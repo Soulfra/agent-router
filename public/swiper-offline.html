@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Swiper - Offline Mode</title>
+  <meta name="description" content="Tinder-style swiper that works offline with LocalStorage sync">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .status-bar {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-bar.online {
+      background: #10b981;
+    }
+
+    .status-bar.offline {
+      background: #ef4444;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 60px auto 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1em;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2em;
+      font-weight: bold;
+      color: #4ade80;
+    }
+
+    .stat-label {
+      font-size: 0.85em;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+
+    .card-container {
+      position: relative;
+      height: 500px;
+      margin-bottom: 30px;
+    }
+
+    .profile-card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      color: #333;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      cursor: grab;
+    }
+
+    .profile-card.dragging {
+      cursor: grabbing;
+    }
+
+    .profile-card.swipe-left {
+      animation: swipeLeft 0.4s ease-out forwards;
+    }
+
+    .profile-card.swipe-right {
+      animation: swipeRight 0.4s ease-out forwards;
+    }
+
+    @keyframes swipeLeft {
+      to {
+        transform: translateX(-150%) rotate(-30deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes swipeRight {
+      to {
+        transform: translateX(150%) rotate(30deg);
+        opacity: 0;
+      }
+    }
+
+    .card-score {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #4ade80;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .card-name {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #667eea;
+    }
+
+    .card-email {
+      font-size: 1.1em;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .card-phone {
+      font-size: 1em;
+      color: #888;
+      margin-bottom: 25px;
+    }
+
+    .card-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .info-item {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .info-label {
+      font-size: 0.75em;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-reject {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-accept {
+      background: #4ade80;
+      color: white;
+    }
+
+    .sync-info {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+
+    .queue-count {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 5px 12px;
+      border-radius: 12px;
+      margin-left: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-bar" id="statusBar">
+    <div class="status-dot"></div>
+    <span id="statusText">Offline</span>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>🃏 Profile Swiper</h1>
+      <p>Works 100% offline • Syncs when connected</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="statSwipes">0</div>
+        <div class="stat-label">Swipes</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statMatches">0</div>
+        <div class="stat-label">Matches</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statAcceptRate">0%</div>
+        <div class="stat-label">Accept Rate</div>
+      </div>
+    </div>
+
+    <div class="card-container" id="cardContainer">
+      <div class="loading" id="loading">Generating profile...</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-reject" id="btnReject" onclick="swipeLeft()">✕</button>
+      <button class="btn btn-accept" id="btnAccept" onclick="swipeRight()">♥</button>
+    </div>
+
+    <div class="sync-info">
+      <span id="syncInfo">All data stored locally</span>
+      <span class="queue-count" id="queueCount" style="display: none;">0 queued</span>
+    </div>
+  </div>
+
+  <script>
+    // ===== EMBEDDED SEED DATA =====
+    const SEED_DATA = {
+      firstNames: [{"name":"James","gender":"male","origin":"english","popularity":95},{"name":"Mary","gender":"female","origin":"english","popularity":92},{"name":"John","gender":"male","origin":"english","popularity":90},{"name":"Patricia","gender":"female","origin":"english","popularity":88},{"name":"Robert","gender":"male","origin":"english","popularity":87},{"name":"Jennifer","gender":"female","origin":"english","popularity":85},{"name":"Michael","gender":"male","origin":"english","popularity":93},{"name":"Linda","gender":"female","origin":"english","popularity":84},{"name":"William","gender":"male","origin":"english","popularity":89},{"name":"Elizabeth","gender":"female","origin":"english","popularity":91},{"name":"David","gender":"male","origin":"hebrew","popularity":86},{"name":"Barbara","gender":"female","origin":"greek","popularity":83},{"name":"Richard","gender":"male","origin":"german","popularity":85},{"name":"Susan","gender":"female","origin":"hebrew","popularity":82},{"name":"Joseph","gender":"male","origin":"hebrew","popularity":88},{"name":"Jessica","gender":"female","origin":"hebrew","popularity":86},{"name":"Thomas","gender":"male","origin":"aramaic","popularity":84},{"name":"Sarah","gender":"female","origin":"hebrew","popularity":87},{"name":"Charles","gender":"male","origin":"german","popularity":83},{"name":"Karen","gender":"female","origin":"greek","popularity":81},{"name":"Christopher","gender":"male","origin":"greek","popularity":82},{"name":"Nancy","gender":"female","origin":"hebrew","popularity":79},{"name":"Daniel","gender":"male","origin":"hebrew","popularity":85},{"name":"Lisa","gender":"female","origin":"hebrew","popularity":80},{"name":"Matthew","gender":"male","origin":"hebrew","popularity":81},{"name":"Betty","gender":"female","origin":"hebrew","popularity":77},{"name":"Anthony","gender":"male","origin":"latin","popularity":79},{"name":"Margaret","gender":"female","origin":"greek","popularity":78},{"name":"Mark","gender":"male","origin":"latin","popularity":78},{"name":"Sandra","gender":"female","origin":"greek","popularity":76},{"name":"Donald","gender":"male","origin":"scottish","popularity":77},{"name":"Ashley","gender":"female","origin":"english","popularity":75},{"name":"Steven","gender":"male","origin":"greek","popularity":76},{"name":"Kimberly","gender":"female","origin":"english","popularity":74},{"name":"Paul","gender":"male","origin":"latin","popularity":80},{"name":"Emily","gender":"female","origin":"latin","popularity":88},{"name":"Andrew","gender":"male","origin":"greek","popularity":75},{"name":"Donna","gender":"female","origin":"italian","popularity":73},{"name":"Joshua","gender":"male","origin":"hebrew","popularity":82},{"name":"Michelle","gender":"female","origin":"french","popularity":78},{"name":"Kevin","gender":"male","origin":"irish","popularity":74},{"name":"Carol","gender":"female","origin":"english","popularity":72},{"name":"Brian","gender":"male","origin":"irish","popularity":73},{"name":"Amanda","gender":"female","origin":"latin","popularity":77},{"name":"George","gender":"male","origin":"greek","popularity":79},{"name":"Melissa","gender":"female","origin":"greek","popularity":76},{"name":"Edward","gender":"male","origin":"english","popularity":75},{"name":"Deborah","gender":"female","origin":"hebrew","popularity":74},{"name":"Ronald","gender":"male","origin":"norse","popularity":72},{"name":"Stephanie","gender":"female","origin":"greek","popularity":75},{"name":"Timothy","gender":"male","origin":"greek","popularity":71},{"name":"Rebecca","gender":"female","origin":"hebrew","popularity":76},{"name":"Jason","gender":"male","origin":"greek","popularity":77},{"name":"Sharon","gender":"female","origin":"hebrew","popularity":71},{"name":"Jeffrey","gender":"male","origin":"german","popularity":70},{"name":"Cynthia","gender":"female","origin":"greek","popularity":70},{"name":"Ryan","gender":"male","origin":"irish","popularity":78},{"name":"Kathleen","gender":"female","origin":"irish","popularity":69},{"name":"Jacob","gender":"male","origin":"hebrew","popularity":83},{"name":"Amy","gender":"female","origin":"french","popularity":77},{"name":"Gary","gender":"male","origin":"english","popularity":68},{"name":"Angela","gender":"female","origin":"greek","popularity":73},{"name":"Nicholas","gender":"male","origin":"greek","popularity":74},{"name":"Shirley","gender":"female","origin":"english","popularity":67},{"name":"Eric","gender":"male","origin":"norse","popularity":72},{"name":"Anna","gender":"female","origin":"hebrew","popularity":80},{"name":"Jonathan","gender":"male","origin":"hebrew","popularity":76},{"name":"Brenda","gender":"female","origin":"norse","popularity":68},{"name":"Stephen","gender":"male","origin":"greek","popularity":73},{"name":"Pamela","gender":"female","origin":"english","popularity":67},{"name":"Larry","gender":"male","origin":"latin","popularity":69},{"name":"Nicole","gender":"female","origin":"greek","popularity":75},{"name":"Justin","gender":"male","origin":"latin","popularity":74},{"name":"Emma","gender":"female","origin":"german","popularity":89},{"name":"Scott","gender":"male","origin":"scottish","popularity":70},{"name":"Samantha","gender":"female","origin":"hebrew","popularity":74},{"name":"Brandon","gender":"male","origin":"english","popularity":71},{"name":"Katherine","gender":"female","origin":"greek","popularity":76},{"name":"Benjamin","gender":"male","origin":"hebrew","popularity":81},{"name":"Christine","gender":"female","origin":"greek","popularity":72},{"name":"Samuel","gender":"male","origin":"hebrew","popularity":79},{"name":"Debra","gender":"female","origin":"hebrew","popularity":66},{"name":"Gregory","gender":"male","origin":"greek","popularity":68},{"name":"Rachel","gender":"female","origin":"hebrew","popularity":77},{"name":"Alexander","gender":"male","origin":"greek","popularity":80},{"name":"Carolyn","gender":"female","origin":"english","popularity":67},{"name":"Patrick","gender":"male","origin":"latin","popularity":72},{"name":"Janet","gender":"female","origin":"hebrew","popularity":68},{"name":"Frank","gender":"male","origin":"german","popularity":70},{"name":"Catherine","gender":"female","origin":"greek","popularity":74},{"name":"Raymond","gender":"male","origin":"german","popularity":67},{"name":"Maria","gender":"female","origin":"hebrew","popularity":82},{"name":"Jack","gender":"male","origin":"english","popularity":75},{"name":"Heather","gender":"female","origin":"english","popularity":71},{"name":"Dennis","gender":"male","origin":"greek","popularity":66},{"name":"Diane","gender":"female","origin":"latin","popularity":69},{"name":"Jerry","gender":"male","origin":"english","popularity":67},{"name":"Ruth","gender":"female","origin":"hebrew","popularity":73},{"name":"Tyler","gender":"male","origin":"english","popularity":73},{"name":"Julie","gender":"female","origin":"latin","popularity":73},{"name":"Aaron","gender":"male","origin":"hebrew","popularity":76},{"name":"Joyce","gender":"female","origin":"latin","popularity":66},{"name":"Jose","gender":"male","origin":"hebrew","popularity":74},{"name":"Virginia","gender":"female","origin":"latin","popularity":70},{"name":"Adam","gender":"male","origin":"hebrew","popularity":75},{"name":"Victoria","gender":"female","origin":"latin","popularity":76},{"name":"Henry","gender":"male","origin":"german","popularity":77},{"name":"Lauren","gender":"female","origin":"latin","popularity":75},{"name":"Nathan","gender":"male","origin":"hebrew","popularity":76},{"name":"Olivia","gender":"female","origin":"latin","popularity":90},{"name":"Zachary","gender":"male","origin":"hebrew","popularity":74},{"name":"Sophia","gender":"female","origin":"greek","popularity":91},{"name":"Kyle","gender":"male","origin":"scottish","popularity":72},{"name":"Isabella","gender":"female","origin":"hebrew","popularity":89},{"name":"Ethan","gender":"male","origin":"hebrew","popularity":84},{"name":"Mia","gender":"female","origin":"scandinavian","popularity":87},{"name":"Jordan","gender":"neutral","origin":"hebrew","popularity":73},{"name":"Avery","gender":"neutral","origin":"english","popularity":76},{"name":"Riley","gender":"neutral","origin":"irish","popularity":74},{"name":"Quinn","gender":"neutral","origin":"irish","popularity":70},{"name":"Casey","gender":"neutral","origin":"irish","popularity":68},{"name":"Morgan","gender":"neutral","origin":"welsh","popularity":71},{"name":"Skyler","gender":"neutral","origin":"dutch","popularity":67},{"name":"Taylor","gender":"neutral","origin":"english","popularity":75},{"name":"Alexis","gender":"neutral","origin":"greek","popularity":73},{"name":"Cameron","gender":"neutral","origin":"scottish","popularity":72}],
+      lastNames: [{"name":"Smith","origin":"english","frequency":100},{"name":"Johnson","origin":"english","frequency":98},{"name":"Williams","origin":"english","frequency":96},{"name":"Brown","origin":"english","frequency":94},{"name":"Jones","origin":"english","frequency":92},{"name":"Garcia","origin":"spanish","frequency":90},{"name":"Miller","origin":"german","frequency":88},{"name":"Davis","origin":"english","frequency":86},{"name":"Rodriguez","origin":"spanish","frequency":84},{"name":"Martinez","origin":"spanish","frequency":82},{"name":"Hernandez","origin":"spanish","frequency":80},{"name":"Lopez","origin":"spanish","frequency":78},{"name":"Gonzalez","origin":"spanish","frequency":76},{"name":"Wilson","origin":"english","frequency":85},{"name":"Anderson","origin":"scandinavian","frequency":83},{"name":"Thomas","origin":"english","frequency":81},{"name":"Taylor","origin":"english","frequency":87},{"name":"Moore","origin":"english","frequency":79},{"name":"Jackson","origin":"english","frequency":84},{"name":"Martin","origin":"latin","frequency":82},{"name":"Lee","origin":"english","frequency":89},{"name":"Perez","origin":"spanish","frequency":75},{"name":"Thompson","origin":"english","frequency":78},{"name":"White","origin":"english","frequency":80},{"name":"Harris","origin":"english","frequency":77},{"name":"Sanchez","origin":"spanish","frequency":73},{"name":"Clark","origin":"english","frequency":76},{"name":"Ramirez","origin":"spanish","frequency":72},{"name":"Lewis","origin":"english","frequency":74},{"name":"Robinson","origin":"english","frequency":75},{"name":"Walker","origin":"english","frequency":71},{"name":"Young","origin":"english","frequency":73},{"name":"Allen","origin":"scottish","frequency":70},{"name":"King","origin":"english","frequency":72},{"name":"Wright","origin":"english","frequency":69},{"name":"Scott","origin":"scottish","frequency":68},{"name":"Torres","origin":"spanish","frequency":67},{"name":"Nguyen","origin":"vietnamese","frequency":85},{"name":"Hill","origin":"english","frequency":71},{"name":"Flores","origin":"spanish","frequency":66},{"name":"Green","origin":"english","frequency":70},{"name":"Adams","origin":"english","frequency":69},{"name":"Nelson","origin":"english","frequency":68},{"name":"Baker","origin":"english","frequency":67},{"name":"Hall","origin":"english","frequency":72},{"name":"Rivera","origin":"spanish","frequency":65},{"name":"Campbell","origin":"scottish","frequency":66},{"name":"Mitchell","origin":"english","frequency":67},{"name":"Carter","origin":"english","frequency":68},{"name":"Roberts","origin":"english","frequency":69},{"name":"Gomez","origin":"spanish","frequency":64},{"name":"Phillips","origin":"greek","frequency":66},{"name":"Evans","origin":"welsh","frequency":67},{"name":"Turner","origin":"english","frequency":65},{"name":"Diaz","origin":"spanish","frequency":63},{"name":"Parker","origin":"english","frequency":64},{"name":"Cruz","origin":"spanish","frequency":62},{"name":"Edwards","origin":"english","frequency":65},{"name":"Collins","origin":"irish","frequency":64},{"name":"Reyes","origin":"spanish","frequency":61},{"name":"Stewart","origin":"scottish","frequency":63},{"name":"Morris","origin":"welsh","frequency":62},{"name":"Morales","origin":"spanish","frequency":60},{"name":"Murphy","origin":"irish","frequency":68},{"name":"Cook","origin":"english","frequency":61},{"name":"Rogers","origin":"english","frequency":62},{"name":"Gutierrez","origin":"spanish","frequency":59},{"name":"Ortiz","origin":"spanish","frequency":58},{"name":"Morgan","origin":"welsh","frequency":63},{"name":"Cooper","origin":"english","frequency":64},{"name":"Peterson","origin":"scandinavian","frequency":61},{"name":"Bailey","origin":"english","frequency":60},{"name":"Reed","origin":"english","frequency":59},{"name":"Kelly","origin":"irish","frequency":65},{"name":"Howard","origin":"english","frequency":65},{"name":"Ramos","origin":"spanish","frequency":57},{"name":"Kim","origin":"korean","frequency":70},{"name":"Cox","origin":"english","frequency":58},{"name":"Ward","origin":"english","frequency":59},{"name":"Richardson","origin":"english","frequency":60},{"name":"Watson","origin":"english","frequency":61},{"name":"Brooks","origin":"english","frequency":57},{"name":"Chavez","origin":"spanish","frequency":56},{"name":"Wood","origin":"english","frequency":58},{"name":"James","origin":"english","frequency":62},{"name":"Bennett","origin":"english","frequency":59},{"name":"Gray","origin":"english","frequency":58},{"name":"Mendoza","origin":"spanish","frequency":55},{"name":"Ruiz","origin":"spanish","frequency":57},{"name":"Hughes","origin":"welsh","frequency":60},{"name":"Price","origin":"welsh","frequency":59},{"name":"Alvarez","origin":"spanish","frequency":56},{"name":"Castillo","origin":"spanish","frequency":54},{"name":"Sanders","origin":"english","frequency":58},{"name":"Patel","origin":"indian","frequency":72},{"name":"Myers","origin":"german","frequency":57},{"name":"Long","origin":"english","frequency":56},{"name":"Ross","origin":"scottish","frequency":58},{"name":"Foster","origin":"english","frequency":57}],
+      domains: [{"domain":"gmail.com","type":"free"},{"domain":"yahoo.com","type":"free"},{"domain":"outlook.com","type":"free"},{"domain":"hotmail.com","type":"free"},{"domain":"icloud.com","type":"free"},{"domain":"protonmail.com","type":"free"},{"domain":"aol.com","type":"free"},{"domain":"zoho.com","type":"free"},{"domain":"mail.com","type":"free"},{"domain":"yandex.com","type":"free"},{"domain":"microsoft.com","type":"corporate"},{"domain":"apple.com","type":"corporate"},{"domain":"google.com","type":"corporate"},{"domain":"amazon.com","type":"corporate"},{"domain":"facebook.com","type":"corporate"},{"domain":"tesla.com","type":"corporate"},{"domain":"netflix.com","type":"corporate"},{"domain":"adobe.com","type":"corporate"},{"domain":"salesforce.com","type":"corporate"},{"domain":"oracle.com","type":"corporate"},{"domain":"ibm.com","type":"corporate"},{"domain":"intel.com","type":"corporate"},{"domain":"cisco.com","type":"corporate"},{"domain":"twitter.com","type":"corporate"},{"domain":"uber.com","type":"corporate"},{"domain":"airbnb.com","type":"corporate"},{"domain":"spotify.com","type":"corporate"},{"domain":"stripe.com","type":"corporate"},{"domain":"slack.com","type":"corporate"},{"domain":"zoom.us","type":"corporate"},{"domain":"harvard.edu","type":"edu"},{"domain":"stanford.edu","type":"edu"},{"domain":"mit.edu","type":"edu"},{"domain":"yale.edu","type":"edu"},{"domain":"princeton.edu","type":"edu"},{"domain":"columbia.edu","type":"edu"},{"domain":"upenn.edu","type":"edu"},{"domain":"cornell.edu","type":"edu"},{"domain":"duke.edu","type":"edu"},{"domain":"northwestern.edu","type":"edu"},{"domain":"berkeley.edu","type":"edu"},{"domain":"ucla.edu","type":"edu"},{"domain":"uchicago.edu","type":"edu"},{"domain":"caltech.edu","type":"edu"},{"domain":"jhu.edu","type":"edu"}],
+      phonePatterns: [{"country_code":"US","country_name":"United States","pattern":"(###) ###-####","example":"(555) 123-4567","dial_code":"+1"},{"country_code":"UK","country_name":"United Kingdom","pattern":"#### ### ####","example":"0123 456 7890","dial_code":"+44"},{"country_code":"CA","country_name":"Canada","pattern":"(###) ###-####","example":"(555) 123-4567","dial_code":"+1"},{"country_code":"AU","country_name":"Australia","pattern":"#### ### ###","example":"0412 345 678","dial_code":"+61"},{"country_code":"DE","country_name":"Germany","pattern":"#### #######","example":"0151 1234567","dial_code":"+49"},{"country_code":"FR","country_name":"France","pattern":"## ## ## ## ##","example":"06 12 34 56 78","dial_code":"+33"},{"country_code":"JP","country_name":"Japan","pattern":"###-####-####","example":"090-1234-5678","dial_code":"+81"},{"country_code":"CN","country_name":"China","pattern":"### #### ####","example":"138 1234 5678","dial_code":"+86"},{"country_code":"IN","country_name":"India","pattern":"##### #####","example":"98765 43210","dial_code":"+91"},{"country_code":"BR","country_name":"Brazil","pattern":"(##) #####-####","example":"(11) 98765-4321","dial_code":"+55"}]
+    };
+
+    // ===== APP STATE =====
+    let currentProfile = null;
+    let sessionId = 'offline_' + Date.now();
+    let usedCombinations = new Set();
+
+    // Check if we have a saved session
+    const savedSession = localStorage.getItem('sessionId');
+    if (savedSession) {
+      sessionId = savedSession;
+    } else {
+      localStorage.setItem('sessionId', sessionId);
+    }
+
+    // ===== PROFILE GENERATOR =====
+    function selectWeightedRandom(items, weightKey) {
+      if (!weightKey) {
+        return items[Math.floor(Math.random() * items.length)];
+      }
+
+      const totalWeight = items.reduce((sum, item) => sum + (item[weightKey] || 50), 0);
+      let random = Math.random() * totalWeight;
+
+      for (const item of items) {
+        random -= (item[weightKey] || 50);
+        if (random <= 0) {
+          return item;
+        }
+      }
+
+      return items[items.length - 1];
+    }
+
+    function generateEmail(firstName, lastName, domain) {
+      const formats = [
+        `${firstName}.${lastName}`,
+        `${firstName}${lastName}`,
+        `${firstName[0]}${lastName}`,
+        `${firstName}_${lastName}`
+      ];
+
+      const format = formats[Math.floor(Math.random() * formats.length)];
+      return `${format}@${domain}`.toLowerCase();
+    }
+
+    function generatePhone(pattern) {
+      return pattern.pattern.replace(/#/g, () => Math.floor(Math.random() * 10));
+    }
+
+    function calculateMatchScore(firstName, lastName, domain) {
+      let score = 50;
+
+      // Popularity bonus
+      score += (firstName.popularity || 50) * 0.2;
+      score += (lastName.frequency || 50) * 0.2;
+
+      // Origin match bonus
+      if (firstName.origin === lastName.origin) {
+        score += 10;
+      }
+
+      // Domain type bonus
+      if (domain.type === 'edu') score += 20;
+      else if (domain.type === 'corporate') score += 15;
+      else score += 5;
+
+      return Math.min(Math.round(score), 100);
+    }
+
+    function generateProfile() {
+      const firstName = selectWeightedRandom(SEED_DATA.firstNames, 'popularity');
+      const lastName = selectWeightedRandom(SEED_DATA.lastNames, 'frequency');
+
+      // Check if combination already used
+      const key = `${firstName.name}:${lastName.name}`;
+      if (usedCombinations.has(key) && usedCombinations.size < 1000) {
+        return generateProfile(); // Try again
+      }
+      usedCombinations.add(key);
+
+      const domainObj = SEED_DATA.domains[Math.floor(Math.random() * SEED_DATA.domains.length)];
+      const phonePattern = SEED_DATA.phonePatterns[Math.floor(Math.random() * SEED_DATA.phonePatterns.length)];
+
+      const email = generateEmail(firstName.name, lastName.name, domainObj.domain);
+      const phone = generatePhone(phonePattern);
+      const matchScore = calculateMatchScore(firstName, lastName, domainObj);
+
+      return {
+        first_name: firstName.name,
+        last_name: lastName.name,
+        full_name: `${firstName.name} ${lastName.name}`,
+        email,
+        phone,
+        phone_formatted: `${phonePattern.dial_code} ${phone}`,
+        domain: domainObj.domain,
+        domain_type: domainObj.type,
+        country_code: phonePattern.country_code,
+        country_name: phonePattern.country_name,
+        match_score: matchScore,
+        metadata: {
+          first_name_origin: firstName.origin,
+          last_name_origin: lastName.origin,
+          first_name_gender: firstName.gender,
+          first_name_popularity: firstName.popularity,
+          last_name_frequency: lastName.frequency
+        }
+      };
+    }
+
+    // ===== LOCAL STORAGE =====
+    function getStats() {
+      const stats = JSON.parse(localStorage.getItem('stats') || '{"swipes": 0, "matches": 0, "rejected": 0}');
+      return stats;
+    }
+
+    function updateStats(direction) {
+      const stats = getStats();
+      stats.swipes++;
+      if (direction === 'right') stats.matches++;
+      else stats.rejected++;
+      localStorage.setItem('stats', JSON.stringify(stats));
+      renderStats();
+    }
+
+    function getMatches() {
+      return JSON.parse(localStorage.getItem('matches') || '[]');
+    }
+
+    function saveMatch(profile) {
+      const matches = getMatches();
+      matches.push({
+        ...profile,
+        timestamp: Date.now(),
+        synced: false
+      });
+      localStorage.setItem('matches', JSON.stringify(matches));
+    }
+
+    function queueSwipe(profile, direction) {
+      const queue = JSON.parse(localStorage.getItem('swipeQueue') || '[]');
+      queue.push({
+        profile,
+        direction,
+        timestamp: Date.now(),
+        sessionId
+      });
+      localStorage.setItem('swipeQueue', JSON.stringify(queue));
+      updateQueueDisplay();
+    }
+
+    function updateQueueDisplay() {
+      const queue = JSON.parse(localStorage.getItem('swipeQueue') || '[]');
+      const queueCount = document.getElementById('queueCount');
+      if (queue.length > 0) {
+        queueCount.textContent = `${queue.length} queued`;
+        queueCount.style.display = 'inline-block';
+      } else {
+        queueCount.style.display = 'none';
+      }
+    }
+
+    // ===== UI FUNCTIONS =====
+    function renderProfile(profile) {
+      const container = document.getElementById('cardContainer');
+      const originEmoji = profile.metadata.first_name_origin === profile.metadata.last_name_origin ? '🔗' : '🌍';
+
+      container.innerHTML = `
+        <div class="profile-card" id="profileCard">
+          <div class="card-score">${profile.match_score}</div>
+          <div class="card-name">${profile.full_name}</div>
+          <div class="card-email">${profile.email}</div>
+          <div class="card-phone">${profile.phone_formatted}</div>
+          <div class="card-info">
+            <div class="info-item">
+              <div class="info-label">Domain</div>
+              <div class="info-value">${profile.domain}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Type</div>
+              <div class="info-value">${profile.domain_type}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Country</div>
+              <div class="info-value">${profile.country_name}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Origin</div>
+              <div class="info-value">${originEmoji} ${profile.metadata.first_name_origin}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStats() {
+      const stats = getStats();
+      document.getElementById('statSwipes').textContent = stats.swipes;
+      document.getElementById('statMatches').textContent = stats.matches;
+
+      const acceptRate = stats.swipes > 0 ? Math.round((stats.matches / stats.swipes) * 100) : 0;
+      document.getElementById('statAcceptRate').textContent = acceptRate + '%';
+    }
+
+    function swipeLeft() {
+      if (!currentProfile) return;
+
+      const card = document.getElementById('profileCard');
+      card.classList.add('swipe-left');
+
+      queueSwipe(currentProfile, 'left');
+      updateStats('left');
+
+      setTimeout(() => {
+        loadNextProfile();
+      }, 400);
+    }
+
+    function swipeRight() {
+      if (!currentProfile) return;
+
+      const card = document.getElementById('profileCard');
+      card.classList.add('swipe-right');
+
+      saveMatch(currentProfile);
+      queueSwipe(currentProfile, 'right');
+      updateStats('right');
+
+      setTimeout(() => {
+        loadNextProfile();
+      }, 400);
+    }
+
+    function loadNextProfile() {
+      currentProfile = generateProfile();
+      renderProfile(currentProfile);
+    }
+
+    // ===== ONLINE/OFFLINE STATUS =====
+    function updateOnlineStatus() {
+      const statusBar = document.getElementById('statusBar');
+      const statusText = document.getElementById('statusText');
+      const syncInfo = document.getElementById('syncInfo');
+
+      if (navigator.onLine) {
+        statusBar.className = 'status-bar online';
+        statusText.textContent = 'Online';
+        syncInfo.textContent = 'Data syncing to server';
+        attemptSync();
+      } else {
+        statusBar.className = 'status-bar offline';
+        statusText.textContent = 'Offline';
+        syncInfo.textContent = 'All data stored locally';
+      }
+    }
+
+    async function attemptSync() {
+      // Try to sync queued swipes
+      const queue = JSON.parse(localStorage.getItem('swipeQueue') || '[]');
+      if (queue.length === 0) return;
+
+      try {
+        // Try to connect to server
+        const response = await fetch('http://localhost:5001/health', { signal: AbortSignal.timeout(2000) });
+        if (response.ok) {
+          console.log('Server available! Syncing', queue.length, 'swipes');
+          // TODO: Actually sync the queue
+          // For now, just clear it
+          // localStorage.setItem('swipeQueue', '[]');
+          updateQueueDisplay();
+        }
+      } catch (error) {
+        console.log('Server not available, keeping queue');
+      }
+    }
+
+    // ===== KEYBOARD CONTROLS =====
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') swipeLeft();
+      else if (e.key === 'ArrowRight') swipeRight();
+    });
+
+    // ===== EVENT LISTENERS =====
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    // ===== INITIALIZE =====
+    updateOnlineStatus();
+    renderStats();
+    loadNextProfile();
+    updateQueueDisplay();
+
+    console.log('🃏 Offline Swiper loaded!');
+    console.log('📊 Seed data:', {
+      firstNames: SEED_DATA.firstNames.length,
+      lastNames: SEED_DATA.lastNames.length,
+      domains: SEED_DATA.domains.length,
+      phonePatterns: SEED_DATA.phonePatterns.length,
+      combinations: SEED_DATA.firstNames.length * SEED_DATA.lastNames.length
+    });
+  </script>
+</body>
+</html>

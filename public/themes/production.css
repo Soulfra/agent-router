@@ -1,0 +1,571 @@
+/**
+ * Production Theme - Minimal B&W Craigslist-style
+ *
+ * Ultra-minimal, fast-loading, no frills
+ * Inspired by Craigslist's no-nonsense approach
+ */
+
+:root {
+  /* Minimal Color Palette - B&W + Blue links */
+  --color-bg: #ffffff;
+  --color-text: #000000;
+  --color-link: #0000ff;
+  --color-link-visited: #800080;
+  --color-border: #cccccc;
+  --color-subtle: #f0f0f0;
+
+  /* No gradients, no animations, no shadows */
+  --spacing: 8px;
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-size-large: 16px;
+}
+
+/* ============================================
+   GLOBAL RESET - Minimal
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  color: var(--color-text);
+  background: var(--color-bg);
+  margin: 0;
+  padding: 8px;
+}
+
+/* ============================================
+   TYPOGRAPHY - Plain & Simple
+   ============================================ */
+
+h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+h3 {
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+p {
+  margin: 8px 0;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: underline;
+}
+
+a:visited {
+  color: var(--color-link-visited);
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+/* ============================================
+   BUTTONS - Plain HTML Style
+   ============================================ */
+
+.btn,
+button,
+input[type="submit"],
+input[type="button"] {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--font-size-base);
+  padding: 4px 8px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+}
+
+.btn:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  background: #f0f0f0;
+}
+
+.btn-primary {
+  background: #000;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #333;
+}
+
+/* ============================================
+   FORMS - Basic HTML
+   ============================================ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: var(--font-size-base);
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  width: 100%;
+  max-width: 400px;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  outline: 1px solid #000;
+}
+
+label {
+  display: block;
+  margin: 4px 0;
+  font-weight: bold;
+}
+
+.input-group {
+  margin: 8px 0;
+}
+
+/* ============================================
+   TABLES - Simple & Clean
+   ============================================ */
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+
+th,
+td {
+  border: 1px solid var(--color-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+th {
+  background: var(--color-subtle);
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* ============================================
+   LISTS - Basic
+   ============================================ */
+
+ul,
+ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+li {
+  margin: 4px 0;
+}
+
+ul.plain,
+ol.plain {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* ============================================
+   LAYOUT - No Fancy Grid
+   ============================================ */
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.row {
+  margin: 8px 0;
+}
+
+.col {
+  display: inline-block;
+  vertical-align: top;
+  padding: 4px;
+}
+
+.col-half {
+  width: 49%;
+}
+
+.col-third {
+  width: 32%;
+}
+
+.col-quarter {
+  width: 24%;
+}
+
+/* ============================================
+   CARDS - Minimal Boxes
+   ============================================ */
+
+.card {
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  margin: 8px 0;
+  background: #fff;
+}
+
+.card-header {
+  font-weight: bold;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 4px;
+}
+
+.card-body {
+  padding: 4px 0;
+}
+
+/* ============================================
+   NAVIGATION - Simple Links
+   ============================================ */
+
+.navbar {
+  border-bottom: 2px solid #000;
+  padding: 8px 0;
+  margin-bottom: 16px;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 18px;
+  text-decoration: none;
+  color: #000;
+}
+
+.navbar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.navbar-nav li {
+  display: inline;
+  margin-right: 16px;
+}
+
+.nav-link {
+  color: var(--color-link);
+  text-decoration: underline;
+}
+
+.nav-link:hover {
+  text-decoration: none;
+}
+
+/* ============================================
+   ALERTS - Plain Text Boxes
+   ============================================ */
+
+.alert {
+  border: 1px solid #000;
+  padding: 8px;
+  margin: 8px 0;
+  background: var(--color-subtle);
+}
+
+.alert-info {
+  border-color: #0000ff;
+}
+
+.alert-success {
+  border-color: #008000;
+}
+
+.alert-warning {
+  border-color: #ff8c00;
+}
+
+.alert-danger {
+  border-color: #ff0000;
+}
+
+/* ============================================
+   BADGES - Plain Text Labels
+   ============================================ */
+
+.badge {
+  display: inline;
+  padding: 2px 4px;
+  border: 1px solid #000;
+  background: #fff;
+  font-size: var(--font-size-small);
+}
+
+.badge-success {
+  border-color: #008000;
+  color: #008000;
+}
+
+.badge-warning {
+  border-color: #ff8c00;
+  color: #ff8c00;
+}
+
+.badge-danger {
+  border-color: #ff0000;
+  color: #ff0000;
+}
+
+/* ============================================
+   MODALS - Simple Overlays
+   ============================================ */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 2px solid #000;
+  padding: 16px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.modal-header {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 8px;
+}
+
+.modal-body {
+  margin: 8px 0;
+}
+
+.modal-footer {
+  margin-top: 8px;
+  border-top: 1px solid #000;
+  padding-top: 8px;
+  text-align: right;
+}
+
+/* ============================================
+   LOADING - Simple Text
+   ============================================ */
+
+.loading {
+  text-align: center;
+  padding: 16px;
+  font-style: italic;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #000;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-small {
+  font-size: var(--font-size-small);
+}
+
+.text-large {
+  font-size: var(--font-size-large);
+}
+
+.mt-1 { margin-top: var(--spacing); }
+.mt-2 { margin-top: calc(var(--spacing) * 2); }
+.mb-1 { margin-bottom: var(--spacing); }
+.mb-2 { margin-bottom: calc(var(--spacing) * 2); }
+.ml-1 { margin-left: var(--spacing); }
+.mr-1 { margin-right: var(--spacing); }
+
+.pt-1 { padding-top: var(--spacing); }
+.pb-1 { padding-bottom: var(--spacing); }
+.pl-1 { padding-left: var(--spacing); }
+.pr-1 { padding-right: var(--spacing); }
+
+.block {
+  display: block;
+}
+
+.inline {
+  display: inline;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.hidden {
+  display: none;
+}
+
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
+}
+
+.clear {
+  clear: both;
+}
+
+/* ============================================
+   NO DEBUG TOOLS IN PRODUCTION
+   ============================================ */
+
+.debug-panel,
+.debug-toggle,
+.staging-badge {
+  display: none !important;
+}
+
+/* ============================================
+   DISABLE ALL ANIMATIONS
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  a {
+    text-decoration: underline;
+    color: #000;
+  }
+
+  .no-print {
+    display: none;
+  }
+}
+
+/* ============================================
+   MOBILE - Keep It Simple
+   ============================================ */
+
+@media (max-width: 768px) {
+  .col-half,
+  .col-third,
+  .col-quarter {
+    width: 100%;
+    display: block;
+  }
+
+  .container {
+    padding: 4px;
+  }
+
+  table {
+    font-size: var(--font-size-small);
+  }
+
+  th,
+  td {
+    padding: 2px 4px;
+  }
+}

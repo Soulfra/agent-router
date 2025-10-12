@@ -1,0 +1,73 @@
+# CalOS Agent Router - Shell Aliases
+# Add to your ~/.zshrc: source ~/Desktop/CALOS_ROOT/agent-router/.zshrc-aliases
+
+# NOTE: 'cal' is reserved for Claude CLI, so we use 'calos' prefix
+
+# Router Management
+alias calos-start="cd ~/Desktop/CALOS_ROOT/agent-router && DB_USER=matthewmauer node router.js --local"
+alias calos-stop="lsof -ti:5001 | xargs kill -9 2>/dev/null && echo 'CalOS router stopped'"
+alias calos-restart="calos-stop && sleep 1 && calos-start"
+alias calos-status="ps aux | grep 'node router.js' | grep -v grep || echo 'Router not running'"
+
+# Price Queries (CLI)
+alias calos-price="node ~/Desktop/CALOS_ROOT/agent-router/bin/calos-price.js"
+alias calos-chart="open http://localhost:5001/prices.html"
+
+# Price Worker Stats
+alias calos-worker="curl -s localhost:5001/api/price/worker/stats | python3 -m json.tool"
+alias calos-prices="psql calos -c 'SELECT symbol, price, recorded_at FROM price_history ORDER BY recorded_at DESC LIMIT 10;'"
+alias calos-cache="psql calos -c 'SELECT cache_key, cached_at, EXTRACT(EPOCH FROM (NOW() - cached_at)) as age_seconds FROM price_cache ORDER BY cached_at DESC;'"
+
+# Database
+alias calos-db="psql calos"
+alias calos-migrate="cd ~/Desktop/CALOS_ROOT/agent-router && DB_USER=matthewmauer node database/run-migrations.js"
+alias calos-tables="psql calos -c '\dt'"
+
+# Logs & Monitoring
+alias calos-logs="tail -f ~/Desktop/CALOS_ROOT/agent-router/logs/router.log 2>/dev/null || echo 'No log file found'"
+alias calos-verify="open http://localhost:5001/verify.html"
+alias calos-wall="open http://localhost:5001/wall.html"
+
+# Quick Tests
+alias calos-test-btc="curl -s http://localhost:5001/api/price/btc | python3 -m json.tool"
+alias calos-test-eth="curl -s http://localhost:5001/api/price/eth | python3 -m json.tool"
+alias calos-test-aapl="curl -s http://localhost:5001/api/price/stock/AAPL | python3 -m json.tool"
+
+# Historical Data Backfill
+alias calos-backfill="cd ~/Desktop/CALOS_ROOT/agent-router && DB_USER=matthewmauer node scripts/backfill-prices.js"
+
+# Algo Trading & Candles
+alias calos-candles="cd ~/Desktop/CALOS_ROOT/agent-router && DB_USER=matthewmauer node scripts/compute-candles.js"
+alias calos-candles-btc="curl -s 'http://localhost:5001/api/candles/BTC?timeframe=1h&limit=24' | python3 -m json.tool"
+alias calos-candles-latest="curl -s 'http://localhost:5001/api/candles/latest?timeframe=1h' | python3 -m json.tool"
+alias calos-candles-all="psql calos -c 'SELECT symbol, timeframe, COUNT(*) as candles FROM price_candles GROUP BY symbol, timeframe ORDER BY symbol, timeframe;'"
+
+# Scheduler Management
+alias calos-scheduler="curl -s http://localhost:5001/api/scheduler/stats | python3 -m json.tool"
+alias calos-scheduler-logs="curl -s 'http://localhost:5001/api/scheduler/logs?limit=20' | python3 -m json.tool"
+alias calos-scheduler-history="curl -s 'http://localhost:5001/api/scheduler/history?limit=20' | python3 -m json.tool"
+
+# Scheduler Control (POST requests)
+function calos-scheduler-run() {
+  curl -X POST "http://localhost:5001/api/scheduler/run/$1" | python3 -m json.tool
+}
+function calos-scheduler-enable() {
+  curl -X POST "http://localhost:5001/api/scheduler/task/$1/enable" | python3 -m json.tool
+}
+function calos-scheduler-disable() {
+  curl -X POST "http://localhost:5001/api/scheduler/task/$1/disable" | python3 -m json.tool
+}
+
+# Health Check
+alias calos-health="curl -s http://localhost:5001/health | python3 -m json.tool"
+
+# Git (from CALOS_ROOT)
+alias calos-git="cd ~/Desktop/CALOS_ROOT/agent-router && git status"
+alias calos-diff="cd ~/Desktop/CALOS_ROOT/agent-router && git diff"
+
+# Development
+alias calos-dev="cd ~/Desktop/CALOS_ROOT/agent-router"
+alias calos-edit="cd ~/Desktop/CALOS_ROOT/agent-router && code ."
+
+echo "✅ CalOS aliases loaded!"
+echo "Quick start: calos-start, calos-status, calos-scheduler, calos-candles"

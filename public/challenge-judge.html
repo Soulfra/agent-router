@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Challenge Judge - Teacher Mode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 2em;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1em;
+    }
+
+    .challenge-info {
+      background: #16213e;
+      padding: 20px;
+      margin: 20px;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    .challenge-prompt {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      color: #4ade80;
+    }
+
+    .challenge-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .card-stack {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      height: 700px;
+    }
+
+    .implementation-card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #16213e;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .implementation-card.dragging {
+      cursor: grabbing;
+    }
+
+    .implementation-card.swipe-left {
+      transform: translateX(-150%) rotate(-30deg);
+      opacity: 0;
+    }
+
+    .implementation-card.swipe-right {
+      transform: translateX(150%) rotate(30deg);
+      opacity: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #333;
+    }
+
+    .brand-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand-badge {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: white;
+    }
+
+    .brand-details h2 {
+      font-size: 1.5em;
+      margin-bottom: 3px;
+    }
+
+    .brand-details .tagline {
+      font-size: 0.9em;
+      color: #888;
+      font-style: italic;
+    }
+
+    .metrics {
+      display: flex;
+      gap: 15px;
+      font-size: 0.85em;
+    }
+
+    .metric {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-weight: bold;
+      color: #4ade80;
+      font-size: 1.2em;
+    }
+
+    .metric-label {
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .code-container {
+      flex: 1;
+      margin: 20px 0;
+      background: #0d1117;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-header {
+      background: #161b22;
+      padding: 10px 15px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .code-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    pre {
+      margin: 0;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.9em;
+      line-height: 1.5;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .quality-indicators {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .indicator {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .indicator.good {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+
+    .indicator.bad {
+      background: rgba(248, 113, 113, 0.2);
+      color: #f87171;
+    }
+
+    .swipe-hint {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 40px;
+      font-size: 1.1em;
+      z-index: 10;
+    }
+
+    .swipe-hint div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .swipe-hint div:hover {
+      opacity: 1;
+    }
+
+    .swipe-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+
+    .swipe-icon.left {
+      background: rgba(248, 113, 113, 0.2);
+      color: #f87171;
+    }
+
+    .swipe-icon.right {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+
+    .progress-bar {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+    }
+
+    .progress-text {
+      color: #888;
+    }
+
+    .progress-text strong {
+      color: #fff;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+      color: #888;
+    }
+
+    .feedback-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feedback-modal.active {
+      display: flex;
+    }
+
+    .feedback-form {
+      background: #16213e;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .feedback-form h3 {
+      margin-bottom: 20px;
+      color: #4ade80;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #888;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #eee;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .rating-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .rating-btn {
+      flex: 1;
+      padding: 10px;
+      background: #0d1117;
+      border: 2px solid #30363d;
+      border-radius: 6px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .rating-btn.selected {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: bold;
+    }
+
+    .btn-submit {
+      background: #4ade80;
+      color: #000;
+    }
+
+    .btn-submit:hover {
+      background: #22c55e;
+    }
+
+    .btn-skip {
+      background: #333;
+      color: #eee;
+    }
+
+    .btn-skip:hover {
+      background: #444;
+    }
+
+    .complete-screen {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .complete-screen.active {
+      display: block;
+    }
+
+    .complete-screen h2 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #4ade80;
+    }
+
+    .winner-card {
+      background: #16213e;
+      padding: 30px;
+      border-radius: 16px;
+      margin: 20px auto;
+      max-width: 600px;
+      border: 2px solid #667eea;
+    }
+
+    .winner-badge {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5em;
+    }
+
+    .leaderboard {
+      background: #16213e;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      max-width: 800px;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid #333;
+    }
+
+    .leaderboard-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎓 Domain Challenge Judge</h1>
+    <p>Teacher Mode: Judge AI-generated implementations</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-text">
+      <span id="current-index">0</span> of <span id="total-count">0</span> implementations judged
+    </div>
+    <div class="progress-text">
+      Challenge: <strong id="challenge-status">Loading...</strong>
+    </div>
+  </div>
+
+  <div id="challenge-info" class="challenge-info" style="display: none;">
+    <div class="challenge-prompt"></div>
+    <div class="challenge-meta">
+      <span>Type: <strong id="challenge-type"></strong></span>
+      <span>Services: <strong id="challenge-services"></strong></span>
+      <span>Implementations: <strong id="implementations-count"></strong></span>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">
+    Loading challenge...
+  </div>
+
+  <div class="container" id="card-container" style="display: none;">
+    <div class="card-stack" id="card-stack">
+      <!-- Cards will be injected here -->
+    </div>
+
+    <div class="swipe-hint">
+      <div onclick="swipeLeft()">
+        <div class="swipe-icon left">👎</div>
+        <span>Swipe Left<br>to Reject</span>
+      </div>
+      <div onclick="swipeRight()">
+        <div class="swipe-icon right">👍</div>
+        <span>Swipe Right<br>to Accept</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="complete-screen" class="complete-screen">
+    <h2>🎉 Challenge Complete!</h2>
+    <div id="winner-display" class="winner-card">
+      <div class="winner-badge"></div>
+      <h3 id="winner-name"></h3>
+      <p id="winner-score"></p>
+    </div>
+    <div class="leaderboard" id="leaderboard">
+      <!-- Leaderboard will be injected -->
+    </div>
+    <button class="btn-submit" onclick="location.reload()">Start New Challenge</button>
+  </div>
+
+  <div id="feedback-modal" class="feedback-modal">
+    <div class="feedback-form">
+      <h3>Detailed Feedback (Optional)</h3>
+
+      <div class="form-group">
+        <label>Creativity (1-5)</label>
+        <div class="rating-group" data-rating="creativity">
+          <div class="rating-btn" data-value="1">1</div>
+          <div class="rating-btn" data-value="2">2</div>
+          <div class="rating-btn" data-value="3">3</div>
+          <div class="rating-btn" data-value="4">4</div>
+          <div class="rating-btn" data-value="5">5</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Functionality (1-5)</label>
+        <div class="rating-group" data-rating="functionality">
+          <div class="rating-btn" data-value="1">1</div>
+          <div class="rating-btn" data-value="2">2</div>
+          <div class="rating-btn" data-value="3">3</div>
+          <div class="rating-btn" data-value="4">4</div>
+          <div class="rating-btn" data-value="5">5</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Code Quality (1-5)</label>
+        <div class="rating-group" data-rating="codeQuality">
+          <div class="rating-btn" data-value="1">1</div>
+          <div class="rating-btn" data-value="2">2</div>
+          <div class="rating-btn" data-value="3">3</div>
+          <div class="rating-btn" data-value="4">4</div>
+          <div class="rating-btn" data-value="5">5</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Brand Alignment (1-5)</label>
+        <div class="rating-group" data-rating="brandAlignment">
+          <div class="rating-btn" data-value="1">1</div>
+          <div class="rating-btn" data-value="2">2</div>
+          <div class="rating-btn" data-value="3">3</div>
+          <div class="rating-btn" data-value="4">4</div>
+          <div class="rating-btn" data-value="5">5</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Comments</label>
+        <textarea id="feedback-comment" placeholder="What did you like or dislike about this implementation?"></textarea>
+      </div>
+
+      <div class="button-group">
+        <button class="btn-skip" onclick="closeFeedbackModal()">Skip</button>
+        <button class="btn-submit" onclick="submitFeedback()">Submit Feedback</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let challengeData = null;
+    let implementations = [];
+    let currentIndex = 0;
+    let sessionId = localStorage.getItem('judge_session_id') || generateUUID();
+    localStorage.setItem('judge_session_id', sessionId);
+
+    let currentCard = null;
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    let currentVote = null;
+    let feedbackData = {};
+
+    // Get challenge ID from URL or use latest
+    const urlParams = new URLSearchParams(window.location.search);
+    const challengeId = urlParams.get('challenge');
+
+    // Initialize
+    loadChallenge();
+
+    async function loadChallenge() {
+      try {
+        let url = '/api/challenges';
+
+        if (challengeId) {
+          url = `/api/challenges/${challengeId}`;
+        } else {
+          // Get latest judging challenge
+          const challengesResponse = await fetch('/api/challenges?status=judging');
+          const challengesData = await challengesResponse.json();
+
+          if (challengesData.challenges.length === 0) {
+            document.getElementById('loading').innerHTML = 'No challenges available for judging.<br><br><a href="/challenge-creator.html">Create a new challenge</a>';
+            return;
+          }
+
+          url = `/api/challenges/${challengesData.challenges[0].challenge_id}`;
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        challengeData = data.challenge;
+        implementations = data.implementations;
+
+        displayChallengeInfo();
+        renderCards();
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('challenge-info').style.display = 'block';
+        document.getElementById('card-container').style.display = 'flex';
+      } catch (error) {
+        console.error('Failed to load challenge:', error);
+        document.getElementById('loading').innerHTML = 'Failed to load challenge. Please try again.';
+      }
+    }
+
+    function displayChallengeInfo() {
+      document.querySelector('.challenge-prompt').textContent = challengeData.challenge_prompt;
+      document.getElementById('challenge-type').textContent = challengeData.challenge_type;
+      document.getElementById('challenge-services').textContent =
+        challengeData.expected_services?.join(', ') || 'None';
+      document.getElementById('implementations-count').textContent = implementations.length;
+      document.getElementById('total-count').textContent = implementations.length;
+      document.getElementById('challenge-status').textContent = challengeData.status;
+    }
+
+    function renderCards() {
+      const stack = document.getElementById('card-stack');
+      stack.innerHTML = '';
+
+      implementations.forEach((impl, index) => {
+        const card = createCard(impl, index);
+        stack.appendChild(card);
+      });
+
+      showCurrentCard();
+    }
+
+    function createCard(impl, index) {
+      const card = document.createElement('div');
+      card.className = 'implementation-card';
+      card.dataset.index = index;
+      card.dataset.implId = impl.implementation_id;
+      card.style.setProperty('--primary-color', impl.primary_color);
+      card.style.setProperty('--secondary-color', impl.secondary_color);
+
+      // Hide all cards except current
+      if (index !== currentIndex) {
+        card.style.display = 'none';
+      }
+
+      const brandInitial = impl.brand_name.charAt(0);
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="brand-info">
+            <div class="brand-badge">${brandInitial}</div>
+            <div class="brand-details">
+              <h2>${impl.brand_name}</h2>
+              <div class="tagline">${impl.brand_tagline || impl.domain_name}</div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">${impl.generation_time_ms}ms</div>
+              <div class="metric-label">Gen Time</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">${impl.code_length}</div>
+              <div class="metric-label">Chars</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>${impl.implementation_type || 'code'}</span>
+            <span>${impl.model_name}</span>
+          </div>
+          <div class="code-body">
+            <pre>${escapeHtml(impl.implementation_code)}</pre>
+          </div>
+        </div>
+
+        <div class="quality-indicators">
+          ${impl.uses_domain_colors ? '<div class="indicator good">✓ Uses Brand Colors</div>' : '<div class="indicator bad">✗ Missing Brand Colors</div>'}
+          ${impl.has_comments ? '<div class="indicator good">✓ Has Comments</div>' : '<div class="indicator bad">✗ No Comments</div>'}
+          ${impl.syntax_valid ? '<div class="indicator good">✓ Valid Syntax</div>' : '<div class="indicator bad">✗ Syntax Issues</div>'}
+        </div>
+      `;
+
+      // Add drag handlers
+      card.addEventListener('mousedown', handleDragStart);
+      card.addEventListener('touchstart', handleDragStart);
+
+      return card;
+    }
+
+    function showCurrentCard() {
+      document.querySelectorAll('.implementation-card').forEach(card => {
+        card.style.display = 'none';
+      });
+
+      currentCard = document.querySelector(`[data-index="${currentIndex}"]`);
+      if (currentCard) {
+        currentCard.style.display = 'flex';
+      }
+
+      document.getElementById('current-index').textContent = currentIndex;
+    }
+
+    function handleDragStart(e) {
+      isDragging = true;
+      startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      currentCard.classList.add('dragging');
+
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('touchmove', handleDragMove);
+      document.addEventListener('mouseup', handleDragEnd);
+      document.addEventListener('touchend', handleDragEnd);
+    }
+
+    function handleDragMove(e) {
+      if (!isDragging) return;
+
+      currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const deltaX = currentX - startX;
+      const rotation = deltaX / 20;
+
+      currentCard.style.transform = `translateX(${deltaX}px) rotate(${rotation}deg)`;
+    }
+
+    function handleDragEnd() {
+      if (!isDragging) return;
+
+      isDragging = false;
+      currentCard.classList.remove('dragging');
+
+      const deltaX = currentX - startX;
+
+      if (Math.abs(deltaX) > 100) {
+        if (deltaX > 0) {
+          swipeRight();
+        } else {
+          swipeLeft();
+        }
+      } else {
+        currentCard.style.transform = '';
+      }
+
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('touchmove', handleDragMove);
+      document.removeEventListener('mouseup', handleDragEnd);
+      document.removeEventListener('touchend', handleDragEnd);
+    }
+
+    function swipeLeft() {
+      if (!currentCard) return;
+      currentVote = 'left';
+      currentCard.classList.add('swipe-left');
+      setTimeout(() => showFeedbackModal(), 300);
+    }
+
+    function swipeRight() {
+      if (!currentCard) return;
+      currentVote = 'right';
+      currentCard.classList.add('swipe-right');
+      setTimeout(() => showFeedbackModal(), 300);
+    }
+
+    function showFeedbackModal() {
+      document.getElementById('feedback-modal').classList.add('active');
+    }
+
+    function closeFeedbackModal() {
+      submitJudgment(null);
+      document.getElementById('feedback-modal').classList.remove('active');
+      resetFeedbackForm();
+    }
+
+    function submitFeedback() {
+      const feedback = {
+        comment: document.getElementById('feedback-comment').value,
+        creativity: feedbackData.creativity || null,
+        functionality: feedbackData.functionality || null,
+        codeQuality: feedbackData.codeQuality || null,
+        brandAlignment: feedbackData.brandAlignment || null
+      };
+
+      submitJudgment(feedback);
+      document.getElementById('feedback-modal').classList.remove('active');
+      resetFeedbackForm();
+    }
+
+    async function submitJudgment(feedback) {
+      try {
+        const implementationId = currentCard.dataset.implId;
+
+        await fetch(`/api/challenges/${challengeData.challenge_id}/judge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            implementation_id: implementationId,
+            session_id: sessionId,
+            vote: currentVote,
+            feedback: feedback
+          })
+        });
+
+        nextCard();
+      } catch (error) {
+        console.error('Failed to submit judgment:', error);
+        alert('Failed to submit vote. Please try again.');
+      }
+    }
+
+    function nextCard() {
+      currentIndex++;
+
+      if (currentIndex >= implementations.length) {
+        completeChallenge();
+      } else {
+        showCurrentCard();
+      }
+    }
+
+    async function completeChallenge() {
+      try {
+        const response = await fetch(`/api/challenges/${challengeData.challenge_id}/complete`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        displayResults(data);
+      } catch (error) {
+        console.error('Failed to complete challenge:', error);
+      }
+    }
+
+    function displayResults(data) {
+      document.getElementById('card-container').style.display = 'none';
+      document.getElementById('complete-screen').classList.add('active');
+
+      const winner = data.winner;
+      document.getElementById('winner-name').textContent = winner.brand;
+      document.getElementById('winner-score').textContent = `Score: ${winner.score}`;
+
+      // TODO: Fetch and display full leaderboard
+    }
+
+    // Rating button handlers
+    document.querySelectorAll('.rating-group').forEach(group => {
+      group.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const ratingType = group.dataset.rating;
+          const value = parseInt(btn.dataset.value);
+
+          group.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+
+          feedbackData[ratingType] = value;
+        });
+      });
+    });
+
+    function resetFeedbackForm() {
+      document.querySelectorAll('.rating-btn').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('feedback-comment').value = '';
+      feedbackData = {};
+      currentVote = null;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+  </script>
+</body>
+</html>

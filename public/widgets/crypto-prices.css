@@ -1,0 +1,117 @@
+/* Crypto Prices Widget Styles */
+
+.crypto-prices-widget {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  min-height: 300px;
+}
+
+.crypto-prices-widget .widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.crypto-prices-widget .widget-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.crypto-prices-widget .last-update {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.crypto-prices-widget .prices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crypto-prices-widget .price-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.crypto-prices-widget .price-item:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(5px);
+}
+
+.crypto-prices-widget .price-symbol {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+.crypto-prices-widget .price-value {
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.crypto-prices-widget .price-change {
+  text-align: right;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  min-width: 80px;
+}
+
+.crypto-prices-widget .price-change.positive {
+  background: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.crypto-prices-widget .price-change.negative {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.crypto-prices-widget .loading,
+.crypto-prices-widget .error,
+.crypto-prices-widget .no-data {
+  text-align: center;
+  padding: 40px 20px;
+  opacity: 0.7;
+  font-size: 1rem;
+}
+
+.crypto-prices-widget .error {
+  color: #fee2e2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .crypto-prices-widget .price-item {
+    grid-template-columns: 60px 1fr auto;
+    padding: 12px;
+  }
+
+  .crypto-prices-widget .price-symbol {
+    font-size: 1rem;
+  }
+
+  .crypto-prices-widget .price-value {
+    font-size: 1.1rem;
+  }
+
+  .crypto-prices-widget .price-change {
+    font-size: 0.85rem;
+    min-width: 70px;
+  }
+}

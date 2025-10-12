@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS XP Calculator - Skills Training Calculator</title>
+  <meta name="description" content="Calculate XP needed, training time, and efficiency for CalOS skills. RuneScape-style calculator for Voting, Development, Security, and more.">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Runescape UF', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .calc-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .calc-card h2 {
+      font-size: 1.3rem;
+      color: #667eea;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 0.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    button.secondary {
+      background: #95a5a6;
+    }
+
+    button.secondary:hover {
+      background: #7f8c8d;
+    }
+
+    .results {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-label {
+      font-weight: 600;
+      color: #555;
+    }
+
+    .result-value {
+      color: #667eea;
+      font-weight: 700;
+    }
+
+    .result-value.highlight {
+      font-size: 1.2rem;
+      color: #e74c3c;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 30px;
+      background: #ecf0f1;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .skill-icon {
+      font-size: 2rem;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    .xp-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .xp-table th {
+      background: #667eea;
+      color: white;
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    .xp-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .xp-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    .action-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .action-item {
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-item:hover {
+      border-color: #667eea;
+      background: #f8f9fa;
+    }
+
+    .action-item.selected {
+      border-color: #667eea;
+      background: #e8eaf6;
+    }
+
+    .action-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .action-xp {
+      color: #667eea;
+      font-size: 0.9rem;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .url-share {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+      border: 2px dashed #ddd;
+      margin-top: 1rem;
+    }
+
+    .url-box {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .url-box input {
+      flex: 1;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .url-box button {
+      width: auto;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 1rem;
+      }
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 CalOS XP Calculator</h1>
+      <p class="subtitle">Calculate XP needed, training time, and efficiency for your skills</p>
+    </header>
+
+    <div class="calc-grid">
+      <!-- Left Column: Input -->
+      <div class="calc-card">
+        <h2>⚙️ Calculator Input</h2>
+
+        <div class="form-group">
+          <label for="skillSelect">Select Skill</label>
+          <select id="skillSelect">
+            <option value="">Loading skills...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="currentLevel">Current Level (1-99)</label>
+          <input type="number" id="currentLevel" min="1" max="98" value="1" placeholder="1">
+        </div>
+
+        <div class="form-group">
+          <label for="currentXP">Or Current XP</label>
+          <input type="number" id="currentXP" min="0" placeholder="0">
+        </div>
+
+        <div class="form-group">
+          <label for="targetLevel">Target Level (1-99)</label>
+          <input type="number" id="targetLevel" min="2" max="99" value="99" placeholder="99">
+        </div>
+
+        <button onclick="calculate()">Calculate XP</button>
+        <button class="secondary" onclick="reset()">Reset</button>
+
+        <div id="activeMultipliers" style="display: none;" class="alert alert-info">
+          <strong>🎉 Active XP Event!</strong>
+          <div id="multiplierText"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Results -->
+      <div class="calc-card">
+        <h2>📈 Results</h2>
+
+        <div id="results" class="results" style="display: none;">
+          <div class="result-row">
+            <span class="result-label">Current Level:</span>
+            <span class="result-value" id="resultCurrentLevel">-</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Current XP:</span>
+            <span class="result-value" id="resultCurrentXP">-</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Target Level:</span>
+            <span class="result-value" id="resultTargetLevel">-</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Target XP:</span>
+            <span class="result-value" id="resultTargetXP">-</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">XP Needed:</span>
+            <span class="result-value highlight" id="resultXPNeeded">-</span>
+          </div>
+
+          <div style="margin-top: 1rem;">
+            <label style="font-size: 0.9rem;">Progress to Goal:</label>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressBar" style="width: 0%;">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="noResults" class="alert alert-info">
+          Enter your current and target levels above, then click "Calculate XP" to see results.
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="calc-card">
+      <h2>⚔️ Training Actions</h2>
+      <p style="margin-bottom: 1rem; color: #666;">Select an action to calculate training time:</p>
+
+      <div id="actionsLoading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading actions...</p>
+      </div>
+
+      <div id="actionsList" class="action-list"></div>
+
+      <div id="trainingTime" class="results" style="display: none; margin-top: 1rem;">
+        <div class="result-row">
+          <span class="result-label">Selected Action:</span>
+          <span class="result-value" id="selectedActionName">-</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">XP per Hour:</span>
+          <span class="result-value" id="xpPerHour">-</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Actions Needed:</span>
+          <span class="result-value" id="actionsNeeded">-</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Training Time:</span>
+          <span class="result-value highlight" id="trainingTimeDisplay">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share URL -->
+    <div class="calc-card">
+      <h2>🔗 Share Calculator</h2>
+      <p style="margin-bottom: 1rem; color: #666;">Share your calculation with others:</p>
+
+      <div class="url-share">
+        <div class="url-box">
+          <input type="text" id="shareURL" readonly placeholder="Click 'Generate Link' to create a shareable URL">
+          <button onclick="generateShareURL()">Generate Link</button>
+          <button class="secondary" onclick="copyShareURL()">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/lib/xp-calculator.js"></script>
+  <script>
+    let skills = [];
+    let currentSkill = null;
+    let actions = [];
+    let selectedAction = null;
+    let calculationResult = null;
+    let activeMultiplier = 1.0;
+
+    // Load skills on page load
+    async function loadSkills() {
+      try {
+        const response = await fetch('/api/calculators/skills');
+        const data = await response.json();
+
+        if (data.success) {
+          skills = data.skills;
+          populateSkillSelect();
+          checkActiveMultipliers();
+          loadURLState();
+        }
+      } catch (error) {
+        console.error('Failed to load skills:', error);
+        document.getElementById('skillSelect').innerHTML = '<option value="">Error loading skills</option>';
+      }
+    }
+
+    function populateSkillSelect() {
+      const select = document.getElementById('skillSelect');
+      select.innerHTML = '<option value="">-- Select a Skill --</option>';
+
+      skills.forEach(skill => {
+        const option = document.createElement('option');
+        option.value = skill.skill_name;
+        option.textContent = `${skill.skill_icon} ${skill.skill_name}`;
+        select.appendChild(option);
+      });
+    }
+
+    async function checkActiveMultipliers() {
+      try {
+        const response = await fetch('/api/calculators/active-multipliers');
+        const data = await response.json();
+
+        if (data.success && data.activeMultipliers.length > 0) {
+          const multiplier = data.activeMultipliers[0];
+          activeMultiplier = multiplier.multiplier_value;
+
+          document.getElementById('activeMultipliers').style.display = 'block';
+          document.getElementById('multiplierText').innerHTML = `
+            ${multiplier.multiplier_name}: ${multiplier.multiplier_value}x XP<br>
+            <small>Ends: ${new Date(multiplier.end_time).toLocaleString()}</small>
+          `;
+        }
+      } catch (error) {
+        console.error('Failed to check multipliers:', error);
+      }
+    }
+
+    // Load skill actions
+    async function loadActions(skillName) {
+      document.getElementById('actionsLoading').style.display = 'block';
+      document.getElementById('actionsList').innerHTML = '';
+
+      try {
+        const response = await fetch(`/api/calculators/skills/${encodeURIComponent(skillName)}/actions`);
+        const data = await response.json();
+
+        if (data.success) {
+          actions = data.actions;
+          displayActions();
+        }
+      } catch (error) {
+        console.error('Failed to load actions:', error);
+      } finally {
+        document.getElementById('actionsLoading').style.display = 'none';
+      }
+    }
+
+    function displayActions() {
+      const container = document.getElementById('actionsList');
+      container.innerHTML = '';
+
+      if (actions.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center;">No actions available for this skill</p>';
+        return;
+      }
+
+      actions.forEach((action, index) => {
+        const item = document.createElement('div');
+        item.className = 'action-item';
+        item.onclick = () => selectAction(index);
+
+        item.innerHTML = `
+          <div class="action-name">${action.action_name}</div>
+          <div class="action-xp">
+            ${action.base_xp} XP | ${action.formattedXPPerHour} XP/hr | ${action.actionsPerHour} actions/hr
+          </div>
+        `;
+
+        container.appendChild(item);
+      });
+    }
+
+    function selectAction(index) {
+      selectedAction = actions[index];
+
+      // Update UI
+      document.querySelectorAll('.action-item').forEach((item, i) => {
+        item.classList.toggle('selected', i === index);
+      });
+
+      calculateTrainingTime();
+    }
+
+    function calculate() {
+      const skillName = document.getElementById('skillSelect').value;
+      const currentLevel = parseInt(document.getElementById('currentLevel').value) || 1;
+      const currentXP = parseInt(document.getElementById('currentXP').value) || null;
+      const targetLevel = parseInt(document.getElementById('targetLevel').value) || 99;
+
+      if (!skillName) {
+        alert('Please select a skill');
+        return;
+      }
+
+      if (targetLevel <= currentLevel) {
+        alert('Target level must be higher than current level');
+        return;
+      }
+
+      // Use XPCalculator functions
+      let actualCurrentLevel = currentLevel;
+      if (currentXP) {
+        actualCurrentLevel = XPCalculator.calculateLevelFromXP(currentXP);
+      }
+
+      const result = XPCalculator.calculateXPNeeded(actualCurrentLevel, targetLevel);
+      calculationResult = result;
+      currentSkill = skillName;
+
+      displayResults(result);
+      loadActions(skillName);
+
+      document.getElementById('currentLevel').value = result.currentLevel;
+      document.getElementById('currentXP').value = result.currentXP;
+    }
+
+    function displayResults(result) {
+      document.getElementById('noResults').style.display = 'none';
+      document.getElementById('results').style.display = 'block';
+
+      document.getElementById('resultCurrentLevel').textContent = result.currentLevel;
+      document.getElementById('resultCurrentXP').textContent = XPCalculator.formatNumber(result.currentXP);
+      document.getElementById('resultTargetLevel').textContent = result.targetLevel;
+      document.getElementById('resultTargetXP').textContent = XPCalculator.formatNumber(result.targetXP);
+      document.getElementById('resultXPNeeded').textContent = XPCalculator.formatNumber(result.xpNeeded);
+
+      const progress = document.getElementById('progressBar');
+      progress.style.width = result.percentComplete + '%';
+      progress.textContent = result.percentComplete + '%';
+    }
+
+    function calculateTrainingTime() {
+      if (!calculationResult || !selectedAction) return;
+
+      const xpPerHour = XPCalculator.calculateXPPerHour(
+        selectedAction.base_xp,
+        selectedAction.actionsPerHour,
+        activeMultiplier
+      );
+
+      const time = XPCalculator.calculateTrainingTime(
+        calculationResult.xpNeeded,
+        xpPerHour
+      );
+
+      const actionsNeeded = XPCalculator.calculateActionsNeeded(
+        calculationResult.xpNeeded,
+        selectedAction.base_xp,
+        activeMultiplier
+      );
+
+      document.getElementById('trainingTime').style.display = 'block';
+      document.getElementById('selectedActionName').textContent = selectedAction.action_name;
+      document.getElementById('xpPerHour').textContent = XPCalculator.formatNumber(xpPerHour);
+      document.getElementById('actionsNeeded').textContent = XPCalculator.formatNumber(actionsNeeded);
+      document.getElementById('trainingTimeDisplay').textContent = time.displayTime;
+    }
+
+    function reset() {
+      document.getElementById('skillSelect').value = '';
+      document.getElementById('currentLevel').value = 1;
+      document.getElementById('currentXP').value = '';
+      document.getElementById('targetLevel').value = 99;
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('noResults').style.display = 'block';
+      document.getElementById('actionsList').innerHTML = '';
+      document.getElementById('trainingTime').style.display = 'none';
+      document.getElementById('shareURL').value = '';
+      calculationResult = null;
+      currentSkill = null;
+      selectedAction = null;
+    }
+
+    function generateShareURL() {
+      const skillName = document.getElementById('skillSelect').value;
+      const currentLevel = document.getElementById('currentLevel').value;
+      const targetLevel = document.getElementById('targetLevel').value;
+
+      if (!skillName) {
+        alert('Please calculate first');
+        return;
+      }
+
+      const state = {
+        skill: skillName,
+        currentLevel: parseInt(currentLevel),
+        targetLevel: parseInt(targetLevel),
+        multiplier: activeMultiplier !== 1.0 ? activeMultiplier : null
+      };
+
+      const queryString = XPCalculator.generateCalculatorURL(state);
+      const shareURL = `${window.location.origin}${window.location.pathname}?${queryString}`;
+
+      document.getElementById('shareURL').value = shareURL;
+    }
+
+    function copyShareURL() {
+      const input = document.getElementById('shareURL');
+      if (!input.value) {
+        alert('Generate a link first');
+        return;
+      }
+
+      input.select();
+      document.execCommand('copy');
+      alert('URL copied to clipboard!');
+    }
+
+    function loadURLState() {
+      const params = XPCalculator.parseCalculatorURL(window.location.search);
+
+      if (params.skill) {
+        document.getElementById('skillSelect').value = params.skill;
+      }
+      if (params.currentLevel) {
+        document.getElementById('currentLevel').value = params.currentLevel;
+      }
+      if (params.currentXP) {
+        document.getElementById('currentXP').value = params.currentXP;
+      }
+      if (params.targetLevel) {
+        document.getElementById('targetLevel').value = params.targetLevel;
+      }
+
+      // Auto-calculate if params present
+      if (params.skill && (params.currentLevel || params.currentXP) && params.targetLevel) {
+        calculate();
+      }
+    }
+
+    // Event listeners
+    document.getElementById('skillSelect').addEventListener('change', (e) => {
+      if (e.target.value && calculationResult) {
+        loadActions(e.target.value);
+        currentSkill = e.target.value;
+      }
+    });
+
+    // Load on page load
+    loadSkills();
+  </script>
+</body>
+</html>

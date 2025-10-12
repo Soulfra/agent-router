@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Portfolio Voting - Earn USDC</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #fff;
+    }
+
+    .header {
+      padding: 20px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .header h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .earnings-bar {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1em;
+    }
+
+    .earnings-bar .total {
+      font-weight: bold;
+      color: #4ade80;
+      font-size: 1.3em;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .card-stack {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 600px;
+    }
+
+    .domain-card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      color: #333;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .domain-card.dragging {
+      cursor: grabbing;
+    }
+
+    .domain-card.swipe-left {
+      transform: translateX(-150%) rotate(-30deg);
+      opacity: 0;
+    }
+
+    .domain-card.swipe-right {
+      transform: translateX(150%) rotate(30deg);
+      opacity: 0;
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .brand-name {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--primary-color, #667eea), var(--secondary-color, #764ba2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .domain-name {
+      font-size: 1.2em;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .tagline {
+      font-size: 1.1em;
+      color: #888;
+      font-style: italic;
+    }
+
+    .card-body {
+      margin: 30px 0;
+    }
+
+    .description {
+      font-size: 1em;
+      line-height: 1.6;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .features {
+      list-style: none;
+      margin: 20px 0;
+    }
+
+    .features li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+      color: #555;
+    }
+
+    .features li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #4ade80;
+      font-weight: bold;
+    }
+
+    .card-footer {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      right: 40px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 10px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 0.85em;
+      color: #888;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      font-size: 2em;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      transform: scale(1.1);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-dislike {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-like {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
+    }
+
+    .btn-feedback {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      box-shadow: 0 5px 20px rgba(67, 233, 123, 0.4);
+      font-size: 1.5em;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    .empty-state p {
+      font-size: 1.2em;
+      opacity: 0.8;
+      margin-bottom: 30px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.1em;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      color: #333;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #667eea;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1em;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1em;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .reward-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      padding: 30px 50px;
+      border-radius: 20px;
+      font-size: 2em;
+      font-weight: bold;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      z-index: 2000;
+      transition: transform 0.3s ease;
+    }
+
+    .reward-popup.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .wallet-section {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px 20px;
+      text-align: center;
+    }
+
+    .wallet-section input {
+      padding: 10px 15px;
+      border-radius: 10px;
+      border: none;
+      width: 100%;
+      max-width: 400px;
+      font-size: 1em;
+    }
+
+    .wallet-section .btn-connect {
+      margin-top: 10px;
+      padding: 10px 30px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .card-stack {
+        height: 500px;
+      }
+
+      .domain-card {
+        padding: 30px;
+      }
+
+      .brand-name {
+        font-size: 2em;
+      }
+
+      .btn {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Domain Portfolio Voting</h1>
+    <p>Swipe & earn USDC for your opinions</p>
+  </div>
+
+  <div class="wallet-section" id="walletSection">
+    <input type="text" id="walletInput" placeholder="Enter your wallet address (optional)" />
+    <button class="btn-connect" onclick="saveWallet()">Save Wallet</button>
+  </div>
+
+  <div class="earnings-bar">
+    <div>Votes: <span id="voteCount">0</span></div>
+    <div class="total">Earned: $<span id="totalEarned">0.00</span> USDC</div>
+  </div>
+
+  <div class="container">
+    <div class="card-stack" id="cardStack">
+      <!-- Cards will be loaded here -->
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <h2>All Done!</h2>
+      <p>You've voted on all domains in the portfolio.</p>
+      <p class="total">Total Earned: $<span id="finalEarned">0.00</span> USDC</p>
+      <button class="btn-primary" onclick="showLeaderboard()">View Leaderboard</button>
+      <button class="btn-primary" style="margin-left: 10px;" onclick="location.reload()">Start Over</button>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div class="modal" id="feedbackModal">
+    <div class="modal-content">
+      <h2>Share Your Thoughts</h2>
+      <p>Earn bonus USDC for detailed feedback!</p>
+
+      <div class="form-group">
+        <label>Your Feedback (min 10 characters)</label>
+        <textarea id="feedbackText" placeholder="What do you think about this domain? What would you use it for? Any suggestions?"></textarea>
+        <small style="color: #888;">
+          <strong>Earn more:</strong>
+          25+ words = $2.50,
+          50+ words = $3.50,
+          100+ words = $5.00
+        </small>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeFeedbackModal()">Cancel</button>
+        <button class="btn-submit" onclick="submitFeedback()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reward Popup -->
+  <div class="reward-popup" id="rewardPopup"></div>
+
+  <script>
+    const API_BASE = '/api/domain-voting';
+    let sessionId = localStorage.getItem('voting_session_id') || generateSessionId();
+    let walletAddress = localStorage.getItem('wallet_address') || null;
+    let currentDomain = null;
+    let votedDomainIds = [];
+    let totalEarned = 0;
+    let voteCount = 0;
+    let currentCard = null;
+
+    // Touch/drag tracking
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+
+    function generateSessionId() {
+      const id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('voting_session_id', id);
+      return id;
+    }
+
+    function saveWallet() {
+      const input = document.getElementById('walletInput');
+      walletAddress = input.value.trim();
+      if (walletAddress) {
+        localStorage.setItem('wallet_address', walletAddress);
+        showReward('Wallet Saved!', 1000);
+      }
+    }
+
+    async function loadNextDomain() {
+      try {
+        const excludeIds = votedDomainIds.join(',');
+        const response = await fetch(`${API_BASE}/card?sessionId=${sessionId}&excludeIds=${excludeIds}`);
+        const data = await response.json();
+
+        if (!data.success || !data.domain) {
+          showEmptyState();
+          return;
+        }
+
+        currentDomain = data.domain;
+        renderDomainCard(data.domain);
+      } catch (error) {
+        console.error('Error loading domain:', error);
+        alert('Failed to load domain. Please try again.');
+      }
+    }
+
+    function renderDomainCard(domain) {
+      const card = document.createElement('div');
+      card.className = 'domain-card';
+      card.id = 'currentCard';
+
+      // Set CSS variables for colors
+      card.style.setProperty('--primary-color', domain.primary_color || '#667eea');
+      card.style.setProperty('--secondary-color', domain.secondary_color || '#764ba2');
+
+      const features = domain.key_features || [];
+      const featuresList = features.length > 0
+        ? `<ul class="features">${features.map(f => `<li>${f}</li>`).join('')}</ul>`
+        : '';
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="brand-name">${domain.brand_name}</div>
+          <div class="domain-name">${domain.domain_name}</div>
+          <div class="tagline">${domain.brand_tagline || ''}</div>
+        </div>
+
+        <div class="card-body">
+          <div class="description">${domain.description || 'No description available.'}</div>
+          ${featuresList}
+        </div>
+
+        <div class="card-footer">
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">${domain.stats.total_votes}</div>
+              <div class="stat-label">Votes</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${domain.stats.like_percentage}%</div>
+              <div class="stat-label">Liked</div>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn btn-dislike" onclick="vote('dislike')">✗</button>
+            <button class="btn btn-feedback" onclick="openFeedbackModal()">💬</button>
+            <button class="btn btn-like" onclick="vote('like')">♥</button>
+          </div>
+        </div>
+      `;
+
+      // Add touch/mouse events for swiping
+      setupCardDrag(card);
+
+      const stack = document.getElementById('cardStack');
+      stack.innerHTML = '';
+      stack.appendChild(card);
+      currentCard = card;
+    }
+
+    function setupCardDrag(card) {
+      card.addEventListener('mousedown', handleDragStart);
+      card.addEventListener('touchstart', handleDragStart);
+
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('touchmove', handleDragMove);
+
+      document.addEventListener('mouseup', handleDragEnd);
+      document.addEventListener('touchend', handleDragEnd);
+    }
+
+    function handleDragStart(e) {
+      isDragging = true;
+      startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+      currentCard.classList.add('dragging');
+    }
+
+    function handleDragMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+
+      currentX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+      const diff = currentX - startX;
+      const rotation = diff / 10;
+
+      if (currentCard) {
+        currentCard.style.transform = `translateX(${diff}px) rotate(${rotation}deg)`;
+        currentCard.style.transition = 'none';
+      }
+    }
+
+    function handleDragEnd(e) {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const diff = currentX - startX;
+
+      if (Math.abs(diff) > 100) {
+        // Swipe detected
+        if (diff > 0) {
+          vote('like');
+        } else {
+          vote('dislike');
+        }
+      } else {
+        // Reset card position
+        if (currentCard) {
+          currentCard.style.transform = '';
+          currentCard.style.transition = 'transform 0.3s ease';
+        }
+      }
+
+      currentCard.classList.remove('dragging');
+    }
+
+    async function vote(direction) {
+      if (!currentDomain) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            domainId: currentDomain.domain_id,
+            voteDirection: direction,
+            walletAddress,
+            deviceType: /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          votedDomainIds.push(currentDomain.domain_id);
+          voteCount++;
+          totalEarned = data.totalPendingRewards;
+
+          updateUI();
+          showReward(`+$${data.earnedThisVote} USDC`);
+
+          // Animate card away
+          if (currentCard) {
+            currentCard.classList.add(direction === 'like' ? 'swipe-right' : 'swipe-left');
+          }
+
+          setTimeout(() => {
+            loadNextDomain();
+          }, 300);
+        } else {
+          alert(data.error || 'Failed to submit vote');
+        }
+      } catch (error) {
+        console.error('Vote error:', error);
+        alert('Failed to submit vote. Please try again.');
+      }
+    }
+
+    function openFeedbackModal() {
+      document.getElementById('feedbackModal').classList.add('show');
+    }
+
+    function closeFeedbackModal() {
+      document.getElementById('feedbackModal').classList.remove('show');
+      document.getElementById('feedbackText').value = '';
+    }
+
+    async function submitFeedback() {
+      const feedbackText = document.getElementById('feedbackText').value.trim();
+
+      if (feedbackText.length < 10) {
+        alert('Feedback must be at least 10 characters long');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            domainId: currentDomain.domain_id,
+            feedbackText,
+            feedbackCategory: 'general',
+            walletAddress
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          totalEarned = data.totalPendingRewards;
+          updateUI();
+          showReward(`+$${data.earnedThisFeedback} USDC Bonus!`, 2000);
+          closeFeedbackModal();
+        } else {
+          alert(data.error || 'Failed to submit feedback');
+        }
+      } catch (error) {
+        console.error('Feedback error:', error);
+        alert('Failed to submit feedback. Please try again.');
+      }
+    }
+
+    function showReward(message, duration = 1500) {
+      const popup = document.getElementById('rewardPopup');
+      popup.textContent = message;
+      popup.classList.add('show');
+
+      setTimeout(() => {
+        popup.classList.remove('show');
+      }, duration);
+    }
+
+    function updateUI() {
+      document.getElementById('voteCount').textContent = voteCount;
+      document.getElementById('totalEarned').textContent = totalEarned.toFixed(2);
+      document.getElementById('finalEarned').textContent = totalEarned.toFixed(2);
+    }
+
+    function showEmptyState() {
+      document.getElementById('cardStack').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'block';
+    }
+
+    function showLeaderboard() {
+      window.location.href = '/domain-leaderboard.html';
+    }
+
+    // Load wallet on startup
+    if (walletAddress) {
+      document.getElementById('walletInput').value = walletAddress;
+    }
+
+    // Load pending rewards
+    async function loadPendingRewards() {
+      try {
+        const response = await fetch(`${API_BASE}/pending-rewards/${sessionId}`);
+        const data = await response.json();
+        if (data.success) {
+          totalEarned = data.totalPendingRewards;
+          voteCount = data.breakdown.votes.count;
+          updateUI();
+        }
+      } catch (error) {
+        console.error('Error loading rewards:', error);
+      }
+    }
+
+    // Initialize
+    loadPendingRewards();
+    loadNextDomain();
+  </script>
+</body>
+</html>

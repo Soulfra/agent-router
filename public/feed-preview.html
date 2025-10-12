@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS Feed Preview</title>
+
+  <style>
+    :root {
+      --primary: #6c5ce7;
+      --secondary: #a29bfe;
+      --success: #00b894;
+      --error: #d63031;
+      --warning: #fdcb6e;
+      --info: #0984e3;
+      --bg-dark: #2d3436;
+      --bg-light: #dfe6e9;
+      --text-dark: #2d3436;
+      --text-light: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text-dark);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-dark);
+      opacity: 0.8;
+      margin-bottom: 1.5rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5f4fd1;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #918ce6;
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #00a885;
+      transform: translateY(-2px);
+    }
+
+    /* Search Bar */
+    .search-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+
+    .search-container.active {
+      border: 2px solid var(--primary);
+      padding: calc(1.5rem - 2px);
+    }
+
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      color: var(--primary);
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 0.75rem 3rem 0.75rem 3rem;
+      border: 2px solid rgba(108, 92, 231, 0.2);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+    }
+
+    .search-input::placeholder {
+      color: #95a5a6;
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #95a5a6;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      display: none;
+      transition: color 0.2s;
+    }
+
+    .search-clear:hover {
+      color: var(--error);
+    }
+
+    .search-clear.visible {
+      display: block;
+    }
+
+    .search-stats {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dark);
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-dark);
+      opacity: 0.7;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Feed */
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: all 0.2s;
+      border-left: 4px solid var(--primary);
+    }
+
+    .message-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .message-card.chat { border-left-color: #6c5ce7; }
+    .message-card.agent_response { border-left-color: #0984e3; }
+    .message-card.system { border-left-color: #636e72; }
+    .message-card.error { border-left-color: #d63031; }
+    .message-card.utility_execution { border-left-color: #00b894; }
+    .message-card.voice_note { border-left-color: #e74c3c; }
+    .message-card.code_execution { border-left-color: #fdcb6e; }
+
+    .message-header {
+      padding: 1rem 1.5rem;
+      background: rgba(0, 0, 0, 0.02);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .message-type {
+      font-weight: 600;
+      text-transform: capitalize;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .message-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-dark);
+      opacity: 0.7;
+    }
+
+    .message-content {
+      padding: 1.5rem;
+      line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .message-content.collapsed {
+      max-height: 100px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .message-content.collapsed::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: linear-gradient(transparent, rgba(255, 255, 255, 0.95));
+    }
+
+    .message-hash {
+      padding: 0.5rem 1.5rem;
+      background: rgba(0, 0, 0, 0.02);
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--text-dark);
+      opacity: 0.6;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .expand-icon {
+      transition: transform 0.2s;
+    }
+
+    .expand-icon.expanded {
+      transform: rotate(180deg);
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .empty h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .empty p {
+      color: var(--text-dark);
+      opacity: 0.7;
+    }
+
+    /* Error state */
+    .error-message {
+      background: var(--error);
+      color: white;
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>📡 CalOS Feed Preview</h1>
+      <p>Styled view of your activity feed • Perfect Recall enabled</p>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="refresh-btn">🔄 Refresh</button>
+        <a href="/feed/rss" target="_blank" class="btn btn-secondary">📡 Subscribe RSS</a>
+        <a href="/feed.html" class="btn btn-success">← Back to Feed</a>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container" id="search-container">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          id="search-input"
+          placeholder="Search messages... (try 'type:chat' or '@gpt4')"
+          autocomplete="off"
+        >
+        <button class="search-clear" id="search-clear" title="Clear search">✕</button>
+      </div>
+      <div class="search-stats" id="search-stats"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="total-messages">0</div>
+        <div class="stat-label">Total Messages</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="message-types">0</div>
+        <div class="stat-label">Message Types</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="last-updated">Never</div>
+        <div class="stat-label">Last Updated</div>
+      </div>
+    </div>
+
+    <!-- Error message (hidden by default) -->
+    <div id="error-container" style="display: none;">
+      <div class="error-message" id="error-message"></div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Loading feed...</div>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed" id="feed" style="display: none;"></div>
+
+    <!-- Empty state -->
+    <div class="empty" id="empty" style="display: none;">
+      <h2>No Messages Yet</h2>
+      <p>Send some messages in the feed to see them here!</p>
+      <br>
+      <a href="/feed.html" class="btn btn-primary">Go to Feed</a>
+    </div>
+  </div>
+
+  <script>
+    let messages = [];
+    let filteredMessages = [];
+    let expandedMessages = new Set();
+    let searchQuery = '';
+    let searchTimeout = null;
+
+    // Filter messages based on search query
+    function filterMessages(query) {
+      if (!query || query.trim() === '') {
+        filteredMessages = messages;
+        return;
+      }
+
+      const lowerQuery = query.toLowerCase().trim();
+
+      filteredMessages = messages.filter(msg => {
+        // Advanced search: type:chat
+        if (lowerQuery.startsWith('type:')) {
+          const typeQuery = lowerQuery.replace('type:', '').trim();
+          return msg.type && msg.type.toLowerCase().includes(typeQuery);
+        }
+
+        // Advanced search: @agent
+        if (lowerQuery.startsWith('@')) {
+          const agentQuery = lowerQuery.substring(1);
+          return msg.agent && msg.agent.toLowerCase().includes(agentQuery);
+        }
+
+        // Advanced search: user:name
+        if (lowerQuery.startsWith('user:')) {
+          const userQuery = lowerQuery.replace('user:', '').trim();
+          return msg.user && msg.user.toLowerCase().includes(userQuery);
+        }
+
+        // Regular search: search across all fields
+        const searchableText = [
+          msg.message || '',
+          msg.formattedHtml || '',
+          msg.type || '',
+          msg.user || '',
+          msg.agent || '',
+          msg.timestamp || ''
+        ].join(' ').toLowerCase();
+
+        return searchableText.includes(lowerQuery);
+      });
+    }
+
+    // Update search UI
+    function updateSearchUI() {
+      const searchContainer = document.getElementById('search-container');
+      const searchClear = document.getElementById('search-clear');
+      const searchStats = document.getElementById('search-stats');
+
+      // Show/hide clear button
+      if (searchQuery.length > 0) {
+        searchClear.classList.add('visible');
+        searchContainer.classList.add('active');
+      } else {
+        searchClear.classList.remove('visible');
+        searchContainer.classList.remove('active');
+      }
+
+      // Update search stats
+      if (searchQuery.length > 0 && messages.length > 0) {
+        const matchCount = filteredMessages.length;
+        const totalCount = messages.length;
+        if (matchCount === 0) {
+          searchStats.textContent = `No results found`;
+        } else if (matchCount === totalCount) {
+          searchStats.textContent = `Showing all ${totalCount} messages`;
+        } else {
+          searchStats.textContent = `Showing ${matchCount} of ${totalCount} messages`;
+        }
+      } else {
+        searchStats.textContent = '';
+      }
+    }
+
+    // Handle search input
+    function handleSearch(query) {
+      searchQuery = query;
+      filterMessages(query);
+      updateSearchUI();
+      renderFeed();
+    }
+
+    // Load feed
+    async function loadFeed() {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('feed').style.display = 'none';
+        document.getElementById('empty').style.display = 'none';
+        document.getElementById('error-container').style.display = 'none';
+
+        const response = await fetch('/feed/json');
+        const data = await response.json();
+
+        if (data.status !== 'ok') {
+          throw new Error(data.message || 'Failed to load feed');
+        }
+
+        messages = data.messages || [];
+        filteredMessages = messages; // Initialize filtered messages
+
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
+
+        if (messages.length === 0) {
+          document.getElementById('empty').style.display = 'block';
+          return;
+        }
+
+        // Show feed
+        document.getElementById('feed').style.display = 'flex';
+        renderFeed();
+        updateStats(data);
+        updateSearchUI(); // Update search stats on load
+
+      } catch (error) {
+        console.error('Failed to load feed:', error);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-container').style.display = 'block';
+        document.getElementById('error-message').textContent = `Error: ${error.message}`;
+      }
+    }
+
+    // Render feed
+    function renderFeed() {
+      const feedEl = document.getElementById('feed');
+      const emptyEl = document.getElementById('empty');
+      feedEl.innerHTML = '';
+
+      // Show empty state if no filtered results
+      if (filteredMessages.length === 0) {
+        feedEl.style.display = 'none';
+        emptyEl.style.display = 'block';
+        emptyEl.innerHTML = `
+          <h2>No Results Found</h2>
+          <p>${searchQuery ? `No messages match "${searchQuery}"` : 'No messages in feed'}</p>
+          <br>
+          ${searchQuery ? '<button class="btn btn-primary" onclick="document.getElementById(\'search-clear\').click()">Clear Search</button>' : '<a href="/feed.html" class="btn btn-primary">Go to Feed</a>'}
+        `;
+        return;
+      }
+
+      // Hide empty state and show feed
+      emptyEl.style.display = 'none';
+      feedEl.style.display = 'flex';
+
+      // Render filtered messages
+      filteredMessages.forEach((msg, index) => {
+        // Find original index in messages array for expanded state tracking
+        const originalIndex = messages.indexOf(msg);
+        const card = createMessageCard(msg, originalIndex);
+        feedEl.appendChild(card);
+      });
+    }
+
+    // Create message card
+    function createMessageCard(msg, index) {
+      const card = document.createElement('div');
+      card.className = `message-card ${msg.type || 'unknown'}`;
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'message-header';
+
+      const type = document.createElement('div');
+      type.className = 'message-type';
+      type.innerHTML = `
+        ${getTypeIcon(msg.type)}
+        ${(msg.type || 'unknown').replace('_', ' ')}
+        ${msg.user ? `• ${msg.user}` : ''}
+        ${msg.agent ? `• ${msg.agent}` : ''}
+      `;
+
+      const meta = document.createElement('div');
+      meta.className = 'message-meta';
+      meta.innerHTML = `
+        <span>${formatTime(msg.timestamp)}</span>
+        <span class="expand-icon ${expandedMessages.has(index) ? 'expanded' : ''}">▼</span>
+      `;
+
+      header.appendChild(type);
+      header.appendChild(meta);
+
+      // Content
+      const content = document.createElement('div');
+      content.className = `message-content ${expandedMessages.has(index) ? '' : 'collapsed'}`;
+
+      if (msg.formattedHtml) {
+        content.innerHTML = msg.formattedHtml;
+      } else {
+        content.textContent = msg.message || '(no content)';
+      }
+
+      // Hash
+      const hash = document.createElement('div');
+      hash.className = 'message-hash';
+      hash.textContent = msg.hash ? `Hash: ${msg.hash}` : 'No hash';
+
+      // Toggle expand/collapse
+      header.addEventListener('click', () => {
+        if (expandedMessages.has(index)) {
+          expandedMessages.delete(index);
+          content.classList.add('collapsed');
+          meta.querySelector('.expand-icon').classList.remove('expanded');
+        } else {
+          expandedMessages.add(index);
+          content.classList.remove('collapsed');
+          meta.querySelector('.expand-icon').classList.add('expanded');
+        }
+      });
+
+      card.appendChild(header);
+      card.appendChild(content);
+      if (msg.hash) {
+        card.appendChild(hash);
+      }
+
+      return card;
+    }
+
+    // Get type icon
+    function getTypeIcon(type) {
+      const icons = {
+        chat: '💬',
+        agent_response: '🤖',
+        system: '⚙️',
+        error: '❌',
+        utility_execution: '⚡',
+        voice_note: '🎤',
+        code_execution: '💻'
+      };
+      return icons[type] || '📝';
+    }
+
+    // Format time
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+
+    // Update stats
+    function updateStats(data) {
+      document.getElementById('total-messages').textContent = messages.length;
+
+      const types = new Set(messages.map(m => m.type));
+      document.getElementById('message-types').textContent = types.size;
+
+      const lastUpdated = data.feed?.lastUpdated || new Date().toISOString();
+      document.getElementById('last-updated').textContent = formatTime(lastUpdated);
+    }
+
+    // Refresh button
+    document.getElementById('refresh-btn').addEventListener('click', loadFeed);
+
+    // Search input with debouncing
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        handleSearch(e.target.value);
+      }, 150); // 150ms debounce
+    });
+
+    // Clear search button
+    document.getElementById('search-clear').addEventListener('click', () => {
+      searchInput.value = '';
+      handleSearch('');
+      searchInput.focus();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+F or Cmd+F or / to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        searchInput.focus();
+      } else if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+
+      // Escape to clear search (if search input is focused)
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        if (searchInput.value) {
+          searchInput.value = '';
+          handleSearch('');
+        } else {
+          searchInput.blur();
+        }
+      }
+    });
+
+    // Load on page load
+    loadFeed();
+  </script>
+</body>
+</html>

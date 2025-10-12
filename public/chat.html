@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CalOS Chat - AI Assistant</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f3460;
+      --text-primary: #eee;
+      --text-secondary: #aaa;
+      --accent: #00d4ff;
+      --accent-hover: #00b8e6;
+      --user-msg: #0f3460;
+      --ai-msg: #16213e;
+      --border: #2a2a4e;
+      --success: #00ff88;
+      --error: #ff3860;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .status.connected {
+      background: var(--success);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .model-selector {
+      padding: 0.5rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .model-selector:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    /* Chat Area */
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      margin-bottom: 1.5rem;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-header {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .message-content {
+      padding: 1rem;
+      border-radius: 1rem;
+      line-height: 1.6;
+      max-width: 85%;
+    }
+
+    .message.user .message-content {
+      background: var(--user-msg);
+      margin-left: auto;
+      border-bottom-right-radius: 0.25rem;
+    }
+
+    .message.ai .message-content {
+      background: var(--ai-msg);
+      border-bottom-left-radius: 0.25rem;
+      border-left: 3px solid var(--accent);
+    }
+
+    .message-content code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    .message-content pre {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 0.5rem 0;
+    }
+
+    .message-content pre code {
+      background: none;
+      padding: 0;
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      padding: 0.5rem;
+    }
+
+    .typing-indicator.show {
+      display: flex;
+    }
+
+    .typing-indicator .dots {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .typing-indicator .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce 1.4s infinite;
+    }
+
+    .typing-indicator .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-indicator .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-8px); }
+    }
+
+    /* Input Area */
+    .input-area {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 1rem;
+      flex-shrink: 0;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 50px;
+      max-height: 150px;
+      padding: 0.875rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 1.5rem;
+      color: var(--text-primary);
+      font-size: 1rem;
+      resize: none;
+      font-family: inherit;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .send-button {
+      padding: 0.875rem 1.5rem;
+      background: var(--accent);
+      color: var(--bg-primary);
+      border: none;
+      border-radius: 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .send-button:hover {
+      background: var(--accent-hover);
+    }
+
+    .send-button:disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .quick-actions::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .quick-actions::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .quick-action {
+      padding: 0.5rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .quick-action:hover {
+      background: var(--accent);
+      color: var(--bg-primary);
+      border-color: var(--accent);
+    }
+
+    /* Error Message */
+    .error-message {
+      background: var(--error);
+      color: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile Optimization */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1rem;
+      }
+
+      .model-selector {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+      }
+
+      .message-content {
+        max-width: 90%;
+        font-size: 0.9375rem;
+      }
+
+      .chat-container {
+        padding: 0.75rem;
+      }
+    }
+
+    /* Scrollbar */
+    .chat-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-container::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>
+      <span class="status" id="status"></span>
+      CalOS Chat
+    </h1>
+    <select class="model-selector" id="modelSelector">
+      <option value="">Loading models...</option>
+    </select>
+  </div>
+
+  <div class="error-message" id="errorMessage"></div>
+
+  <div class="chat-container" id="chatContainer">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Connecting to Ollama...</div>
+    </div>
+  </div>
+
+  <div class="typing-indicator" id="typingIndicator">
+    <span>AI is thinking</span>
+    <div class="dots">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="quick-actions" id="quickActions" style="display: none;">
+      <button class="quick-action" data-question="How do I implement JWT authentication?">🔐 JWT Auth</button>
+      <button class="quick-action" data-question="Show me the database schema for users">💾 User Schema</button>
+      <button class="quick-action" data-question="How do I implement WebSocket messaging?">💬 WebSocket</button>
+      <button class="quick-action" data-question="How do I set up structured logging?">📋 Logging</button>
+      <button class="quick-action" data-question="How do I implement semantic search?">🔍 Search</button>
+    </div>
+    <div class="input-container">
+      <div class="input-wrapper">
+        <textarea
+          id="messageInput"
+          placeholder="Ask about architecture, auth, messaging, database..."
+          rows="1"
+        ></textarea>
+      </div>
+      <button class="send-button" id="sendButton" disabled>Send</button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin.replace(':5001', ':11434');
+    let currentModel = 'calos-expert';
+    let isGenerating = false;
+
+    const elements = {
+      chatContainer: document.getElementById('chatContainer'),
+      messageInput: document.getElementById('messageInput'),
+      sendButton: document.getElementById('sendButton'),
+      modelSelector: document.getElementById('modelSelector'),
+      status: document.getElementById('status'),
+      typingIndicator: document.getElementById('typingIndicator'),
+      errorMessage: document.getElementById('errorMessage'),
+      loading: document.getElementById('loading'),
+      quickActions: document.getElementById('quickActions')
+    };
+
+    // Auto-resize textarea
+    elements.messageInput.addEventListener('input', () => {
+      elements.messageInput.style.height = 'auto';
+      elements.messageInput.style.height = elements.messageInput.scrollHeight + 'px';
+      elements.sendButton.disabled = !elements.messageInput.value.trim() || isGenerating;
+    });
+
+    // Send on Enter (Shift+Enter for new line)
+    elements.messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!isGenerating && elements.messageInput.value.trim()) {
+          sendMessage();
+        }
+      }
+    });
+
+    elements.sendButton.addEventListener('click', sendMessage);
+    elements.modelSelector.addEventListener('change', (e) => {
+      currentModel = e.target.value;
+      localStorage.setItem('selectedModel', currentModel);
+    });
+
+    // Quick actions
+    elements.quickActions.addEventListener('click', (e) => {
+      if (e.target.classList.contains('quick-action')) {
+        const question = e.target.dataset.question;
+        elements.messageInput.value = question;
+        elements.messageInput.focus();
+        sendMessage();
+      }
+    });
+
+    // Initialize
+    async function init() {
+      try {
+        // Load models
+        const response = await fetch(`${API_BASE}/api/tags`);
+        const data = await response.json();
+
+        elements.modelSelector.innerHTML = '';
+        data.models.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model.name;
+          option.textContent = model.name;
+          elements.modelSelector.appendChild(option);
+        });
+
+        // Select calos-expert if available, otherwise first model
+        const savedModel = localStorage.getItem('selectedModel');
+        const hasCalosExpert = data.models.some(m => m.name === 'calos-expert');
+
+        if (hasCalosExpert) {
+          currentModel = 'calos-expert';
+          elements.modelSelector.value = currentModel;
+        } else if (savedModel && data.models.some(m => m.name === savedModel)) {
+          currentModel = savedModel;
+          elements.modelSelector.value = currentModel;
+        } else {
+          currentModel = data.models[0].name;
+          elements.modelSelector.value = currentModel;
+        }
+
+        elements.status.classList.add('connected');
+        elements.loading.style.display = 'none';
+        elements.quickActions.style.display = 'flex';
+        elements.messageInput.focus();
+
+        // Show welcome message
+        addMessage('ai', `Hello! I'm your CalOS AI assistant. I can help you with:\n\n• **Architecture & System Design**\n• **Authentication** (JWT, OAuth2, MFA)\n• **Real-Time Messaging** (WebSocket)\n• **Database Design** (PostgreSQL, Redis)\n• **Search** (Full-text, Semantic, Hybrid)\n• **Logging & Monitoring**\n• **Testing & Deployment**\n\nAsk me anything about building production software!`);
+
+      } catch (error) {
+        showError('Failed to connect to Ollama. Make sure it\'s running on port 11434.');
+        elements.status.classList.remove('connected');
+        elements.loading.textContent = 'Ollama not available';
+      }
+    }
+
+    async function sendMessage() {
+      const message = elements.messageInput.value.trim();
+      if (!message || isGenerating) return;
+
+      // Add user message
+      addMessage('user', message);
+      elements.messageInput.value = '';
+      elements.messageInput.style.height = 'auto';
+      elements.sendButton.disabled = true;
+      isGenerating = true;
+
+      // Show typing indicator
+      elements.typingIndicator.classList.add('show');
+      scrollToBottom();
+
+      try {
+        const response = await fetch(`${API_BASE}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: currentModel,
+            prompt: message,
+            stream: false
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to generate response');
+
+        const data = await response.json();
+
+        // Hide typing indicator
+        elements.typingIndicator.classList.remove('show');
+
+        // Add AI response
+        addMessage('ai', data.response);
+
+      } catch (error) {
+        elements.typingIndicator.classList.remove('show');
+        showError('Failed to generate response. ' + error.message);
+        addMessage('ai', 'Sorry, I encountered an error. Please try again.');
+      } finally {
+        isGenerating = false;
+        elements.sendButton.disabled = false;
+        elements.messageInput.focus();
+      }
+    }
+
+    function addMessage(role, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}`;
+
+      const header = document.createElement('div');
+      header.className = 'message-header';
+      header.textContent = role === 'user' ? 'You' : currentModel;
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+
+      // Parse markdown-style code blocks
+      content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        return `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
+      });
+
+      // Parse inline code
+      content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      // Parse bold
+      content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+      // Parse newlines
+      content = content.replace(/\n/g, '<br>');
+
+      contentDiv.innerHTML = content;
+
+      messageDiv.appendChild(header);
+      messageDiv.appendChild(contentDiv);
+      elements.chatContainer.appendChild(messageDiv);
+
+      scrollToBottom();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+      setTimeout(() => {
+        elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+      }, 100);
+    }
+
+    function showError(message) {
+      elements.errorMessage.textContent = message;
+      elements.errorMessage.classList.add('show');
+      setTimeout(() => {
+        elements.errorMessage.classList.remove('show');
+      }, 5000);
+    }
+
+    // Initialize on load
+    init();
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => {
+        console.log('Service worker registration failed:', err);
+      });
+    }
+  </script>
+</body>
+</html>

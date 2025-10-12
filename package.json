@@ -1,0 +1,47 @@
+{
+  "name": "calos-agent-router",
+  "version": "1.1.0",
+  "description": "CalOS Agent Router - AI-powered routing system with lofi streaming, ELO voting, and real-time collaboration",
+  "main": "router.js",
+  "scripts": {
+    "start": "node router.js",
+    "dev": "nodemon router.js"
+  },
+  "keywords": [
+    "ai",
+    "router",
+    "agent",
+    "calos"
+  ],
+  "author": "Cal",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.65.0",
+    "axios": "^1.12.2",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^9.2.2",
+    "body-parser": "^1.20.2",
+    "cheerio": "^1.0.0-rc.12",
+    "chokidar": "^3.5.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-iiif": "^1.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "openai": "^4.20.1",
+    "pg": "^8.11.3",
+    "pgvector": "^0.1.8",
+    "prom-client": "^15.1.3",
+    "puppeteer": "^21.6.1",
+    "rss": "^1.2.2",
+    "sharp": "^0.34.4",
+    "stripe": "^19.1.0",
+    "uuid": "^8.3.2",
+    "ws": "^8.14.2",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

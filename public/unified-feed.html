@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS - Unified Feed</title>
+  <link rel="stylesheet" href="/unified-feed.css">
+  <link rel="stylesheet" href="widgets/world-clock.css">
+  <link rel="stylesheet" href="widgets/system-status.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <h1>🌐 CalOS</h1>
+      <div class="header-actions">
+        <button id="rss-btn" class="icon-btn" title="Subscribe to RSS Feed">
+          <span>📡</span> RSS
+        </button>
+        <div class="status-indicator" id="connection-status">
+          <span class="dot offline"></span>
+          <span class="text">Connecting...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Sidebar (Messages) -->
+    <aside class="sidebar" id="messages-sidebar">
+      <div class="sidebar-header">
+        <h3>📬 Messages</h3>
+      </div>
+      <div class="messages-list" id="messages-list">
+        <!-- Archived sessions appear here -->
+        <div class="empty-state">No archived messages yet</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      <!-- Feed View -->
+      <div class="view" id="feed-view">
+        <div class="feed-container">
+          <div class="activity-wall" id="activity-wall">
+            <!-- Activity posts appear here -->
+          </div>
+
+          <!-- Live Chat Input (appears at bottom when in feed view) -->
+          <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+              <input
+                type="text"
+                id="chat-input"
+                placeholder="Type a message..."
+                autocomplete="off"
+              />
+              <button id="send-btn" class="send-btn">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Church View -->
+      <div class="view hidden" id="church-view">
+        <div class="church-container">
+          <h2>⛪ Church - Model Congregation</h2>
+          <p class="subtitle">Ask a question and all agents will respond</p>
+
+          <div class="church-input-container">
+            <textarea
+              id="church-question"
+              placeholder="Ask the congregation..."
+              rows="3"
+            ></textarea>
+            <button id="church-send-btn" class="send-btn">Ask All Agents</button>
+          </div>
+
+          <div class="agents-grid" id="agents-grid">
+            <!-- Agent response cards appear here -->
+            <div class="empty-state">No responses yet. Ask a question to see all agents respond.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div class="view hidden" id="settings-view">
+        <div class="settings-container">
+          <h2>⚙️ Settings</h2>
+
+          <div class="setting-group">
+            <h3>System</h3>
+            <div class="setting-item">
+              <label>Auto-archive after inactivity</label>
+              <select id="archive-timeout">
+                <option value="300000">5 minutes</option>
+                <option value="600000">10 minutes</option>
+                <option value="900000">15 minutes</option>
+                <option value="1800000">30 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <h3>Feed</h3>
+            <div class="setting-item">
+              <label>
+                <input type="checkbox" id="show-system-events" checked />
+                Show system events in feed
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>
+                <input type="checkbox" id="show-health-checks" />
+                Show health checks in feed
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <h3>Church</h3>
+            <div class="setting-item">
+              <label>Default agents to include</label>
+              <div class="agents-checkboxes" id="default-agents">
+                <label><input type="checkbox" value="gpt4" checked /> GPT-4</label>
+                <label><input type="checkbox" value="claude" checked /> Claude</label>
+                <label><input type="checkbox" value="llama" checked /> Llama</label>
+                <label><input type="checkbox" value="mistral" /> Mistral</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <h3>About</h3>
+            <p>CalOS Unified Feed v1.0.0</p>
+            <p>Real-time activity wall with chat integration</p>
+            <p><a href="/wall.html">View classic wall</a></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widgets View -->
+      <div class="view hidden" id="widgets-view">
+        <div class="widgets-container">
+          <h2>🌍 Widgets</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin-top: 20px;">
+            <div id="world-clock-widget"></div>
+            <div id="system-status-widget"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bottom Navigation (Tinder-style) -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="feed">
+      <span class="icon">📰</span>
+      <span class="label">Feed</span>
+    </button>
+    <button class="nav-btn" data-view="messages">
+      <span class="icon">💬</span>
+      <span class="label">Messages</span>
+    </button>
+    <button class="nav-btn" data-view="church">
+      <span class="icon">⛪</span>
+      <span class="label">Church</span>
+    </button>
+    <button class="nav-btn" data-view="settings">
+      <span class="icon">⚙️</span>
+      <span class="label">Settings</span>
+    </button>
+    <button class="nav-btn" data-view="widgets">
+      <span class="icon">🌍</span>
+      <span class="label">Widgets</span>
+    </button>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="/unified-feed.js"></script>
+  <script src="widgets/world-clock.js"></script>
+  <script src="widgets/system-status.js"></script>
+  <script>
+    // Initialize widgets
+    document.addEventListener('DOMContentLoaded', () => {
+      // World Clock Widget
+      const worldClock = new WorldClock('world-clock-widget');
+
+      // System Status Widget
+      const systemStatus = new SystemStatus('system-status-widget');
+    });
+  </script>
+</body>
+</html>

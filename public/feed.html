@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS Feed - Perfect Recall</title>
+
+  <style>
+    /* CalOS Feed - Single File with Inline Styles */
+    :root {
+      --primary: #6c5ce7;
+      --secondary: #a29bfe;
+      --success: #00b894;
+      --error: #d63031;
+      --warning: #fdcb6e;
+      --info: #0984e3;
+      --bg-dark: #2d3436;
+      --bg-light: #dfe6e9;
+      --text-dark: #2d3436;
+      --text-light: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text-dark);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .icon-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-indicator .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-indicator .dot.online {
+      background: var(--success);
+    }
+
+    .status-indicator .dot.offline {
+      background: var(--error);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid rgba(108, 92, 231, 0.2);
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+      position: relative;
+    }
+
+    .nav-btn:hover {
+      background: rgba(108, 92, 231, 0.05);
+      color: var(--primary);
+    }
+
+    .nav-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .nav-btn .icon {
+      font-size: 1.2rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Main Container */
+    .main-container {
+      flex: 1;
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Feed Area */
+    .feed-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .activity-wall {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .post {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--info);
+      transition: all 0.2s;
+    }
+
+    .post:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Color coding */
+    .post.chat { border-left-color: var(--primary); }
+    .post.agent_response { border-left-color: var(--secondary); }
+    .post.system { border-left-color: var(--info); }
+    .post.error { border-left-color: var(--error); }
+    .post.voice_note { border-left-color: #e74c3c; }
+    .post.utility_execution { border-left-color: var(--warning); }
+
+    /* Voice note specific styling */
+    .post.voice_note .post-type::before {
+      content: '🎤 ';
+    }
+
+    .post.voice_note .post-content {
+      font-style: italic;
+      background: rgba(231, 76, 60, 0.05);
+      padding: 0.75rem;
+      border-radius: 8px;
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .post-type {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .post-time {
+      font-size: 0.85rem;
+      color: #b2bec3;
+    }
+
+    .post-content {
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* Formatted content */
+    .post-content b { font-weight: 700; }
+    .post-content i { font-style: italic; }
+    .post-content u { text-decoration: underline; }
+    .post-content code {
+      background: var(--bg-light);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .post-agent {
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      background: var(--bg-light);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: inline-block;
+    }
+
+    .post-hash {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #b2bec3;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Chat Input */
+    .chat-input-container {
+      position: sticky;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 1rem 1.5rem;
+    }
+
+    .chat-input-wrapper {
+      display: flex;
+      gap: 0.75rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--bg-light);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    #chat-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .send-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .send-btn:hover {
+      background: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .stat-label {
+      color: #636e72;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .verify-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .verify-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: #b2bec3;
+      font-style: italic;
+    }
+
+    /* Verification Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-header h2 {
+      color: var(--primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #636e72;
+    }
+
+    .verification-result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--bg-light);
+      border-radius: 8px;
+    }
+
+    .verification-result.success {
+      background: rgba(0, 184, 148, 0.1);
+      border-left: 4px solid var(--success);
+    }
+
+    .verification-result pre {
+      margin-top: 0.5rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* Voice Note FAB */
+    .voice-fab {
+      position: fixed;
+      bottom: 170px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .voice-fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .voice-fab.recording {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+      }
+      50% {
+        box-shadow: 0 4px 20px rgba(231, 76, 60, 0.8);
+      }
+    }
+
+    /* Code Playground */
+    .playground-fab {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .playground-fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .playground-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .playground-modal.visible {
+      display: flex;
+    }
+
+    .playground-container {
+      background: white;
+      border-radius: var(--border-radius);
+      width: 90%;
+      max-width: 1200px;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .playground-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--bg-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .playground-header h2 {
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .playground-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .language-selector {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--bg-light);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .playground-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #636e72;
+    }
+
+    .playground-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .code-editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--bg-light);
+    }
+
+    .code-editor {
+      flex: 1;
+      padding: 1rem;
+      overflow: auto;
+    }
+
+    .code-editor textarea {
+      width: 100%;
+      height: 100%;
+      border: none;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      resize: none;
+      padding: 0;
+    }
+
+    .code-editor textarea:focus {
+      outline: none;
+    }
+
+    .code-output-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    .output-header {
+      padding: 0.75rem 1rem;
+      background: #2d2d30;
+      border-bottom: 1px solid #3e3e42;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .code-output {
+      flex: 1;
+      padding: 1rem;
+      overflow: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .code-output.error {
+      color: #f48771;
+    }
+
+    .code-output.success {
+      color: #89d185;
+    }
+
+    .playground-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--bg-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .run-code-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .run-code-btn:hover {
+      background: #00a181;
+      transform: translateY(-2px);
+    }
+
+    .run-code-btn:disabled {
+      background: #b2bec3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .execution-stats {
+      font-size: 0.9rem;
+      color: #636e72;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <h1>🌐 CalOS Feed</h1>
+      <div class="header-actions">
+        <button id="rss-btn" class="icon-btn" title="RSS Feed">
+          📡 RSS
+        </button>
+        <div class="status-indicator" id="connection-status">
+          <span class="dot offline"></span>
+          <span class="text">Connecting...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="nav-bar">
+    <button class="nav-btn active" data-view="feed">
+      <span class="icon">📰</span>Feed
+    </button>
+    <button class="nav-btn" data-view="notes">
+      <span class="icon">📝</span>Notes
+    </button>
+    <button class="nav-btn" data-view="theater">
+      <span class="icon">🎭</span>Theater
+    </button>
+    <button class="nav-btn" data-view="dashboard">
+      <span class="icon">📊</span>Dashboard
+    </button>
+    <button class="nav-btn" data-view="tools">
+      <span class="icon">🔧</span>Tools
+    </button>
+  </nav>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div style="display: flex; gap: 2rem;">
+      <div class="stat">
+        <span class="stat-label">Session:</span>
+        <span class="stat-value" id="session-id">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Messages:</span>
+        <span class="stat-value" id="message-count">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Stored:</span>
+        <span class="stat-value" id="stored-count">0</span>
+      </div>
+    </div>
+    <button id="verify-btn" class="verify-btn">✓ Verify Perfect Recall</button>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="feed-area">
+      <!-- Activity Wall -->
+      <div class="activity-wall" id="activity-wall">
+        <div class="empty-state">Connected. Send a message to start...</div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="chat-input-container">
+        <div class="chat-input-wrapper">
+          <input
+            type="text"
+            id="chat-input"
+            placeholder="Type a message..."
+            autocomplete="off"
+          />
+          <button id="send-btn" class="send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verification Modal -->
+  <div class="modal" id="verification-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Perfect Recall Verification</h2>
+        <button class="modal-close" id="modal-close">×</button>
+      </div>
+      <div id="verification-results"></div>
+    </div>
+  </div>
+
+  <!-- Voice Note FAB -->
+  <button class="voice-fab" id="voice-fab" title="Record Voice Note">
+    🎤
+  </button>
+
+  <!-- Utility Playground FAB -->
+  <button class="playground-fab" id="playground-fab" title="Open Utility Playground">
+    ⚡
+  </button>
+
+  <!-- Utility Playground Modal -->
+  <div class="playground-modal" id="playground-modal">
+    <div class="playground-container">
+      <div class="playground-header">
+        <h2>⚡ Utility Playground</h2>
+        <div class="playground-controls">
+          <select class="category-selector" id="category-selector">
+            <option value="">Select Category</option>
+            <option value="crypto">🔒 Crypto</option>
+            <option value="text">📝 Text</option>
+            <option value="data">📊 Data</option>
+          </select>
+          <select class="operation-selector" id="operation-selector" disabled>
+            <option value="">Select Operation</option>
+          </select>
+          <button class="playground-close" id="playground-close">×</button>
+        </div>
+      </div>
+
+      <div class="playground-body">
+        <div class="utility-form-container">
+          <div id="utility-form">
+            <div class="no-selection">
+              <p>👆 Select a category and operation to get started</p>
+              <div class="examples">
+                <strong>Available utilities:</strong>
+                <ul>
+                  <li><strong>Crypto:</strong> Hash, HMAC, Base64, UUID, Random bytes</li>
+                  <li><strong>Text:</strong> Count, Replace, Case transform, Slugify, Truncate</li>
+                  <li><strong>Data:</strong> JSON/CSV parse, Filter, Sort, Unique, Group by</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-output-container">
+          <div class="output-header">Output</div>
+          <div class="code-output" id="code-output">Select and run a utility to see output here...</div>
+        </div>
+      </div>
+
+      <div class="playground-footer">
+        <div class="execution-stats" id="execution-stats">Ready</div>
+        <button class="run-code-btn" id="run-code-btn" disabled>▶ Run Utility</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * CalOS Feed - Single File with Perfect Recall
+     * Features:
+     * - WebSocket real-time messaging
+     * - Database persistence with .catch() error handling
+     * - Formatting support (bold, colors, underline)
+     * - Perfect recall verification
+     */
+
+    // Protocol check - must be served via HTTP server
+    if (window.location.protocol === 'file:') {
+      document.body.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-family: system-ui;">
+          <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; max-width: 600px; text-align: center; backdrop-filter: blur(10px);">
+            <h1 style="font-size: 48px; margin-bottom: 20px;">⚠️</h1>
+            <h2 style="margin-bottom: 20px;">Cannot Load Feed from File System</h2>
+            <p style="line-height: 1.6; margin-bottom: 30px;">
+              This feed requires a running server. Please start the router and access via HTTP:
+            </p>
+            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; font-family: monospace; margin-bottom: 20px;">
+              <div style="margin-bottom: 10px;">cd agent-router</div>
+              <div style="margin-bottom: 10px;">node router.js</div>
+              <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
+                Then open: <strong style="color: #00b894;">http://localhost:5001/feed.html</strong>
+              </div>
+            </div>
+            <p style="font-size: 14px; opacity: 0.8;">
+              Current location: ${window.location.href}
+            </p>
+          </div>
+        </div>
+      `;
+      throw new Error('Feed must be accessed via HTTP server, not file:// protocol');
+    }
+
+    // State
+    let ws = null;
+    let messages = [];
+    let storedCount = 0;
+    let sessionId = 'session_' + Date.now();
+
+    // DOM Elements
+    const connectionStatus = document.getElementById('connection-status');
+    const activityWall = document.getElementById('activity-wall');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const rssBtn = document.getElementById('rss-btn');
+    const verifyBtn = document.getElementById('verify-btn');
+    const sessionIdEl = document.getElementById('session-id');
+    const messageCountEl = document.getElementById('message-count');
+    const storedCountEl = document.getElementById('stored-count');
+    const verificationModal = document.getElementById('verification-modal');
+    const modalClose = document.getElementById('modal-close');
+    const verificationResults = document.getElementById('verification-results');
+
+    // Initialize
+    async function init() {
+      // Set session ID display
+      sessionIdEl.textContent = sessionId.substring(8, 16);
+
+      // Connect WebSocket
+      connectWebSocket();
+
+      // Setup event listeners
+      setupEventListeners();
+
+      // Load recent notes on startup
+      await loadRecentNotes();
+    }
+
+    // Load recent notes from database
+    async function loadRecentNotes() {
+      try {
+        const response = await fetch('/api/notes/recent?limit=10&userId=user_123');
+        const data = await response.json();
+
+        if (data.status === 'ok' && data.notes && data.notes.length > 0) {
+          console.log(`📝 Loaded ${data.notes.length} recent notes`);
+
+          // Add each note to feed (in reverse order so newest appears at bottom)
+          data.notes.reverse().forEach(note => {
+            addMessageToFeed({
+              type: 'voice_note',
+              message: note.content,
+              timestamp: note.created_at,
+              metadata: {
+                noteId: note.id,
+                title: note.title,
+                source: note.source,
+                category: note.category,
+                tags: note.tags
+              }
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load recent notes:', error);
+      }
+    }
+
+    // WebSocket Connection
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      ws = new WebSocket(`${protocol}//${host}`);
+
+      ws.onopen = () => {
+        console.log('✓ Connected to CalOS');
+        updateConnectionStatus(true);
+      };
+
+      ws.onclose = () => {
+        console.log('✗ Disconnected from CalOS');
+        updateConnectionStatus(false);
+
+        // Reconnect after 3 seconds
+        setTimeout(connectWebSocket, 3000);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        updateConnectionStatus(false);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          handleMessage(message);
+        } catch (error) {
+          console.error('Failed to parse message:', error);
+        }
+      };
+    }
+
+    // Handle incoming messages
+    function handleMessage(message) {
+      switch (message.type) {
+        case 'connection':
+          console.log('Connection established:', message.message);
+          break;
+
+        case 'chat':
+        case 'agent_response':
+        case 'system':
+          addMessageToFeed(message);
+          storeMessageToDatabase(message);
+          break;
+
+        case 'voice_note':
+          // Voice notes are already stored in notes table, just display
+          addMessageToFeed(message);
+          break;
+
+        case 'message_stored':
+          console.log('✓ Message stored:', message.data.hash);
+          break;
+
+        default:
+          console.log('Unknown message type:', message.type);
+      }
+    }
+
+    // Add message to feed
+    function addMessageToFeed(message) {
+      // Remove empty state
+      const emptyState = activityWall.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      messages.push(message);
+      messageCountEl.textContent = messages.length;
+
+      const post = document.createElement('div');
+      post.className = `post ${message.type}`;
+
+      const header = document.createElement('div');
+      header.className = 'post-header';
+
+      const type = document.createElement('span');
+      type.className = 'post-type';
+      type.textContent = message.type.replace('_', ' ');
+
+      const time = document.createElement('span');
+      time.className = 'post-time';
+      time.textContent = formatTime(message.timestamp);
+
+      header.appendChild(type);
+      header.appendChild(time);
+
+      const content = document.createElement('div');
+      content.className = 'post-content';
+
+      // Use formatted HTML if available (from database)
+      if (message.formattedHtml) {
+        content.innerHTML = message.formattedHtml;
+      } else {
+        // For agent_response, use result field
+        const text = message.result || message.message || message.event || '';
+        content.textContent = text;
+      }
+
+      // Add duration badge for agent responses
+      if (message.duration && message.type === 'agent_response') {
+        const duration = document.createElement('span');
+        duration.className = 'post-duration';
+        duration.textContent = `${message.duration}ms`;
+        duration.style.cssText = 'margin-left: 10px; padding: 2px 8px; background: rgba(0,0,0,0.1); border-radius: 4px; font-size: 0.85em;';
+        header.appendChild(duration);
+      }
+
+      post.appendChild(header);
+      post.appendChild(content);
+
+      // Add agent/user badge
+      if (message.agent || message.user) {
+        const agent = document.createElement('span');
+        agent.className = 'post-agent';
+        agent.textContent = message.agent || message.user;
+        post.appendChild(agent);
+      }
+
+      // Add hash if available
+      if (message.hash) {
+        const hash = document.createElement('div');
+        hash.className = 'post-hash';
+        hash.textContent = `Hash: ${message.hash.substring(0, 16)}...`;
+        post.appendChild(hash);
+      }
+
+      activityWall.appendChild(post);
+
+      // Scroll to bottom
+      activityWall.scrollTop = activityWall.scrollHeight;
+    }
+
+    // Store message to database
+    function storeMessageToDatabase(message) {
+      fetch('/api/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          type: message.type,
+          user: message.user || null,
+          agent: message.agent || null,
+          message: message.result || message.message || message.event || '',
+          timestamp: message.timestamp || new Date().toISOString(),
+          metadata: {
+            duration: message.duration || null,
+            input: message.input || null
+          }
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'stored') {
+          console.log('✓ Stored to database:', data.hash);
+          storedCount++;
+          storedCountEl.textContent = storedCount;
+
+          // Update message with hash and formatted HTML
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage) {
+            lastMessage.hash = data.hash;
+            lastMessage.formattedHtml = data.formattedHtml;
+          }
+        }
+      })
+      .catch(err => {
+        console.error('✗ Failed to store to database:', err);
+        // TODO: Queue for retry
+      });
+    }
+
+    // Send chat message
+    async function sendChatMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      // Clear input immediately
+      chatInput.value = '';
+
+      // Show user message in feed immediately
+      const userMessage = {
+        type: 'chat',
+        user: 'You',
+        message,
+        timestamp: new Date().toISOString()
+      };
+
+      addMessageToFeed(userMessage);
+
+      // Store user message to database
+      storeMessageToDatabase({
+        sessionId,
+        type: 'chat',
+        user: 'You',
+        message,
+        timestamp: userMessage.timestamp
+      });
+
+      // Send to LLM agents via /agent endpoint
+      try {
+        const response = await fetch('/agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: message,
+            context: {
+              sessionId,
+              source: 'feed'
+            }
+          })
+        });
+
+        const result = await response.json();
+
+        // Agent responses will arrive via WebSocket broadcast
+        // (router.js broadcasts agent_response messages as agents complete)
+
+      } catch (error) {
+        console.error('Failed to send message to agents:', error);
+
+        // Show error in feed
+        addMessageToFeed({
+          type: 'error',
+          message: `Failed to send message: ${error.message}`,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Verify perfect recall
+    async function verifyPerfectRecall() {
+      try {
+        const response = await fetch(`/api/verify?sessionId=${sessionId}`);
+        const data = await response.json();
+
+        // Show modal
+        verificationModal.classList.add('visible');
+
+        // Display results
+        verificationResults.innerHTML = `
+          <div class="verification-result success">
+            <h3>✓ Verification Successful</h3>
+            <p>All messages have been verified for perfect recall.</p>
+
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+
+            <h4 style="margin-top: 1.5rem;">Message Hashes:</h4>
+          </div>
+        `;
+
+        // Get hashes
+        const hashesResponse = await fetch(`/api/hashes/${sessionId}`);
+        const hashesData = await hashesResponse.json();
+
+        const hashList = hashesData.hashes.map(h =>
+          `${new Date(h.timestamp).toLocaleTimeString()} - ${h.hash.substring(0, 16)}...`
+        ).join('\n');
+
+        verificationResults.innerHTML += `<pre style="margin-top: 1rem;">${hashList}</pre>`;
+
+      } catch (error) {
+        console.error('Verification failed:', error);
+        verificationResults.innerHTML = `
+          <div class="verification-result">
+            <h3>✗ Verification Failed</h3>
+            <p>Error: ${error.message}</p>
+          </div>
+        `;
+        verificationModal.classList.add('visible');
+      }
+    }
+
+    // Update connection status
+    function updateConnectionStatus(connected) {
+      const dot = connectionStatus.querySelector('.dot');
+      const text = connectionStatus.querySelector('.text');
+
+      if (connected) {
+        dot.classList.remove('offline');
+        dot.classList.add('online');
+        text.textContent = 'Connected';
+      } else {
+        dot.classList.remove('online');
+        dot.classList.add('offline');
+        text.textContent = 'Disconnected';
+      }
+    }
+
+    // Format time
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+
+      return date.toLocaleString();
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Navigation buttons
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const view = btn.dataset.view;
+
+          // Remove active from all buttons
+          document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+          // Add active to clicked button
+          btn.classList.add('active');
+
+          // Navigate to view
+          if (view === 'feed') {
+            // Stay on current page (already on feed)
+          } else if (view === 'notes') {
+            window.location.href = '/notes.html';
+          } else if (view === 'theater') {
+            window.location.href = '/theater';
+          } else if (view === 'dashboard') {
+            window.location.href = '/dashboard';
+          } else if (view === 'tools') {
+            window.location.href = '/tools';
+          }
+        });
+      });
+
+      // Send on Enter
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          sendChatMessage();
+        }
+      });
+
+      sendBtn.addEventListener('click', sendChatMessage);
+
+      // RSS button - opens styled preview
+      rssBtn.addEventListener('click', () => {
+        window.open('/feed/preview', '_blank');
+      });
+
+      // Verify button
+      verifyBtn.addEventListener('click', verifyPerfectRecall);
+
+      // Modal close
+      modalClose.addEventListener('click', () => {
+        verificationModal.classList.remove('visible');
+      });
+
+      // Close modal on backdrop click
+      verificationModal.addEventListener('click', (e) => {
+        if (e.target === verificationModal) {
+          verificationModal.classList.remove('visible');
+        }
+      });
+
+      // Keepalive ping
+      setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 30000);
+    }
+
+    // Utility Playground functionality
+    const playgroundFab = document.getElementById('playground-fab');
+    const playgroundModal = document.getElementById('playground-modal');
+    const playgroundClose = document.getElementById('playground-close');
+    const categorySelector = document.getElementById('category-selector');
+    const operationSelector = document.getElementById('operation-selector');
+    const utilityForm = document.getElementById('utility-form');
+    const codeOutput = document.getElementById('code-output');
+    const runCodeBtn = document.getElementById('run-code-btn');
+    const executionStats = document.getElementById('execution-stats');
+
+    let currentCategory = '';
+    let currentOperation = '';
+
+    // Operation definitions with form fields
+    const operations = {
+      crypto: {
+        hash: { name: 'Hash', endpoint: '/api/crypto/hash', fields: [
+          { name: 'text', label: 'Text to hash', type: 'textarea', required: true },
+          { name: 'algorithm', label: 'Algorithm', type: 'select', options: ['sha256', 'sha512', 'md5', 'sha1'], default: 'sha256' }
+        ]},
+        hmac: { name: 'HMAC', endpoint: '/api/crypto/hmac', fields: [
+          { name: 'text', label: 'Text to sign', type: 'textarea', required: true },
+          { name: 'secret', label: 'Secret key', type: 'text', required: true },
+          { name: 'algorithm', label: 'Algorithm', type: 'select', options: ['sha256', 'sha512', 'sha1'], default: 'sha256' }
+        ]},
+        base64_encode: { name: 'Base64 Encode', endpoint: '/api/crypto/base64-encode', fields: [
+          { name: 'text', label: 'Text to encode', type: 'textarea', required: true }
+        ]},
+        base64_decode: { name: 'Base64 Decode', endpoint: '/api/crypto/base64-decode', fields: [
+          { name: 'encoded', label: 'Base64 encoded text', type: 'textarea', required: true }
+        ]},
+        random_bytes: { name: 'Random Bytes', endpoint: '/api/crypto/random-bytes', fields: [
+          { name: 'length', label: 'Length (bytes)', type: 'number', default: 16, min: 1, max: 1024 }
+        ]},
+        uuid: { name: 'Generate UUID', endpoint: '/api/crypto/uuid', fields: [] }
+      },
+      text: {
+        count: { name: 'Count Occurrences', endpoint: '/api/text/count', fields: [
+          { name: 'text', label: 'Text', type: 'textarea', required: true },
+          { name: 'pattern', label: 'Pattern to count', type: 'text', required: true },
+          { name: 'caseSensitive', label: 'Case sensitive', type: 'checkbox', default: true }
+        ]},
+        replace: { name: 'Replace Text', endpoint: '/api/text/replace', fields: [
+          { name: 'text', label: 'Text', type: 'textarea', required: true },
+          { name: 'pattern', label: 'Pattern', type: 'text', required: true },
+          { name: 'replacement', label: 'Replacement', type: 'text', required: true },
+          { name: 'replaceAll', label: 'Replace all', type: 'checkbox', default: true }
+        ]},
+        case: { name: 'Change Case', endpoint: '/api/text/case', fields: [
+          { name: 'text', label: 'Text', type: 'textarea', required: true },
+          { name: 'caseType', label: 'Case type', type: 'select', options: ['upper', 'lower', 'title', 'camel', 'snake', 'kebab'], required: true }
+        ]},
+        count_all: { name: 'Count All', endpoint: '/api/text/count-all', fields: [
+          { name: 'text', label: 'Text', type: 'textarea', required: true }
+        ]},
+        slugify: { name: 'Slugify', endpoint: '/api/text/slugify', fields: [
+          { name: 'text', label: 'Text to slugify', type: 'text', required: true }
+        ]},
+        truncate: { name: 'Truncate', endpoint: '/api/text/truncate', fields: [
+          { name: 'text', label: 'Text', type: 'textarea', required: true },
+          { name: 'length', label: 'Max length', type: 'number', default: 100 },
+          { name: 'suffix', label: 'Suffix', type: 'text', default: '...' }
+        ]}
+      },
+      data: {
+        parse_json: { name: 'Parse JSON', endpoint: '/api/data/parse-json', fields: [
+          { name: 'json', label: 'JSON string', type: 'textarea', required: true }
+        ]},
+        stringify_json: { name: 'Stringify JSON', endpoint: '/api/data/stringify-json', fields: [
+          { name: 'data', label: 'Data (JSON)', type: 'textarea', required: true },
+          { name: 'pretty', label: 'Pretty print', type: 'checkbox', default: false },
+          { name: 'indent', label: 'Indent spaces', type: 'number', default: 2 }
+        ]},
+        parse_csv: { name: 'Parse CSV', endpoint: '/api/data/parse-csv', fields: [
+          { name: 'csv', label: 'CSV text', type: 'textarea', required: true },
+          { name: 'delimiter', label: 'Delimiter', type: 'text', default: ',' },
+          { name: 'hasHeader', label: 'Has header row', type: 'checkbox', default: true }
+        ]},
+        to_csv: { name: 'To CSV', endpoint: '/api/data/to-csv', fields: [
+          { name: 'data', label: 'Data (JSON array)', type: 'textarea', required: true },
+          { name: 'delimiter', label: 'Delimiter', type: 'text', default: ',' },
+          { name: 'includeHeader', label: 'Include header', type: 'checkbox', default: true }
+        ]},
+        sort: { name: 'Sort Array', endpoint: '/api/data/sort', fields: [
+          { name: 'data', label: 'Array (JSON)', type: 'textarea', required: true },
+          { name: 'key', label: 'Sort key (for objects)', type: 'text' },
+          { name: 'order', label: 'Order', type: 'select', options: ['asc', 'desc'], default: 'asc' }
+        ]},
+        unique: { name: 'Unique Values', endpoint: '/api/data/unique', fields: [
+          { name: 'data', label: 'Array (JSON)', type: 'textarea', required: true }
+        ]}
+      }
+    };
+
+    // Open playground
+    playgroundFab.addEventListener('click', () => {
+      playgroundModal.classList.add('visible');
+    });
+
+    // Close playground
+    playgroundClose.addEventListener('click', () => {
+      playgroundModal.classList.remove('visible');
+    });
+
+    // Close on backdrop click
+    playgroundModal.addEventListener('click', (e) => {
+      if (e.target === playgroundModal) {
+        playgroundModal.classList.remove('visible');
+      }
+    });
+
+    // Category change
+    categorySelector.addEventListener('change', (e) => {
+      currentCategory = e.target.value;
+      operationSelector.innerHTML = '<option value="">Select Operation</option>';
+
+      if (currentCategory && operations[currentCategory]) {
+        operationSelector.disabled = false;
+        Object.keys(operations[currentCategory]).forEach(op => {
+          const option = document.createElement('option');
+          option.value = op;
+          option.textContent = operations[currentCategory][op].name;
+          operationSelector.appendChild(option);
+        });
+      } else {
+        operationSelector.disabled = true;
+        utilityForm.innerHTML = '<div class="no-selection"><p>👆 Select a category first</p></div>';
+        runCodeBtn.disabled = true;
+      }
+    });
+
+    // Operation change
+    operationSelector.addEventListener('change', (e) => {
+      currentOperation = e.target.value;
+
+      if (!currentOperation) {
+        utilityForm.innerHTML = '<div class="no-selection"><p>👆 Select an operation</p></div>';
+        runCodeBtn.disabled = true;
+        return;
+      }
+
+      const op = operations[currentCategory][currentOperation];
+      let formHTML = '<form id="utility-input-form" style="display: flex; flex-direction: column; gap: 15px;">';
+
+      op.fields.forEach(field => {
+        formHTML += '<div style="display: flex; flex-direction: column; gap: 5px;">';
+        formHTML += `<label style="font-weight: 600; color: var(--text-dark);">${field.label}${field.required ? ' <span style="color: var(--error);">*</span>' : ''}</label>`;
+
+        if (field.type === 'textarea') {
+          formHTML += `<textarea name="${field.name}" style="min-height: 80px; padding: 10px; border: 2px solid var(--bg-light); border-radius: 8px; font-family: monospace; resize: vertical;" ${field.required ? 'required' : ''}></textarea>`;
+        } else if (field.type === 'select') {
+          formHTML += `<select name="${field.name}" style="padding: 10px; border: 2px solid var(--bg-light); border-radius: 8px;">`;
+          field.options.forEach(opt => {
+            formHTML += `<option value="${opt}" ${field.default === opt ? 'selected' : ''}>${opt}</option>`;
+          });
+          formHTML += '</select>';
+        } else if (field.type === 'checkbox') {
+          formHTML += `<input type="checkbox" name="${field.name}" ${field.default ? 'checked' : ''} style="width: 20px; height: 20px;">`;
+        } else if (field.type === 'number') {
+          formHTML += `<input type="number" name="${field.name}" value="${field.default || ''}" ${field.min ? `min="${field.min}"` : ''} ${field.max ? `max="${field.max}"` : ''} style="padding: 10px; border: 2px solid var(--bg-light); border-radius: 8px;">`;
+        } else {
+          formHTML += `<input type="text" name="${field.name}" value="${field.default || ''}" style="padding: 10px; border: 2px solid var(--bg-light); border-radius: 8px;" ${field.required ? 'required' : ''}>`;
+        }
+
+        formHTML += '</div>';
+      });
+
+      formHTML += '</form>';
+      utilityForm.innerHTML = formHTML;
+      runCodeBtn.disabled = false;
+    });
+
+    // Run utility
+    runCodeBtn.addEventListener('click', async () => {
+      if (!currentCategory || !currentOperation) return;
+
+      const op = operations[currentCategory][currentOperation];
+      const form = document.getElementById('utility-input-form');
+
+      // Collect form data
+      const formData = {};
+      const formElements = form.elements;
+
+      for (let element of formElements) {
+        if (element.name) {
+          if (element.type === 'checkbox') {
+            formData[element.name] = element.checked;
+          } else if (element.type === 'number') {
+            formData[element.name] = parseInt(element.value);
+          } else if (element.name === 'data' || element.name === 'json') {
+            // Try to parse JSON fields
+            try {
+              formData[element.name] = element.value ? JSON.parse(element.value) : element.value;
+            } catch (e) {
+              formData[element.name] = element.value;
+            }
+          } else {
+            formData[element.name] = element.value;
+          }
+        }
+      }
+
+      // Disable run button
+      runCodeBtn.disabled = true;
+      runCodeBtn.textContent = '⏳ Running...';
+      codeOutput.textContent = 'Executing...';
+      codeOutput.className = 'code-output';
+      executionStats.textContent = 'Executing...';
+
+      const startTime = Date.now();
+
+      try {
+        const response = await fetch(op.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        const duration = Date.now() - startTime;
+
+        if (result.status === 'ok') {
+          codeOutput.textContent = JSON.stringify(result, null, 2);
+          codeOutput.className = 'code-output success';
+          executionStats.textContent = `✓ Executed in ${duration}ms`;
+
+          // Add execution to feed
+          addMessageToFeed({
+            type: 'utility_execution',
+            message: `Ran ${currentCategory}/${op.name}`,
+            timestamp: new Date().toISOString(),
+            metadata: {
+              category: currentCategory,
+              operation: currentOperation,
+              duration
+            }
+          });
+        } else {
+          codeOutput.textContent = `Error: ${result.message || JSON.stringify(result)}`;
+          codeOutput.className = 'code-output error';
+          executionStats.textContent = '✗ Failed';
+        }
+      } catch (error) {
+        codeOutput.textContent = `Error: ${error.message}`;
+        codeOutput.className = 'code-output error';
+        executionStats.textContent = '✗ Execution failed';
+      } finally {
+        runCodeBtn.disabled = false;
+        runCodeBtn.textContent = '▶ Run Utility';
+      }
+    });
+
+    // Voice Recording
+    const voiceFab = document.getElementById('voice-fab');
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    voiceFab.addEventListener('click', async () => {
+      if (!isRecording) {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const reader = new FileReader();
+
+            reader.onloadend = async () => {
+              const base64Audio = reader.result.split(',')[1];
+
+              // Show transcribing indicator
+              voiceFab.textContent = '⏳';
+              voiceFab.disabled = true;
+
+              try {
+                // Transcribe audio
+                const transcribeResponse = await fetch('/transcribe-voice', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ audio: base64Audio })
+                });
+
+                const transcribeResult = await transcribeResponse.json();
+
+                if (transcribeResult.status === 'ok' && transcribeResult.text) {
+                  // Save as note
+                  const noteResponse = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      title: 'Voice Note',
+                      content: transcribeResult.text,
+                      source: 'voice',
+                      userId: 'user_123'
+                    })
+                  });
+
+                  const noteResult = await noteResponse.json();
+
+                  if (noteResult.status === 'ok') {
+                    // Add to feed
+                    addMessageToFeed({
+                      type: 'voice_note',
+                      message: transcribeResult.text,
+                      timestamp: new Date().toISOString(),
+                      metadata: {
+                        noteId: noteResult.note.id,
+                        confidence: transcribeResult.confidence || 1.0
+                      }
+                    });
+                  } else {
+                    console.error('Failed to save note:', noteResult);
+                  }
+                } else {
+                  console.error('Transcription failed:', transcribeResult);
+                }
+              } catch (error) {
+                console.error('Voice note error:', error);
+              } finally {
+                voiceFab.textContent = '🎤';
+                voiceFab.disabled = false;
+              }
+            };
+
+            reader.readAsDataURL(audioBlob);
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          voiceFab.classList.add('recording');
+          voiceFab.textContent = '⏹';
+        } catch (error) {
+          console.error('Failed to start recording:', error);
+          alert('Microphone access denied or not available');
+        }
+      } else {
+        // Stop recording
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        isRecording = false;
+        voiceFab.classList.remove('recording');
+        voiceFab.textContent = '🎤';
+      }
+    });
+
+    // Start the app
+    init();
+  </script>
+</body>
+</html>

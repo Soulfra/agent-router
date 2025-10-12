@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalOS Activity Wall</title>
+    <link rel="stylesheet" href="wall.css">
+    <link rel="stylesheet" href="widgets/world-clock.css">
+    <link rel="stylesheet" href="widgets/system-status.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <h1>🤖 CalOS Activity Wall</h1>
+            <p class="tagline">Real-time system activity • Like old Facebook/MySpace</p>
+            <div class="header-actions">
+                <a href="/feed/rss" target="_blank" class="rss-link">
+                    <span class="rss-icon">📡</span>
+                    Subscribe RSS
+                </a>
+                <a href="/dashboard.html" class="dashboard-link">
+                    🎮 Mission Control
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Connecting...</span>
+        </div>
+        <div class="status-item">
+            <span id="postCount">0 posts</span>
+        </div>
+        <div class="status-item">
+            <span id="lastUpdate">Never</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-widget">
+                <h3>About This Wall</h3>
+                <p>This is CalOS's public activity feed. It shows everything the system is doing in real-time.</p>
+                <p>Like old Facebook/MySpace, but for an AI system.</p>
+            </div>
+
+            <!-- World Clock Widget -->
+            <div id="world-clock-widget"></div>
+
+            <!-- System Status Widget -->
+            <div id="system-status-widget"></div>
+
+            <!-- Crypto Prices Widget -->
+            <div id="crypto-prices-widget"></div>
+
+            <div class="sidebar-widget">
+                <h3>📊 System Stats</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Total Posts:</span>
+                    <span class="stat-value" id="totalPosts">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Logs:</span>
+                    <span class="stat-value" id="logCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Errors:</span>
+                    <span class="stat-value" id="errorCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Health Checks:</span>
+                    <span class="stat-value" id="healthCount">0</span>
+                </div>
+            </div>
+
+            <div class="sidebar-widget">
+                <h3>🔗 Links</h3>
+                <ul class="link-list">
+                    <li><a href="/">CalOS Chat</a></li>
+                    <li><a href="/dashboard.html">Mission Control</a></li>
+                    <li><a href="/feed/rss">RSS Feed</a></li>
+                    <li><a href="/feed/json">JSON Feed</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-widget footer-widget">
+                <p class="small-text">
+                    CalOS v2.0<br>
+                    Built with ❤️ for the 20-30 year vision
+                </p>
+            </div>
+        </div>
+
+        <!-- Feed -->
+        <div class="feed">
+            <div class="feed-header">
+                <h2>Activity Feed</h2>
+                <button class="refresh-btn" onclick="refreshFeed()">
+                    <span id="refreshIcon">🔄</span> Refresh
+                </button>
+            </div>
+
+            <div id="feedContainer">
+                <!-- Posts will be inserted here -->
+                <div class="loading-message">
+                    <div class="spinner"></div>
+                    <p>Loading activity feed...</p>
+                </div>
+            </div>
+
+            <div class="load-more">
+                <button class="load-more-btn" onclick="loadMore()" style="display: none;">
+                    Load More Posts
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="wall.js"></script>
+    <script src="widgets/world-clock.js"></script>
+    <script src="widgets/system-status.js"></script>
+    <script src="widgets/crypto-prices.js"></script>
+    <script>
+        // Initialize widgets
+        document.addEventListener('DOMContentLoaded', () => {
+            // World Clock Widget
+            const worldClock = new WorldClock('world-clock-widget');
+
+            // System Status Widget
+            const systemStatus = new SystemStatus('system-status-widget');
+
+            // Crypto Prices Widget
+            const cryptoPrices = new CryptoPricesWidget('crypto-prices-widget');
+            cryptoPrices.init();
+        });
+    </script>
+</body>
+</html>

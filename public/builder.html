@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS - AI Builder Workshop</title>
+
+  <!-- External Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+
+  <style>
+    :root {
+      --primary: #6c5ce7;
+      --secondary: #a29bfe;
+      --success: #00b894;
+      --error: #d63031;
+      --warning: #fdcb6e;
+      --info: #0984e3;
+      --bg-dark: #2d3436;
+      --bg-light: #f5f6fa;
+      --text-dark: #2d3436;
+      --text-light: #ffffff;
+      --border: #dfe6e9;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: white;
+      border-bottom: 2px solid var(--primary);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .status-badge.idle { background: var(--border); color: var(--text-dark); }
+    .status-badge.building { background: var(--info); color: white; animation: pulse 2s infinite; }
+    .status-badge.testing { background: var(--warning); color: white; animation: pulse 2s infinite; }
+    .status-badge.paused { background: var(--secondary); color: white; }
+    .status-badge.complete { background: var(--success); color: white; }
+    .status-badge.failed { background: var(--error); color: white; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Main Container */
+    .container {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 40% 40% 20%;
+      gap: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 1rem;
+      border-bottom: 2px solid var(--border);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+
+    .panel-content {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    /* Spec Viewer */
+    #spec-viewer {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    #spec-content {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    #spec-content h1 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary); }
+    #spec-content h2 { font-size: 1.2rem; margin: 1.5rem 0 0.5rem; color: var(--secondary); }
+    #spec-content h3 { font-size: 1rem; margin: 1rem 0 0.5rem; }
+    #spec-content p { margin-bottom: 0.8rem; }
+    #spec-content code { background: var(--bg-light); padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
+    #spec-content pre { background: var(--bg-dark); color: white; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; }
+    #spec-content ul, #spec-content ol { margin-left: 1.5rem; margin-bottom: 0.8rem; }
+
+    /* Task Queue */
+    #task-queue {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .task {
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      border-left: 4px solid var(--border);
+      background: var(--bg-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .task:hover { transform: translateX(4px); }
+    .task.pending { border-left-color: var(--border); }
+    .task.in_progress { border-left-color: var(--info); background: #e3f2fd; }
+    .task.completed { border-left-color: var(--success); background: #e8f5e9; }
+    .task.failed { border-left-color: var(--error); background: #ffebee; }
+
+    .task-icon {
+      font-size: 1.2rem;
+      min-width: 24px;
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .task-phase {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      background: var(--secondary);
+      color: white;
+    }
+
+    /* Terminal */
+    #terminal-panel {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    #terminal {
+      height: 100%;
+      background: #1e1e1e;
+    }
+
+    /* Code Viewer */
+    #code-viewer {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    #code-content {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      overflow-x: auto;
+      height: 100%;
+    }
+
+    /* Test Results */
+    #test-results {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .test-result {
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      border-left: 4px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .test-result.pass { border-left-color: var(--success); background: #e8f5e9; }
+    .test-result.fail { border-left-color: var(--error); background: #ffebee; }
+
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .test-grade {
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .test-grade.A-plus, .test-grade.A { color: var(--success); }
+    .test-grade.B, .test-grade.C { color: var(--warning); }
+    .test-grade.F { color: var(--error); }
+
+    .test-output {
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: var(--bg-dark);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+    }
+
+    /* Comments Panel */
+    #comments {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .comment {
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      border-left: 4px solid var(--info);
+      background: var(--bg-light);
+      font-size: 0.9rem;
+    }
+
+    .comment.suggestion { border-left-color: var(--info); }
+    .comment.issue { border-left-color: var(--error); }
+    .comment.approved { border-left-color: var(--success); }
+    .comment.needs_revision { border-left-color: var(--warning); }
+
+    .comment-header {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .comment-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .comment-input select {
+      padding: 0.5rem;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .comment-input textarea {
+      flex: 1;
+      padding: 0.5rem;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .comment-input button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .comment-input button:hover {
+      background: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    /* Controls */
+    #controls {
+      grid-column: 1 / 4;
+      grid-row: 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 2rem;
+    }
+
+    .control-btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .control-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-start { background: var(--success); color: white; }
+    .btn-pause { background: var(--warning); color: white; }
+    .btn-resume { background: var(--info); color: white; }
+    .btn-save { background: var(--secondary); color: white; }
+    .btn-report { background: var(--primary); color: white; }
+
+    /* Progress Bar */
+    .progress-container {
+      flex: 1;
+      background: var(--border);
+      border-radius: 20px;
+      height: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success) 0%, var(--primary) 100%);
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-light);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <h1>
+      <span>🏗️</span>
+      AI Builder Workshop
+    </h1>
+    <div class="status-badge idle" id="status-badge">
+      <span id="status-icon">⏸</span>
+      <span id="status-text">Idle</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Spec Viewer -->
+    <div class="panel" id="spec-viewer">
+      <div class="panel-header">
+        <span>📄 Specification</span>
+        <span id="spec-progress">0%</span>
+      </div>
+      <div class="panel-content" id="spec-content">
+        <p style="color: var(--text-dark); opacity: 0.6;">Loading specification...</p>
+      </div>
+    </div>
+
+    <!-- Task Queue -->
+    <div class="panel" id="task-queue">
+      <div class="panel-header">
+        <span>📋 Task Queue</span>
+        <span id="task-count">0 / 0</span>
+      </div>
+      <div class="panel-content" id="task-list">
+        <p style="color: var(--text-dark); opacity: 0.6;">Click "Start Build" to load tasks...</p>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="panel" id="terminal-panel">
+      <div class="panel-header">
+        <span>💻 Terminal</span>
+        <span id="terminal-model">Model: deepseek-coder:33b</span>
+      </div>
+      <div class="panel-content" style="padding: 0;">
+        <div id="terminal"></div>
+      </div>
+    </div>
+
+    <!-- Code Viewer -->
+    <div class="panel" id="code-viewer">
+      <div class="panel-header">
+        <span>📝 Code Viewer</span>
+        <span id="current-file">No file selected</span>
+      </div>
+      <div class="panel-content" style="padding: 0;">
+        <pre id="code-content"><code>// Generated code will appear here...</code></pre>
+      </div>
+    </div>
+
+    <!-- Test Results -->
+    <div class="panel" id="test-results">
+      <div class="panel-header">
+        <span>🧪 Test Results</span>
+        <span id="test-summary">0 passed, 0 failed</span>
+      </div>
+      <div class="panel-content" id="test-list">
+        <p style="color: var(--text-dark); opacity: 0.6;">Tests will appear here after implementation...</p>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="panel" id="comments">
+      <div class="panel-header">
+        <span>💬 Teacher Comments</span>
+        <span id="comment-count">0 comments</span>
+      </div>
+      <div class="panel-content" id="comment-list">
+        <div class="comment-input">
+          <select id="comment-type">
+            <option value="suggestion">💡 Suggestion</option>
+            <option value="issue">⚠️ Issue</option>
+            <option value="approved">✅ Approved</option>
+            <option value="needs_revision">🔄 Needs Revision</option>
+          </select>
+          <textarea id="comment-text" placeholder="Add a comment for the model..."></textarea>
+          <button onclick="addComment()">Send</button>
+        </div>
+        <div id="comments-display"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+      <button class="control-btn btn-start" id="btn-start" onclick="startBuild()">
+        <span>▶</span> Start Build
+      </button>
+      <button class="control-btn btn-pause" id="btn-pause" onclick="pauseBuild()" disabled>
+        <span>⏸</span> Pause
+      </button>
+      <button class="control-btn btn-resume" id="btn-resume" onclick="resumeBuild()" disabled>
+        <span>🔄</span> Resume
+      </button>
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar" style="width: 0%;">0%</div>
+      </div>
+      <button class="control-btn btn-save" onclick="saveCheckpoint()">
+        <span>💾</span> Save
+      </button>
+      <button class="control-btn btn-report" onclick="viewReport()">
+        <span>📊</span> Report
+      </button>
+    </div>
+  </div>
+
+  <!-- External Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.0/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+
+  <script>
+    // Global State
+    let state = {
+      status: 'idle', // idle, building, testing, paused, complete, failed
+      tasks: [],
+      currentTask: null,
+      testResults: [],
+      comments: [],
+      progress: 0,
+      ws: null,
+      terminal: null
+    };
+
+    // Initialize Terminal
+    function initTerminal() {
+      state.terminal = new Terminal({
+        cursorBlink: true,
+        theme: {
+          background: '#1e1e1e',
+          foreground: '#d4d4d4',
+          cursor: '#ffffff'
+        },
+        fontSize: 13,
+        fontFamily: 'Monaco, Menlo, "Courier New", monospace'
+      });
+
+      state.terminal.open(document.getElementById('terminal'));
+      state.terminal.writeln('🏗️  AI Builder Workshop Terminal');
+      state.terminal.writeln('─'.repeat(80));
+      state.terminal.writeln('Ready. Click "Start Build" to begin.\n');
+    }
+
+    // Initialize WebSocket
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      state.ws = new WebSocket(`${protocol}//${window.location.host}/ws/builder`);
+
+      state.ws.onopen = () => {
+        state.terminal.writeln('✓ Connected to build server');
+      };
+
+      state.ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      };
+
+      state.ws.onerror = (error) => {
+        state.terminal.writeln(`❌ WebSocket error: ${error}`);
+      };
+
+      state.ws.onclose = () => {
+        state.terminal.writeln('⚠️  Disconnected from build server');
+      };
+    }
+
+    // Handle WebSocket Messages
+    function handleWebSocketMessage(data) {
+      switch(data.type) {
+        case 'terminal':
+          state.terminal.writeln(data.message);
+          break;
+        case 'file_written':
+          state.terminal.writeln(`✓ Wrote: ${data.path}`);
+          showCodeFile(data.path, data.content);
+          break;
+        case 'test_result':
+          addTestResult(data.result);
+          break;
+        case 'task_update':
+          updateTask(data.taskId, data.status);
+          break;
+        case 'progress':
+          updateProgress(data.percent);
+          break;
+      }
+    }
+
+    // Load Specification
+    async function loadSpec() {
+      try {
+        const response = await fetch('/docs/TOOL-CALLING-SYSTEM-SPEC.md');
+        const markdown = await response.text();
+
+        const html = marked.parse(markdown);
+        document.getElementById('spec-content').innerHTML = html;
+
+        // Highlight code blocks
+        document.querySelectorAll('#spec-content pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+
+        state.terminal.writeln('✓ Loaded specification');
+      } catch (error) {
+        state.terminal.writeln(`❌ Failed to load spec: ${error.message}`);
+      }
+    }
+
+    // Start Build
+    async function startBuild() {
+      try {
+        updateStatus('building', '🔨', 'Building...');
+        state.terminal.writeln('\n🔨 Starting build process...');
+        state.terminal.writeln('─'.repeat(80));
+
+        const response = await fetch('/api/builder/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'deepseek-coder:33b' })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          state.tasks = data.tasks;
+          renderTasks();
+          state.terminal.writeln(`✓ Loaded ${data.tasks.length} tasks`);
+
+          // Enable pause button
+          document.getElementById('btn-start').disabled = true;
+          document.getElementById('btn-pause').disabled = false;
+
+          // Start implementing tasks
+          await implementNextTask();
+        } else {
+          throw new Error(data.error || 'Failed to start build');
+        }
+      } catch (error) {
+        state.terminal.writeln(`❌ Error: ${error.message}`);
+        updateStatus('failed', '❌', 'Failed');
+      }
+    }
+
+    // Implement Next Task
+    async function implementNextTask() {
+      if (state.status === 'paused') return;
+
+      const nextTask = state.tasks.find(t => t.status === 'pending');
+      if (!nextTask) {
+        updateStatus('complete', '✅', 'Complete!');
+        state.terminal.writeln('\n✅ All tasks completed!');
+        return;
+      }
+
+      state.currentTask = nextTask;
+      nextTask.status = 'in_progress';
+      renderTasks();
+
+      state.terminal.writeln(`\n▶️  Task: ${nextTask.description}`);
+
+      try {
+        const taskId = state.tasks.indexOf(nextTask);
+        const response = await fetch(`/api/builder/implement/${taskId}`, {
+          method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          nextTask.status = 'completed';
+          state.terminal.writeln(`✓ Completed: ${data.result.files.join(', ')}`);
+
+          // Update progress
+          const completed = state.tasks.filter(t => t.status === 'completed').length;
+          updateProgress(Math.round((completed / state.tasks.length) * 100));
+
+          // Continue to next task after short delay
+          setTimeout(() => implementNextTask(), 1000);
+        } else {
+          throw new Error(data.error || 'Implementation failed');
+        }
+      } catch (error) {
+        nextTask.status = 'failed';
+        renderTasks();
+        state.terminal.writeln(`❌ Error: ${error.message}`);
+        updateStatus('paused', '⏸', 'Paused (Error)');
+        document.getElementById('btn-pause').disabled = true;
+        document.getElementById('btn-resume').disabled = false;
+      }
+    }
+
+    // Render Tasks
+    function renderTasks() {
+      const taskList = document.getElementById('task-list');
+      taskList.innerHTML = '';
+
+      const icons = {
+        pending: '⭕',
+        in_progress: '⏳',
+        completed: '✅',
+        failed: '❌'
+      };
+
+      state.tasks.forEach((task) => {
+        const taskEl = document.createElement('div');
+        taskEl.className = `task ${task.status}`;
+        taskEl.innerHTML = `
+          <span class="task-icon">${icons[task.status]}</span>
+          <span class="task-text">${task.description}</span>
+          <span class="task-phase">Phase ${task.phase}</span>
+        `;
+        taskList.appendChild(taskEl);
+      });
+
+      // Update count
+      const completed = state.tasks.filter(t => t.status === 'completed').length;
+      document.getElementById('task-count').textContent = `${completed} / ${state.tasks.length}`;
+    }
+
+    // Update Status
+    function updateStatus(status, icon, text) {
+      state.status = status;
+      document.getElementById('status-badge').className = `status-badge ${status}`;
+      document.getElementById('status-icon').textContent = icon;
+      document.getElementById('status-text').textContent = text;
+    }
+
+    // Update Progress
+    function updateProgress(percent) {
+      state.progress = percent;
+      const bar = document.getElementById('progress-bar');
+      bar.style.width = `${percent}%`;
+      bar.textContent = `${percent}%`;
+    }
+
+    // Show Code File
+    function showCodeFile(path, content) {
+      document.getElementById('current-file').textContent = path;
+      const codeEl = document.getElementById('code-content');
+      codeEl.innerHTML = `<code class="javascript">${escapeHtml(content)}</code>`;
+      hljs.highlightElement(codeEl.querySelector('code'));
+    }
+
+    // Add Test Result
+    function addTestResult(result) {
+      const testList = document.getElementById('test-list');
+
+      const resultEl = document.createElement('div');
+      resultEl.className = `test-result ${result.success ? 'pass' : 'fail'}`;
+      resultEl.innerHTML = `
+        <div class="test-header">
+          <span>${result.success ? '✅' : '❌'} ${result.file}</span>
+          <span class="test-grade ${result.grade.replace('+', '-plus')}">${result.grade}</span>
+        </div>
+        <div class="test-output">${escapeHtml(result.output || result.error)}</div>
+      `;
+
+      testList.appendChild(resultEl);
+
+      // Update summary
+      const passed = state.testResults.filter(r => r.success).length;
+      const failed = state.testResults.filter(r => !r.success).length;
+      document.getElementById('test-summary').textContent = `${passed} passed, ${failed} failed`;
+
+      state.testResults.push(result);
+    }
+
+    // Add Comment
+    async function addComment() {
+      const type = document.getElementById('comment-type').value;
+      const text = document.getElementById('comment-text').value.trim();
+
+      if (!text) return;
+
+      const comment = { type, text, timestamp: new Date().toISOString() };
+      state.comments.push(comment);
+
+      // Send to backend
+      await fetch('/api/builder/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(comment)
+      });
+
+      // Display comment
+      const icons = {
+        suggestion: '💡',
+        issue: '⚠️',
+        approved: '✅',
+        needs_revision: '🔄'
+      };
+
+      const commentEl = document.createElement('div');
+      commentEl.className = `comment ${type}`;
+      commentEl.innerHTML = `
+        <div class="comment-header">
+          <span>${icons[type]}</span>
+          <span>${type.replace('_', ' ').toUpperCase()}</span>
+        </div>
+        <p>${escapeHtml(text)}</p>
+      `;
+
+      document.getElementById('comments-display').prepend(commentEl);
+      document.getElementById('comment-text').value = '';
+
+      // Update count
+      document.getElementById('comment-count').textContent = `${state.comments.length} comments`;
+
+      state.terminal.writeln(`💬 Teacher comment added: ${text.substring(0, 50)}...`);
+    }
+
+    // Pause Build
+    function pauseBuild() {
+      updateStatus('paused', '⏸', 'Paused');
+      state.terminal.writeln('\n⏸ Build paused by teacher');
+      document.getElementById('btn-pause').disabled = true;
+      document.getElementById('btn-resume').disabled = false;
+    }
+
+    // Resume Build
+    function resumeBuild() {
+      updateStatus('building', '🔨', 'Building...');
+      state.terminal.writeln('\n▶️ Resuming build...');
+      document.getElementById('btn-pause').disabled = false;
+      document.getElementById('btn-resume').disabled = true;
+      implementNextTask();
+    }
+
+    // Save Checkpoint
+    function saveCheckpoint() {
+      const checkpoint = {
+        tasks: state.tasks,
+        testResults: state.testResults,
+        comments: state.comments,
+        progress: state.progress,
+        timestamp: new Date().toISOString()
+      };
+
+      localStorage.setItem('builder_checkpoint', JSON.stringify(checkpoint));
+      state.terminal.writeln('💾 Checkpoint saved');
+    }
+
+    // View Report
+    function viewReport() {
+      const completed = state.tasks.filter(t => t.status === 'completed').length;
+      const failed = state.tasks.filter(t => t.status === 'failed').length;
+      const passed = state.testResults.filter(r => r.success).length;
+      const totalTests = state.testResults.length;
+
+      const report = `
+Build Report
+${'='.repeat(80)}
+
+Tasks:
+  ✅ Completed: ${completed}
+  ❌ Failed: ${failed}
+  📋 Total: ${state.tasks.length}
+  📊 Progress: ${state.progress}%
+
+Tests:
+  ✅ Passed: ${passed}
+  ❌ Failed: ${totalTests - passed}
+  📊 Pass Rate: ${totalTests > 0 ? Math.round((passed/totalTests)*100) : 0}%
+
+Comments: ${state.comments.length}
+
+Status: ${state.status.toUpperCase()}
+${'='.repeat(80)}
+`;
+
+      state.terminal.writeln(`\n${report}`);
+    }
+
+    // Utility Functions
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Update Task
+    function updateTask(taskId, status) {
+      if (state.tasks[taskId]) {
+        state.tasks[taskId].status = status;
+        renderTasks();
+      }
+    }
+
+    // Initialize on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      initTerminal();
+      initWebSocket();
+      loadSpec();
+    });
+  </script>
+</body>
+</html>

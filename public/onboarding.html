@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand Builder Onboarding | CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .progress-bar-container {
+      background: rgba(255, 255, 255, 0.2);
+      height: 8px;
+      margin-top: 20px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: white;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .earnings {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .earnings-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .earnings-amount {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .welcome-screen {
+      text-align: center;
+    }
+
+    .welcome-screen h2 {
+      font-size: 28px;
+      color: #2d3436;
+      margin-bottom: 20px;
+    }
+
+    .welcome-screen p {
+      font-size: 16px;
+      color: #636e72;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .payment-breakdown {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 30px 0;
+      text-align: left;
+    }
+
+    .payment-breakdown h3 {
+      font-size: 20px;
+      color: #2d3436;
+      margin-bottom: 15px;
+    }
+
+    .payment-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #dfe6e9;
+    }
+
+    .payment-item:last-child {
+      border-bottom: none;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .question-container {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .question-container.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-text {
+      font-size: 24px;
+      color: #2d3436;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .help-text {
+      font-size: 14px;
+      color: #636e72;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #dfe6e9;
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .choice-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice-btn {
+      padding: 15px;
+      background: white;
+      border: 2px solid #dfe6e9;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+    }
+
+    .choice-btn:hover {
+      border-color: #667eea;
+      background: #f8f9fa;
+    }
+
+    .choice-btn.selected {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+
+    .archetype-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .archetype-card {
+      padding: 20px;
+      background: white;
+      border: 3px solid #dfe6e9;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .archetype-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .archetype-card.selected {
+      border-width: 3px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .archetype-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .archetype-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .archetype-description {
+      font-size: 13px;
+      color: #636e72;
+      line-height: 1.4;
+    }
+
+    .btn-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #2d3436;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+
+    .level-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .completion-screen {
+      display: none;
+      text-align: center;
+    }
+
+    .completion-screen.active {
+      display: block;
+    }
+
+    .completion-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+
+    .completion-screen h2 {
+      font-size: 32px;
+      color: #2d3436;
+      margin-bottom: 15px;
+    }
+
+    .completion-screen .earnings-display {
+      font-size: 48px;
+      font-weight: bold;
+      color: #00b894;
+      margin: 20px 0;
+    }
+
+    .error-message {
+      background: #ff7675;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #636e72;
+    }
+
+    .multi-choice-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .checkbox-btn {
+      padding: 12px 15px;
+      background: white;
+      border: 2px solid #dfe6e9;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .checkbox-btn:hover {
+      border-color: #667eea;
+      background: #f8f9fa;
+    }
+
+    .checkbox-btn.selected {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .checkbox-icon {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #dfe6e9;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .checkbox-btn.selected .checkbox-icon {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Build Your Brand</h1>
+      <p id="header-subtitle">Get paid to develop your ideas</p>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <div class="earnings">
+        <span class="earnings-label">Your Earnings</span>
+        <span class="earnings-amount" id="earnings-display">$0.00</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="error-message" id="error-message"></div>
+
+      <!-- Welcome Screen -->
+      <div class="welcome-screen active" id="welcome-screen">
+        <h2>Welcome to Brand Builder</h2>
+        <p>We'll pay you to develop your brand strategy from scratch. The deeper you go, the more you earn.</p>
+
+        <div class="payment-breakdown">
+          <h3>Payment Structure</h3>
+          <div class="payment-item">
+            <span>Levels 1-3 (Identity)</span>
+            <span>$15</span>
+          </div>
+          <div class="payment-item">
+            <span>Levels 4-6 (Vision & Values)</span>
+            <span>+$30</span>
+          </div>
+          <div class="payment-item">
+            <span>Levels 7-9 (Strategy)</span>
+            <span>+$75</span>
+          </div>
+          <div class="payment-item">
+            <span>Level 10 (Complete Plan)</span>
+            <span>+$50</span>
+          </div>
+          <div class="payment-item">
+            <span>Brand Idea Bonus</span>
+            <span>+$20-50</span>
+          </div>
+          <div class="payment-item">
+            <span>Total Potential</span>
+            <span>$190-220</span>
+          </div>
+        </div>
+
+        <p><strong>Time Required:</strong> 30-60 minutes for deep, thoughtful answers.</p>
+        <p><strong>Payment:</strong> Via Venmo, PayPal, or crypto after review.</p>
+
+        <button class="btn btn-primary" onclick="app.startSession()">Let's Begin</button>
+      </div>
+
+      <!-- Survey Questions -->
+      <div class="question-container" id="survey-questions">
+        <span class="level-badge" id="level-badge">Level 1</span>
+        <div class="question-text" id="question-text"></div>
+        <div class="help-text" id="help-text"></div>
+        <div id="answer-input"></div>
+
+        <div class="btn-container">
+          <button class="btn btn-secondary" id="prev-btn" onclick="app.previousQuestion()" style="display: none;">Previous</button>
+          <button class="btn btn-primary" id="next-btn" onclick="app.nextQuestion()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Completion Screen -->
+      <div class="completion-screen" id="completion-screen">
+        <div class="completion-icon">🎉</div>
+        <h2>Congratulations!</h2>
+        <p>You've completed the Brand Builder survey</p>
+        <div class="earnings-display" id="final-earnings">$0.00</div>
+        <p>Your detailed brand strategy has been saved. We'll review your submission and process payment within 3-5 business days.</p>
+        <button class="btn btn-primary" onclick="location.reload()">Start Another</button>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loading" style="display: none;">
+        Loading...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const app = {
+      sessionId: null,
+      currentLevel: 1,
+      questions: [],
+      currentQuestionIndex: 0,
+      archetypes: [],
+      totalEarnings: 0,
+      responses: {},
+
+      async init() {
+        await this.loadArchetypes();
+      },
+
+      async loadArchetypes() {
+        try {
+          const response = await fetch('/api/onboarding/archetypes');
+          const data = await response.json();
+          if (data.success) {
+            this.archetypes = data.archetypes;
+          }
+        } catch (error) {
+          this.showError('Failed to load archetypes');
+        }
+      },
+
+      async startSession() {
+        this.showLoading(true);
+
+        try {
+          const response = await fetch('/api/onboarding/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            this.sessionId = data.sessionId;
+            this.currentLevel = data.currentLevel;
+            await this.loadLevel(this.currentLevel);
+            this.switchScreen('welcome-screen', 'survey-questions');
+          } else {
+            throw new Error(data.error || 'Failed to start session');
+          }
+        } catch (error) {
+          this.showError(error.message);
+        } finally {
+          this.showLoading(false);
+        }
+      },
+
+      async loadLevel(level) {
+        try {
+          const response = await fetch(`/api/onboarding/questions/${level}`);
+          const data = await response.json();
+
+          if (data.success) {
+            this.questions = data.questions;
+            this.currentQuestionIndex = 0;
+            this.renderQuestion();
+          }
+        } catch (error) {
+          this.showError('Failed to load questions');
+        }
+      },
+
+      renderQuestion() {
+        const question = this.questions[this.currentQuestionIndex];
+        if (!question) return;
+
+        document.getElementById('level-badge').textContent = `Level ${question.level}`;
+        document.getElementById('question-text').textContent = question.question_text;
+        document.getElementById('help-text').textContent = question.help_text || '';
+
+        const answerInput = document.getElementById('answer-input');
+        answerInput.innerHTML = '';
+
+        switch (question.question_type) {
+          case 'text':
+          case 'email':
+            answerInput.innerHTML = `<input type="${question.question_type}"
+              id="answer" placeholder="${question.placeholder || ''}"
+              value="${this.responses[question.id] || ''}">`;
+            break;
+
+          case 'textarea':
+            answerInput.innerHTML = `<textarea id="answer"
+              placeholder="${question.placeholder || ''}">${this.responses[question.id] || ''}</textarea>`;
+            break;
+
+          case 'choice':
+            const options = JSON.parse(question.options);
+            answerInput.innerHTML = '<div class="choice-group"></div>';
+            const choiceGroup = answerInput.querySelector('.choice-group');
+            options.forEach(opt => {
+              const btn = document.createElement('button');
+              btn.className = 'choice-btn';
+              btn.textContent = opt;
+              if (this.responses[question.id] === opt) btn.classList.add('selected');
+              btn.onclick = () => {
+                choiceGroup.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+              };
+              choiceGroup.appendChild(btn);
+            });
+            break;
+
+          case 'multi-choice':
+            const multiOptions = JSON.parse(question.options);
+            answerInput.innerHTML = '<div class="multi-choice-group"></div>';
+            const multiGroup = answerInput.querySelector('.multi-choice-group');
+            const selected = this.responses[question.id] ? JSON.parse(this.responses[question.id]) : [];
+            multiOptions.forEach(opt => {
+              const btn = document.createElement('button');
+              btn.className = 'checkbox-btn';
+              if (selected.includes(opt)) btn.classList.add('selected');
+              btn.innerHTML = `
+                <span class="checkbox-icon">${selected.includes(opt) ? '✓' : ''}</span>
+                <span>${opt}</span>
+              `;
+              btn.onclick = () => {
+                btn.classList.toggle('selected');
+                const icon = btn.querySelector('.checkbox-icon');
+                icon.textContent = btn.classList.contains('selected') ? '✓' : '';
+              };
+              multiGroup.appendChild(btn);
+            });
+            break;
+
+          case 'archetype-select':
+            answerInput.innerHTML = '<div class="archetype-grid"></div>';
+            const grid = answerInput.querySelector('.archetype-grid');
+            this.archetypes.forEach(arch => {
+              const card = document.createElement('div');
+              card.className = 'archetype-card';
+              if (this.responses[question.id] == arch.id) card.classList.add('selected');
+              card.style.borderColor = arch.color;
+              card.innerHTML = `
+                <div class="archetype-name" style="color: ${arch.color}">${arch.name}</div>
+                <div class="archetype-description">${arch.description}</div>
+              `;
+              card.onclick = () => {
+                grid.querySelectorAll('.archetype-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+              };
+              grid.appendChild(card);
+            });
+            break;
+        }
+
+        // Update prev/next buttons
+        document.getElementById('prev-btn').style.display =
+          this.currentQuestionIndex > 0 ? 'block' : 'none';
+
+        this.updateProgress();
+      },
+
+      getAnswer() {
+        const question = this.questions[this.currentQuestionIndex];
+
+        switch (question.question_type) {
+          case 'text':
+          case 'email':
+          case 'textarea':
+            return document.getElementById('answer').value;
+
+          case 'choice':
+            const selectedBtn = document.querySelector('.choice-btn.selected');
+            return selectedBtn ? selectedBtn.textContent : null;
+
+          case 'multi-choice':
+            const selectedBtns = document.querySelectorAll('.checkbox-btn.selected');
+            const values = Array.from(selectedBtns).map(btn =>
+              btn.querySelector('span:last-child').textContent
+            );
+            return JSON.stringify(values);
+
+          case 'archetype-select':
+            const selectedCard = document.querySelector('.archetype-card.selected');
+            if (!selectedCard) return null;
+            const archName = selectedCard.querySelector('.archetype-name').textContent;
+            const arch = this.archetypes.find(a => a.name === archName);
+            return arch ? arch.id.toString() : null;
+
+          default:
+            return null;
+        }
+      },
+
+      async nextQuestion() {
+        const answer = this.getAnswer();
+
+        if (!answer || answer.trim() === '' || answer === '[]') {
+          this.showError('Please provide an answer before continuing');
+          return;
+        }
+
+        const question = this.questions[this.currentQuestionIndex];
+        this.responses[question.id] = answer;
+
+        // Submit answer to backend
+        this.showLoading(true);
+
+        try {
+          const answerMetadata = {};
+          if (question.question_type === 'archetype-select') {
+            answerMetadata.archetypeId = parseInt(answer);
+          }
+
+          const response = await fetch('/api/onboarding/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: this.sessionId,
+              questionId: question.id,
+              answer: answer,
+              answerMetadata
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            this.totalEarnings = data.totalEarned;
+            document.getElementById('earnings-display').textContent = `$${parseFloat(data.totalEarned).toFixed(2)}`;
+
+            // Move to next question or level
+            if (this.currentQuestionIndex < this.questions.length - 1) {
+              this.currentQuestionIndex++;
+              this.renderQuestion();
+            } else if (data.levelComplete && data.nextLevel <= 10) {
+              // Load next level
+              await this.loadLevel(data.nextLevel);
+            } else {
+              // Survey complete
+              this.showCompletionScreen();
+            }
+          } else {
+            throw new Error(data.error || 'Failed to submit answer');
+          }
+        } catch (error) {
+          this.showError(error.message);
+        } finally {
+          this.showLoading(false);
+        }
+      },
+
+      previousQuestion() {
+        if (this.currentQuestionIndex > 0) {
+          this.currentQuestionIndex--;
+          this.renderQuestion();
+        }
+      },
+
+      showCompletionScreen() {
+        document.getElementById('final-earnings').textContent = `$${parseFloat(this.totalEarnings).toFixed(2)}`;
+        this.switchScreen('survey-questions', 'completion-screen');
+        document.getElementById('progress-bar').style.width = '100%';
+      },
+
+      updateProgress() {
+        const totalQuestions = 29; // Total across all levels
+        const answeredQuestions = Object.keys(this.responses).length;
+        const progress = (answeredQuestions / totalQuestions) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+      },
+
+      switchScreen(from, to) {
+        document.getElementById(from).classList.remove('active');
+        document.getElementById(to).classList.add('active');
+      },
+
+      showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+      },
+
+      showError(message) {
+        const errorEl = document.getElementById('error-message');
+        errorEl.textContent = message;
+        errorEl.classList.add('show');
+        setTimeout(() => errorEl.classList.remove('show'), 5000);
+      }
+    };
+
+    // Initialize on load
+    app.init();
+  </script>
+</body>
+</html>

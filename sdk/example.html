@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in with CalOS - Example</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    .user-info {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      border-left: 4px solid #4CAF50;
+    }
+    .user-info h3 {
+      margin-top: 0;
+      color: #4CAF50;
+    }
+    .user-info pre {
+      background: #333;
+      color: #0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .skill {
+      background: #4CAF50;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    button {
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .logout-btn {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .logout-btn:hover {
+      background: #d32f2f;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sign in with CalOS - Example</h1>
+    <p>This page demonstrates how to integrate CalOS authentication into your application.</p>
+
+    <div id="logged-out" style="display: none;">
+      <p>Click the button below to sign in with your CalOS account:</p>
+      <div id="signin-buttons"></div>
+
+      <h3>Button Variants</h3>
+      <p>You can customize the button appearance:</p>
+      <ul>
+        <li><strong>Size:</strong> small, medium, large</li>
+        <li><strong>Theme:</strong> light, dark</li>
+        <li><strong>Text:</strong> Custom text</li>
+      </ul>
+    </div>
+
+    <div id="logged-in" style="display: none;">
+      <h2>Welcome!</h2>
+      <p>You are logged in to CalOS.</p>
+
+      <div class="user-info">
+        <h3>User Information</h3>
+        <p><strong>Username:</strong> <span id="username"></span></p>
+        <p><strong>User ID:</strong> <code id="user-id"></code></p>
+        <p><strong>Email:</strong> <span id="email"></span></p>
+
+        <div id="skills-section" style="display: none;">
+          <h4>Your Skills</h4>
+          <div class="skills" id="skills"></div>
+        </div>
+
+        <h4>Raw User Data</h4>
+        <pre id="user-data"></pre>
+      </div>
+
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Integration Guide</h2>
+    <p>To use CalOS authentication in your app:</p>
+
+    <h3>1. Include the SDK</h3>
+    <pre><code>&lt;script type="module" src="https://calos.dev/sdk/calos-sdk.js"&gt;&lt;/script&gt;</code></pre>
+
+    <h3>2. Initialize CalOS Auth</h3>
+    <pre><code>import { CalOSAuth, createSignInButton } from './calos-sdk.js';
+
+const calos = new CalOSAuth({
+  clientId: 'cal_your_client_id',
+  redirectUri: 'http://localhost:3000/callback',
+  scope: 'openid profile email skills'
+});
+</code></pre>
+
+    <h3>3. Add Sign In Button</h3>
+    <pre><code>const button = createSignInButton(calos, {
+  theme: 'light',
+  size: 'medium'
+});
+document.getElementById('signin').appendChild(button);
+</code></pre>
+
+    <h3>4. Handle Callback</h3>
+    <pre><code>// On your callback page
+calos.handleCallback().then(result => {
+  console.log('User:', result.user);
+  console.log('Access Token:', result.accessToken);
+}).catch(error => {
+  console.error('Login failed:', error);
+});
+</code></pre>
+  </div>
+
+  <script type="module">
+    import { CalOSAuth, createSignInButton } from './calos-sdk.js';
+
+    // Initialize CalOS with test app credentials
+    const calos = new CalOSAuth({
+      clientId: 'cal_542947b38a857d6192355469b3a4e6d1',
+      redirectUri: 'http://localhost:3000/callback',
+      scope: 'openid profile email skills',
+      calosUrl: 'http://localhost:5001'
+    });
+
+    // Check if this is a callback
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('code')) {
+      handleCallback();
+    } else {
+      checkLoginStatus();
+    }
+
+    async function handleCallback() {
+      try {
+        const result = await calos.handleCallback();
+        console.log('Login successful:', result);
+        displayUser(result.user);
+
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (error) {
+        console.error('Login failed:', error);
+        alert('Login failed: ' + error.message);
+        checkLoginStatus();
+      }
+    }
+
+    async function checkLoginStatus() {
+      const user = await calos.getCurrentUser();
+      if (user) {
+        displayUser(user);
+      } else {
+        showLogin();
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('logged-out').style.display = 'block';
+      document.getElementById('logged-in').style.display = 'none';
+
+      // Create button variants
+      const buttonsContainer = document.getElementById('signin-buttons');
+
+      // Medium light button (default)
+      const btn1 = createSignInButton(calos, { theme: 'light', size: 'medium' });
+      buttonsContainer.appendChild(btn1);
+      buttonsContainer.appendChild(document.createElement('br'));
+      buttonsContainer.appendChild(document.createElement('br'));
+
+      // Dark button
+      const btn2 = createSignInButton(calos, { theme: 'dark', size: 'medium' });
+      buttonsContainer.appendChild(btn2);
+      buttonsContainer.appendChild(document.createElement('br'));
+      buttonsContainer.appendChild(document.createElement('br'));
+
+      // Small button
+      const btn3 = createSignInButton(calos, { theme: 'light', size: 'small', text: 'CalOS Login' });
+      buttonsContainer.appendChild(btn3);
+      buttonsContainer.appendChild(document.createElement('br'));
+      buttonsContainer.appendChild(document.createElement('br'));
+
+      // Large button
+      const btn4 = createSignInButton(calos, { theme: 'dark', size: 'large', text: 'Continue with CalOS' });
+      buttonsContainer.appendChild(btn4);
+    }
+
+    function displayUser(user) {
+      document.getElementById('logged-out').style.display = 'none';
+      document.getElementById('logged-in').style.display = 'block';
+
+      document.getElementById('username').textContent = user.username || 'N/A';
+      document.getElementById('user-id').textContent = user.sub || 'N/A';
+      document.getElementById('email').textContent = user.email || 'N/A';
+
+      // Display skills if available
+      if (user.skills && user.skills.length > 0) {
+        document.getElementById('skills-section').style.display = 'block';
+        const skillsContainer = document.getElementById('skills');
+        skillsContainer.innerHTML = '';
+
+        user.skills.forEach(skill => {
+          const skillEl = document.createElement('div');
+          skillEl.className = 'skill';
+          skillEl.textContent = `${skill.skill_name} - Level ${skill.level} (${skill.xp} XP)`;
+          skillsContainer.appendChild(skillEl);
+        });
+      }
+
+      // Display raw user data
+      document.getElementById('user-data').textContent = JSON.stringify(user, null, 2);
+    }
+
+    window.logout = function() {
+      calos.signOut();
+      location.reload();
+    };
+  </script>
+</body>
+</html>

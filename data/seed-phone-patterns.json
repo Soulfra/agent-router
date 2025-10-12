@@ -1,0 +1,144 @@
+{
+  "phone_patterns": [
+    {
+      "country_code": "US",
+      "country_name": "United States",
+      "pattern": "(###) ###-####",
+      "example": "(555) 123-4567",
+      "dial_code": "+1"
+    },
+    {
+      "country_code": "CA",
+      "country_name": "Canada",
+      "pattern": "(###) ###-####",
+      "example": "(416) 555-1234",
+      "dial_code": "+1"
+    },
+    {
+      "country_code": "GB",
+      "country_name": "United Kingdom",
+      "pattern": "#### ### ####",
+      "example": "0207 123 4567",
+      "dial_code": "+44"
+    },
+    {
+      "country_code": "AU",
+      "country_name": "Australia",
+      "pattern": "#### ### ###",
+      "example": "0412 345 678",
+      "dial_code": "+61"
+    },
+    {
+      "country_code": "DE",
+      "country_name": "Germany",
+      "pattern": "#### #######",
+      "example": "0151 1234567",
+      "dial_code": "+49"
+    },
+    {
+      "country_code": "FR",
+      "country_name": "France",
+      "pattern": "## ## ## ## ##",
+      "example": "06 12 34 56 78",
+      "dial_code": "+33"
+    },
+    {
+      "country_code": "IT",
+      "country_name": "Italy",
+      "pattern": "### ### ####",
+      "example": "320 123 4567",
+      "dial_code": "+39"
+    },
+    {
+      "country_code": "ES",
+      "country_name": "Spain",
+      "pattern": "### ## ## ##",
+      "example": "612 34 56 78",
+      "dial_code": "+34"
+    },
+    {
+      "country_code": "MX",
+      "country_name": "Mexico",
+      "pattern": "## #### ####",
+      "example": "55 1234 5678",
+      "dial_code": "+52"
+    },
+    {
+      "country_code": "BR",
+      "country_name": "Brazil",
+      "pattern": "(##) #####-####",
+      "example": "(11) 91234-5678",
+      "dial_code": "+55"
+    },
+    {
+      "country_code": "JP",
+      "country_name": "Japan",
+      "pattern": "###-####-####",
+      "example": "090-1234-5678",
+      "dial_code": "+81"
+    },
+    {
+      "country_code": "CN",
+      "country_name": "China",
+      "pattern": "### #### ####",
+      "example": "138 1234 5678",
+      "dial_code": "+86"
+    },
+    {
+      "country_code": "IN",
+      "country_name": "India",
+      "pattern": "##### #####",
+      "example": "98765 43210",
+      "dial_code": "+91"
+    },
+    {
+      "country_code": "RU",
+      "country_name": "Russia",
+      "pattern": "(###) ###-##-##",
+      "example": "(901) 234-56-78",
+      "dial_code": "+7"
+    },
+    {
+      "country_code": "ZA",
+      "country_name": "South Africa",
+      "pattern": "### ### ####",
+      "example": "082 123 4567",
+      "dial_code": "+27"
+    },
+    {
+      "country_code": "NL",
+      "country_name": "Netherlands",
+      "pattern": "## ########",
+      "example": "06 12345678",
+      "dial_code": "+31"
+    },
+    {
+      "country_code": "SE",
+      "country_name": "Sweden",
+      "pattern": "###-### ## ##",
+      "example": "070-123 45 67",
+      "dial_code": "+46"
+    },
+    {
+      "country_code": "NO",
+      "country_name": "Norway",
+      "pattern": "### ## ###",
+      "example": "412 34 567",
+      "dial_code": "+47"
+    },
+    {
+      "country_code": "DK",
+      "country_name": "Denmark",
+      "pattern": "## ## ## ##",
+      "example": "20 12 34 56",
+      "dial_code": "+45"
+    },
+    {
+      "country_code": "FI",
+      "country_name": "Finland",
+      "pattern": "### #######",
+      "example": "040 1234567",
+      "dial_code": "+358"
+    }
+  ]
+}

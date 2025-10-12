@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS System Status</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #eee;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .status-card {
+      background: #16213e;
+      border-radius: 1rem;
+      padding: 2rem;
+      border: 2px solid #2a2a4e;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #555;
+      transition: background 0.3s;
+    }
+
+    .status-card.ready::before {
+      background: linear-gradient(90deg, #00ff88, #00d4ff);
+    }
+
+    .status-card.error::before {
+      background: #ff3860;
+    }
+
+    .status-card.loading::before {
+      background: #ffeb3b;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .status-message {
+      color: #aaa;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-badge.ready {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+
+    .status-badge.error {
+      background: rgba(255, 56, 96, 0.2);
+      color: #ff3860;
+    }
+
+    .status-badge.loading {
+      background: rgba(255, 235, 59, 0.2);
+      color: #ffeb3b;
+    }
+
+    .flow-diagram {
+      background: #16213e;
+      border-radius: 1rem;
+      padding: 2rem;
+      border: 2px solid #2a2a4e;
+      margin-bottom: 3rem;
+    }
+
+    .flow-diagram h2 {
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .flow-step {
+      background: #0f3460;
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      min-width: 300px;
+      text-align: center;
+      border: 2px solid #2a2a4e;
+    }
+
+    .flow-arrow {
+      color: #00d4ff;
+      font-size: 2rem;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .action-button {
+      background: #0f3460;
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      border: 2px solid #2a2a4e;
+      transition: all 0.3s;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .action-button:hover {
+      background: #00d4ff;
+      color: #1a1a2e;
+      border-color: #00d4ff;
+      transform: translateY(-2px);
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #555;
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .details {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .details-row:last-child {
+      border-bottom: none;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-step {
+        min-width: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 CalOS System Status</h1>
+    <p class="subtitle">Real-time status of your AI system</p>
+
+    <div class="status-grid">
+      <!-- Model Status -->
+      <div class="status-card loading" id="modelCard">
+        <div class="status-icon">🤖</div>
+        <div class="status-title">AI Brain (Model)</div>
+        <div class="status-message" id="modelMessage">Checking...</div>
+        <span class="status-badge loading" id="modelBadge">
+          <span class="spinner"></span> Checking
+        </span>
+        <div class="details" id="modelDetails" style="display: none;"></div>
+      </div>
+
+      <!-- Ollama Server Status -->
+      <div class="status-card loading" id="ollamaCard">
+        <div class="status-icon">🖥️</div>
+        <div class="status-title">Ollama Server</div>
+        <div class="status-message" id="ollamaMessage">Checking...</div>
+        <span class="status-badge loading" id="ollamaBadge">
+          <span class="spinner"></span> Checking
+        </span>
+        <div class="details" id="ollamaDetails" style="display: none;"></div>
+      </div>
+
+      <!-- Web Server Status -->
+      <div class="status-card loading" id="webCard">
+        <div class="status-icon">🌐</div>
+        <div class="status-title">Web Server</div>
+        <div class="status-message" id="webMessage">Checking...</div>
+        <span class="status-badge loading" id="webBadge">
+          <span class="spinner"></span> Checking
+        </span>
+        <div class="details" id="webDetails" style="display: none;"></div>
+      </div>
+    </div>
+
+    <div class="flow-diagram">
+      <h2>System Flow</h2>
+      <div class="flow">
+        <div class="flow-step">📚 Training Data (192KB docs)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🤖 Model Trained (calos-expert)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🖥️ Ollama Server (Port 11434)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🌐 Web Interface (Port 5001)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">💬 You Ask Questions → Get Answers</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a href="/chat.html" class="action-button">
+        💬 Open Chat Interface
+      </a>
+      <button class="action-button" onclick="window.location.reload()">
+        🔄 Refresh Status
+      </button>
+      <a href="/builder.html" class="action-button">
+        🔨 Open Builder
+      </a>
+      <a href="/index.html" class="action-button">
+        🖼️ Open Gallery
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const OLLAMA_API = window.location.origin.replace(':5001', ':11434');
+
+    // Check Model
+    async function checkModel() {
+      try {
+        const response = await fetch(`${OLLAMA_API}/api/tags`);
+        const data = await response.json();
+
+        const model = data.models.find(m => m.name === 'calos-expert:latest' || m.name.startsWith('calos-expert'));
+
+        if (model) {
+          updateCard('model', 'ready', '✅ Model Trained', 'calos-expert is ready to answer questions');
+
+          const size = (model.size / (1024 ** 3)).toFixed(1);
+          const modified = new Date(model.modified_at).toLocaleString();
+
+          document.getElementById('modelDetails').style.display = 'block';
+          document.getElementById('modelDetails').innerHTML = `
+            <div class="details-row">
+              <span>Name:</span>
+              <span>${model.name}</span>
+            </div>
+            <div class="details-row">
+              <span>Size:</span>
+              <span>${size} GB</span>
+            </div>
+            <div class="details-row">
+              <span>Last Modified:</span>
+              <span>${modified}</span>
+            </div>
+          `;
+        } else {
+          updateCard('model', 'error', '❌ Model Not Found', 'Run ./quick-start.sh to train the model');
+        }
+      } catch (error) {
+        updateCard('model', 'error', '❌ Cannot Check Model', 'Ollama server may not be running');
+      }
+    }
+
+    // Check Ollama Server
+    async function checkOllama() {
+      try {
+        const response = await fetch(`${OLLAMA_API}/api/tags`);
+
+        if (response.ok) {
+          updateCard('ollama', 'ready', '✅ Server Running', 'Ollama is responding on port 11434');
+
+          const data = await response.json();
+          document.getElementById('ollamaDetails').style.display = 'block';
+          document.getElementById('ollamaDetails').innerHTML = `
+            <div class="details-row">
+              <span>Status:</span>
+              <span>Online</span>
+            </div>
+            <div class="details-row">
+              <span>Port:</span>
+              <span>11434</span>
+            </div>
+            <div class="details-row">
+              <span>Models:</span>
+              <span>${data.models.length} available</span>
+            </div>
+          `;
+        } else {
+          updateCard('ollama', 'error', '❌ Server Error', 'Ollama responded with error');
+        }
+      } catch (error) {
+        updateCard('ollama', 'error', '❌ Server Offline', 'Run ./quick-start.sh to start Ollama');
+      }
+    }
+
+    // Check Web Server
+    async function checkWeb() {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          updateCard('web', 'ready', '✅ Server Running', 'Web interface is accessible on port 5001');
+
+          document.getElementById('webDetails').style.display = 'block';
+          document.getElementById('webDetails').innerHTML = `
+            <div class="details-row">
+              <span>Status:</span>
+              <span>Online</span>
+            </div>
+            <div class="details-row">
+              <span>Port:</span>
+              <span>5001</span>
+            </div>
+            <div class="details-row">
+              <span>Endpoints:</span>
+              <span>Chat, Builder, Gallery</span>
+            </div>
+          `;
+        } else {
+          updateCard('web', 'error', '❌ Server Error', 'Web server responded with error');
+        }
+      } catch (error) {
+        updateCard('web', 'error', '❌ Server Offline', 'Run ./quick-start.sh to start web server');
+      }
+    }
+
+    function updateCard(id, status, title, message) {
+      const card = document.getElementById(`${id}Card`);
+      const badge = document.getElementById(`${id}Badge`);
+      const messageEl = document.getElementById(`${id}Message`);
+
+      card.className = `status-card ${status}`;
+      badge.className = `status-badge ${status}`;
+      messageEl.textContent = message;
+
+      if (status === 'ready') {
+        badge.textContent = '✅ Ready';
+      } else if (status === 'error') {
+        badge.textContent = '❌ Error';
+      } else {
+        badge.innerHTML = '<span class="spinner"></span> Checking';
+      }
+    }
+
+    // Run checks on load
+    Promise.all([
+      checkModel(),
+      checkOllama(),
+      checkWeb()
+    ]);
+
+    // Auto-refresh every 10 seconds
+    setInterval(() => {
+      checkModel();
+      checkOllama();
+      checkWeb();
+    }, 10000);
+  </script>
+</body>
+</html>

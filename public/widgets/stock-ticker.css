@@ -1,0 +1,137 @@
+/* Stock Ticker Widget Styles */
+
+.stock-ticker-widget {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+  border-radius: 15px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  min-height: 300px;
+}
+
+.stock-ticker-widget .widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.stock-ticker-widget .widget-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.stock-ticker-widget .last-update {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.stock-ticker-widget .ticker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stock-ticker-widget .ticker-item {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.stock-ticker-widget .ticker-item:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(5px);
+}
+
+.stock-ticker-widget .ticker-symbol .symbol {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+.stock-ticker-widget .ticker-price {
+  text-align: right;
+}
+
+.stock-ticker-widget .ticker-price .price {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.stock-ticker-widget .ticker-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 5px;
+  min-width: 180px;
+  justify-content: flex-end;
+}
+
+.stock-ticker-widget .ticker-change.positive {
+  background: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.stock-ticker-widget .ticker-change.negative {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.stock-ticker-widget .ticker-change .change-arrow {
+  font-size: 1rem;
+}
+
+.stock-ticker-widget .ticker-change .change-amount {
+  font-weight: 700;
+}
+
+.stock-ticker-widget .ticker-change .change-percent {
+  opacity: 0.9;
+}
+
+.stock-ticker-widget .loading,
+.stock-ticker-widget .error,
+.stock-ticker-widget .no-data {
+  text-align: center;
+  padding: 40px 20px;
+  opacity: 0.7;
+  font-size: 1rem;
+}
+
+.stock-ticker-widget .error {
+  color: #fee2e2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .stock-ticker-widget .ticker-item {
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
+  }
+
+  .stock-ticker-widget .ticker-change {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    min-width: auto;
+  }
+
+  .stock-ticker-widget .ticker-symbol .symbol {
+    font-size: 1.1rem;
+  }
+
+  .stock-ticker-widget .ticker-price .price {
+    font-size: 1.2rem;
+  }
+}

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Mauer Network - 12 Brands by Matthew Mauer</title>
+  <meta name="description" content="A portfolio of data, AI, and developer tools built by Matthew Mauer">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="The Mauer Network">
+  <meta property="og:description" content="12 brands across creative, business, and technical domains">
+  <meta property="og:type" content="website">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Header */
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      margin-bottom: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero .subtitle {
+      font-size: 20px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat .number {
+      font-size: 36px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .hero-stat .label {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* About Section */
+    .about {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .about-content {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .about-photo {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 72px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .about-text h2 {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .about-text p {
+      color: #666;
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .social-link:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* Domain Grid */
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      margin: 60px 0 32px;
+      color: white;
+    }
+
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .domain-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .domain-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: var(--brand-color, #667eea);
+    }
+
+    .domain-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .domain-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: var(--brand-color, #667eea);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    .domain-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    .domain-url {
+      font-size: 14px;
+      color: #667eea;
+      margin-bottom: 12px;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+
+    .domain-tagline {
+      color: #666;
+      font-size: 15px;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .domain-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .domain-badge {
+      background: #f3f4f6;
+      color: #4b5563;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .domain-link {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: transform 0.2s;
+    }
+
+    .domain-link:hover {
+      transform: scale(1.05);
+    }
+
+    .coming-soon {
+      opacity: 0.7;
+    }
+
+    .coming-soon-badge {
+      background: #fbbf24;
+      color: #78350f;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 12px;
+    }
+
+    /* Trademarks Section */
+    .trademarks {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-top: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .trademarks h2 {
+      font-size: 28px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .trademark-list {
+      list-style: none;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .trademark-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .trademark-list li:last-child {
+      border-bottom: none;
+    }
+
+    /* Contact Section */
+    .contact {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-top: 40px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .contact h2 {
+      font-size: 28px;
+      margin-bottom: 24px;
+    }
+
+    .contact-info {
+      font-size: 16px;
+      color: #666;
+      line-height: 2;
+    }
+
+    .contact-info a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .contact-info a:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: white;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 24px;
+      border: 6px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .about-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .about-photo {
+        margin: 0 auto;
+      }
+
+      .social-links {
+        justify-content: center;
+      }
+
+      .domain-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero -->
+    <div class="hero">
+      <h1>THE MAUER NETWORK</h1>
+      <p class="subtitle">A portfolio of data, AI, and developer tools</p>
+
+      <div class="hero-meta" id="hero-stats">
+        <div class="hero-stat">
+          <div class="number">12</div>
+          <div class="label">Brands</div>
+        </div>
+        <div class="hero-stat">
+          <div class="number">805</div>
+          <div class="label">Interfaces</div>
+        </div>
+        <div class="hero-stat">
+          <div class="number">6</div>
+          <div class="label">Categories</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="about">
+      <div class="about-content">
+        <div class="about-photo">MM</div>
+        <div class="about-text">
+          <h2>Matthew Mauer</h2>
+          <p>Independent developer & entrepreneur building tools for data, AI, and automation. Each brand in this network solves a specific problem — from search engines that pay users to project completion tools.</p>
+          <p><strong>Philosophy:</strong> Transparent, user-first technology. No surveillance, no exploitation. Build systems that empower creators and users.</p>
+
+          <div class="social-links">
+            <a href="https://github.com/matthewmauer" class="social-link" target="_blank">
+              GitHub
+            </a>
+            <a href="mailto:matthew@mauernetwork.com" class="social-link">
+              Email
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Domains -->
+    <h2 class="section-title">OUR BRANDS</h2>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Loading portfolio...</p>
+    </div>
+
+    <div class="domain-grid" id="domain-grid" style="display: none;">
+      <!-- Domains loaded via JavaScript -->
+    </div>
+
+    <!-- Trademarks -->
+    <div class="trademarks" id="trademarks-section" style="display: none;">
+      <h2>📜 Registered Trademarks</h2>
+      <ul class="trademark-list" id="trademark-list">
+        <!-- Trademarks loaded via JavaScript -->
+      </ul>
+    </div>
+
+    <!-- Contact -->
+    <div class="contact">
+      <h2>Get In Touch</h2>
+      <div class="contact-info">
+        <p><strong>Email:</strong> <a href="mailto:matthew@mauernetwork.com">matthew@mauernetwork.com</a></p>
+        <p><strong>GitHub:</strong> <a href="https://github.com/matthewmauer" target="_blank">@matthewmauer</a></p>
+        <p><strong>Location:</strong> Remote First</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load domains from API
+    async function loadPortfolio() {
+      try {
+        const response = await fetch('/api/domains/portfolio');
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          renderDomains(data.domains);
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('domain-grid').style.display = 'grid';
+        }
+      } catch (error) {
+        console.error('Failed to load portfolio:', error);
+        document.getElementById('loading').innerHTML = '<p>Failed to load portfolio. Please refresh.</p>';
+      }
+    }
+
+    // Render domain cards
+    function renderDomains(domains) {
+      const grid = document.getElementById('domain-grid');
+
+      domains.forEach(domain => {
+        const card = document.createElement('div');
+        card.className = 'domain-card' + (domain.status === 'coming_soon' ? ' coming-soon' : '');
+        card.style.setProperty('--brand-color', domain.primary_color || '#667eea');
+
+        const logo = domain.logo_url
+          ? `<img src="${domain.logo_url}" class="domain-logo" alt="${domain.brand_name} logo">`
+          : `<div class="domain-logo">${domain.brand_name.charAt(0)}</div>`;
+
+        card.innerHTML = `
+          ${logo}
+          <div class="domain-name">${domain.brand_name}</div>
+          <div class="domain-url">${domain.domain_name}</div>
+          <p class="domain-tagline">${domain.brand_tagline || 'Coming soon'}</p>
+
+          <div class="domain-meta">
+            <span class="domain-badge">${domain.category}</span>
+            <span class="domain-badge">${domain.primary_radi}</span>
+            ${domain.interfaces_count > 0 ? `<span class="domain-badge">${domain.interfaces_count} interfaces</span>` : ''}
+          </div>
+
+          ${domain.status === 'active'
+            ? `<a href="https://${domain.domain_name}" class="domain-link" target="_blank">Visit Site →</a>`
+            : '<span class="coming-soon-badge">🚧 Coming Soon</span>'
+          }
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Load trademarks
+    async function loadTrademarks() {
+      try {
+        const response = await fetch('/api/domains/trademarks');
+        const data = await response.json();
+
+        if (data.status === 'ok' && data.trademarks.length > 0) {
+          renderTrademarks(data.trademarks);
+          document.getElementById('trademarks-section').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Failed to load trademarks:', error);
+      }
+    }
+
+    // Render trademarks
+    function renderTrademarks(trademarks) {
+      const list = document.getElementById('trademark-list');
+
+      trademarks.forEach(tm => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <span>${tm.trademark_name}${tm.trademark_symbol}</span>
+          <span>${tm.status === 'registered' ? '✓ Registered' : 'Pending'}</span>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPortfolio();
+      loadTrademarks();
+    });
+  </script>
+</body>
+</html>

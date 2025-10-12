@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalOS Mission Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .connection-status.connected {
+            background: #00ff00;
+            color: #0a0a0a;
+        }
+
+        .connection-status.disconnected {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            border: 2px solid #00ff00;
+            padding: 20px;
+            background: #0f0f0f;
+        }
+
+        .panel h2 {
+            margin-bottom: 15px;
+            color: #00ff00;
+            font-size: 1.3em;
+        }
+
+        .system-health {
+            text-align: center;
+        }
+
+        .health-indicator {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .health-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            padding: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .processes {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .process {
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .process-info {
+            flex: 1;
+        }
+
+        .process-name {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .process-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .status-indicator {
+            font-size: 1.5em;
+        }
+
+        .process-details {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .process-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #00ff00;
+            background: transparent;
+            color: #00ff00;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #00ff00;
+            color: #0a0a0a;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn.danger {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .btn.danger:hover {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .log-feed {
+            grid-column: 1 / -1;
+        }
+
+        .log-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .log-entries {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #000;
+            padding: 15px;
+            border: 1px solid #333;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid transparent;
+        }
+
+        .log-entry.INFO {
+            border-left-color: #00ff00;
+        }
+
+        .log-entry.WARN {
+            border-left-color: #ffff00;
+        }
+
+        .log-entry.ERROR {
+            border-left-color: #ff0000;
+        }
+
+        .log-timestamp {
+            color: #666;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+
+        .log-level {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+
+        .log-level.INFO {
+            background: #00ff00;
+            color: #0a0a0a;
+        }
+
+        .log-level.WARN {
+            background: #ffff00;
+            color: #0a0a0a;
+        }
+
+        .log-level.ERROR {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .log-source {
+            color: #0088ff;
+            margin-right: 10px;
+        }
+
+        .log-message {
+            color: #ccc;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #333;
+            border-top-color: #00ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #00ff00;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00cc00;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 CalOS Mission Control</h1>
+        <p>Real-time system monitoring and process management</p>
+        <div class="connection-status disconnected" id="connectionStatus">
+            Disconnected
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="panel system-health">
+            <h2>System Health</h2>
+            <div class="health-indicator" id="healthIndicator">⚪</div>
+            <div id="healthStatus">Checking...</div>
+            <div class="health-stats">
+                <div class="stat">
+                    <div class="stat-label">Total Processes</div>
+                    <div class="stat-value" id="totalProcesses">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Healthy</div>
+                    <div class="stat-value" id="healthyProcesses" style="color: #00ff00;">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Working</div>
+                    <div class="stat-value" id="workingProcesses" style="color: #ffff00;">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Errors</div>
+                    <div class="stat-value" id="errorProcesses" style="color: #ff0000;">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel processes">
+            <h2>Processes</h2>
+            <div id="processList">
+                <p style="color: #666;">Loading processes...</p>
+            </div>
+        </div>
+
+        <div class="panel log-feed">
+            <h2>Live Log Feed</h2>
+            <div class="log-controls">
+                <button class="btn" onclick="clearLogs()">Clear</button>
+                <button class="btn" onclick="toggleAutoScroll()">
+                    <span id="autoScrollText">Auto-scroll: ON</span>
+                </button>
+                <button class="btn" onclick="exportLogs()">Export</button>
+            </div>
+            <div class="log-entries" id="logEntries">
+                <div style="color: #666;">Waiting for logs...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let autoScroll = true;
+        let logs = [];
+        const maxLogs = 500;
+
+        // Connect to WebSocket
+        function connect() {
+            const wsUrl = 'ws://localhost:3003';
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('Connected to CalOS');
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').className = 'connection-status connected';
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from CalOS');
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').className = 'connection-status disconnected';
+
+                // Reconnect after 3 seconds
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    handleMessage(message);
+                } catch (error) {
+                    console.error('Failed to parse message:', error);
+                }
+            };
+        }
+
+        // Handle incoming message
+        function handleMessage(message) {
+            switch (message.type) {
+                case 'connected':
+                    console.log('Welcome:', message.message);
+                    break;
+                case 'system_health':
+                    updateSystemHealth(message.data);
+                    break;
+                case 'log':
+                    addLog(message.data);
+                    break;
+                case 'error_detected':
+                    addError(message.data);
+                    break;
+                case 'health_check':
+                    updateProcessHealth(message.data);
+                    break;
+                case 'status_change':
+                    handleStatusChange(message.data);
+                    break;
+                case 'process_event':
+                    handleProcessEvent(message.data);
+                    break;
+            }
+        }
+
+        // Update system health display
+        function updateSystemHealth(health) {
+            const indicator = document.getElementById('healthIndicator');
+            const status = document.getElementById('healthStatus');
+
+            indicator.textContent = health.overall;
+            status.textContent = `${health.percentage} healthy`;
+            status.style.color = health.color;
+
+            document.getElementById('totalProcesses').textContent = health.total;
+            document.getElementById('healthyProcesses').textContent = health.healthy;
+            document.getElementById('workingProcesses').textContent = health.working;
+            document.getElementById('errorProcesses').textContent = health.errors;
+        }
+
+        // Add log entry
+        function addLog(log) {
+            logs.push(log);
+            if (logs.length > maxLogs) {
+                logs.shift();
+            }
+
+            const container = document.getElementById('logEntries');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${log.level}`;
+
+            const timestamp = new Date(log.timestamp).toLocaleTimeString();
+
+            entry.innerHTML = `
+                <span class="log-timestamp">${timestamp}</span>
+                <span class="log-level ${log.level}">${log.level}</span>
+                <span class="log-source">${log.source}</span>
+                <span class="log-message">${log.message}</span>
+            `;
+
+            container.appendChild(entry);
+
+            // Auto-scroll
+            if (autoScroll) {
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Keep max logs
+            while (container.children.length > maxLogs) {
+                container.removeChild(container.firstChild);
+            }
+        }
+
+        // Add error entry
+        function addError(error) {
+            const container = document.getElementById('logEntries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ERROR';
+            entry.style.borderLeft = '3px solid #ff0000';
+
+            entry.innerHTML = `
+                <span class="log-timestamp">${new Date().toLocaleTimeString()}</span>
+                <span class="log-level ERROR">ERROR</span>
+                <span class="log-source">${error.source || 'system'}</span>
+                <span class="log-message">🚨 ${error.type}: ${error.rawLine || error.error}</span>
+                ${error.autoFix ? `<br><span class="log-message" style="margin-left: 150px;">💡 Auto-fix: ${error.autoFix}</span>` : ''}
+            `;
+
+            container.appendChild(entry);
+
+            if (autoScroll) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // Update process health
+        function updateProcessHealth(data) {
+            // This would update individual process indicators
+            console.log('Health check:', data);
+        }
+
+        // Handle status change
+        function handleStatusChange(data) {
+            addLog({
+                timestamp: new Date().toISOString(),
+                level: 'INFO',
+                source: 'health',
+                message: `${data.name}: ${data.from} → ${data.to}`
+            });
+        }
+
+        // Handle process event
+        function handleProcessEvent(data) {
+            const eventType = Object.keys(data).find(k => k !== 'name' && k !== 'timestamp');
+            addLog({
+                timestamp: data.timestamp || new Date().toISOString(),
+                level: 'INFO',
+                source: 'process',
+                message: `${data.name}: ${eventType || 'event'}`
+            });
+        }
+
+        // Clear logs
+        function clearLogs() {
+            logs = [];
+            document.getElementById('logEntries').innerHTML = '<div style="color: #666;">Logs cleared</div>';
+        }
+
+        // Toggle auto-scroll
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            document.getElementById('autoScrollText').textContent = `Auto-scroll: ${autoScroll ? 'ON' : 'OFF'}`;
+        }
+
+        // Export logs
+        function exportLogs() {
+            const json = JSON.stringify(logs, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `calos-logs-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Fetch processes
+        async function fetchProcesses() {
+            try {
+                const response = await fetch('http://localhost:3003/processes');
+                const processes = await response.json();
+                displayProcesses(processes);
+            } catch (error) {
+                console.error('Failed to fetch processes:', error);
+            }
+        }
+
+        // Display processes
+        function displayProcesses(processes) {
+            const container = document.getElementById('processList');
+            container.innerHTML = '';
+
+            for (const [name, info] of Object.entries(processes)) {
+                const div = document.createElement('div');
+                div.className = 'process';
+
+                const statusEmoji = info.status === 'running' ? '🟢' : '🔴';
+
+                div.innerHTML = `
+                    <div class="process-info">
+                        <div class="process-name">${name}</div>
+                        <div class="process-status">
+                            <span class="status-indicator">${statusEmoji}</span>
+                            <span>${info.status}</span>
+                            ${info.status === 'running' ? '<span class="spinner"></span>' : ''}
+                        </div>
+                        <div class="process-details">
+                            ${info.pid ? `PID: ${info.pid}` : 'Not running'}
+                            ${info.restartCount > 0 ? ` | Restarts: ${info.restartCount}` : ''}
+                        </div>
+                        ${info.status === 'running' ? '<div class="progress-bar"><div class="progress-fill"></div></div>' : ''}
+                    </div>
+                    <div class="process-actions">
+                        <button class="btn" onclick="restartProcess('${name}')" ${info.status !== 'running' ? 'disabled' : ''}>
+                            Restart
+                        </button>
+                        <button class="btn danger" onclick="stopProcess('${name}')" ${info.status !== 'running' ? 'disabled' : ''}>
+                            Stop
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(div);
+            }
+        }
+
+        // Restart process (placeholder)
+        function restartProcess(name) {
+            console.log('Restart:', name);
+            addLog({
+                timestamp: new Date().toISOString(),
+                level: 'INFO',
+                source: 'user',
+                message: `Restart requested for ${name}`
+            });
+            // TODO: Implement API call to process manager
+        }
+
+        // Stop process (placeholder)
+        function stopProcess(name) {
+            console.log('Stop:', name);
+            addLog({
+                timestamp: new Date().toISOString(),
+                level: 'WARN',
+                source: 'user',
+                message: `Stop requested for ${name}`
+            });
+            // TODO: Implement API call to process manager
+        }
+
+        // Initialize
+        connect();
+        fetchProcesses();
+        setInterval(fetchProcesses, 10000); // Refresh every 10s
+    </script>
+</body>
+</html>
