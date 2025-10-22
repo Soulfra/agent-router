@@ -1,0 +1,417 @@
+#!/usr/bin/env node
+
+/**
+ * QR Login Setup Wizard
+ *
+ * Automated setup for serverless QR login using Google Sheets
+ * - Detects existing Google OAuth credentials
+ * - Reuses Gmail webhook Google Sheets setup
+ * - Auto-creates QR sessions sheet
+ * - Generates browser-compatible config
+ * - Auto-deploys to GitHub Pages
+ *
+ * Usage: npm run qr:setup
+ */
+
+const readline = require('readline');
+const { google } = require('googleapis');
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+// Colors
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m'
+};
+
+// Create readline interface
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const prompt = (question) => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
+};
+
+const confirm = async (question, defaultYes = true) => {
+  const answer = await prompt(`${question} (${defaultYes ? 'Y/n' : 'y/N'}): `);
+  if (!answer) return defaultYes;
+  return answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+};
+
+class QRLoginSetup {
+  constructor() {
+    this.config = {
+      spreadsheetId: null,
+      sheetName: 'qr_sessions',
+      apiKey: null,
+      hasGoogleCLI: false,
+      hasExistingCredentials: false,
+      credentialsPath: null,
+      projectsDir: path.join(__dirname, '..', 'projects', 'soulfra.github.io')
+    };
+  }
+
+  /**
+   * Main setup flow
+   */
+  async run() {
+    this.displayBanner();
+
+    try {
+      // Step 1: Detect existing Google setup
+      await this.detectGoogleSetup();
+
+      // Step 2: Check/create Google Sheet
+      await this.setupGoogleSheet();
+
+      // Step 3: Setup API key for browser
+      await this.setupAPIKey();
+
+      // Step 4: Inject credentials into deployed files
+      await this.injectCredentials();
+
+      // Step 5: Deploy to GitHub Pages
+      if (await confirm('\nDeploy to GitHub Pages now?')) {
+        await this.deploy();
+      }
+
+      this.displaySuccess();
+
+    } catch (error) {
+      console.error(`\n${colors.red}✗ Setup failed:${colors.reset}`, error.message);
+      console.error(error.stack);
+      process.exit(1);
+    } finally {
+      rl.close();
+    }
+  }
+
+  /**
+   * Display welcome banner
+   */
+  displayBanner() {
+    console.log(`
+${colors.cyan}${colors.bright}
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║        QR Login Setup (Automated)                            ║
+║        CALOS Platform                                        ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+${colors.reset}
+
+${colors.dim}Serverless QR login using Google Sheets${colors.reset}
+
+${colors.green}${colors.bright}✓ Reuses existing Google OAuth${colors.reset}
+${colors.green}${colors.bright}✓ Auto-creates Google Sheet${colors.reset}
+${colors.green}${colors.bright}✓ Auto-injects credentials${colors.reset}
+${colors.green}${colors.bright}✓ Auto-deploys to GitHub Pages${colors.reset}
+`);
+  }
+
+  /**
+   * Detect existing Google Cloud setup
+   */
+  async detectGoogleSetup() {
+    console.log(`\n${colors.bright}${colors.cyan}[1/5] Detecting Google Cloud Setup...${colors.reset}\n`);
+
+    // Check for gcloud CLI
+    try {
+      const gcloudVersion = execSync('gcloud --version 2>&1', { encoding: 'utf8' });
+      if (gcloudVersion.includes('Google Cloud SDK')) {
+        this.config.hasGoogleCLI = true;
+        console.log(`${colors.green}✓${colors.reset} Google Cloud CLI detected`);
+
+        // Get active account
+        try {
+          const account = execSync('gcloud config get-value account 2>&1', { encoding: 'utf8' }).trim();
+          if (account && !account.includes('(unset)')) {
+            console.log(`${colors.green}✓${colors.reset} Authenticated as: ${colors.cyan}${account}${colors.reset}`);
+          }
+        } catch (e) {
+          console.log(`${colors.yellow}⚠${colors.reset} gcloud not authenticated`);
+        }
+      }
+    } catch (e) {
+      console.log(`${colors.yellow}⚠${colors.reset} Google Cloud CLI not installed`);
+    }
+
+    // Check for existing credentials
+    const possiblePaths = [
+      path.join(__dirname, '..', 'config', 'google-sheets-credentials.json'),
+      path.join(__dirname, '..', '.credentials', 'google-sheets.json'),
+      path.join(process.env.HOME, '.config', 'gcloud', 'application_default_credentials.json')
+    ];
+
+    for (const credPath of possiblePaths) {
+      if (fs.existsSync(credPath)) {
+        this.config.hasExistingCredentials = true;
+        this.config.credentialsPath = credPath;
+        console.log(`${colors.green}✓${colors.reset} Found credentials: ${colors.dim}${credPath}${colors.reset}`);
+        break;
+      }
+    }
+
+    // Check .env for Google Sheets config
+    const envPath = path.join(__dirname, '..', '.env');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const spreadsheetIdMatch = envContent.match(/GOOGLE_SHEETS_DB_ID=(.+)/);
+      if (spreadsheetIdMatch) {
+        this.config.spreadsheetId = spreadsheetIdMatch[1].trim();
+        console.log(`${colors.green}✓${colors.reset} Found existing spreadsheet: ${colors.cyan}${this.config.spreadsheetId}${colors.reset}`);
+      }
+    }
+
+    if (!this.config.hasExistingCredentials && !this.config.hasGoogleCLI) {
+      console.log(`\n${colors.yellow}⚠ No Google credentials found${colors.reset}`);
+      console.log(`\nPlease run one of these first:`);
+      console.log(`  ${colors.cyan}npm run gmail:setup:free${colors.reset}  (Sets up Google Sheets + Gmail)`);
+      console.log(`  ${colors.cyan}gcloud auth application-default login${colors.reset}  (Authenticates gcloud)`);
+      process.exit(1);
+    }
+  }
+
+  /**
+   * Setup Google Sheet for QR sessions
+   */
+  async setupGoogleSheet() {
+    console.log(`\n${colors.bright}${colors.cyan}[2/5] Setting Up Google Sheet...${colors.reset}\n`);
+
+    // If no spreadsheet ID, create new one or ask for existing
+    if (!this.config.spreadsheetId) {
+      console.log(`No existing Google Sheet found.`);
+      const useExisting = await confirm('Do you have an existing Google Sheet to use?', false);
+
+      if (useExisting) {
+        this.config.spreadsheetId = await prompt('Enter Spreadsheet ID: ');
+      } else {
+        console.log(`\n${colors.dim}Creating new Google Sheet...${colors.reset}`);
+        console.log(`${colors.yellow}⚠ Manual step required:${colors.reset}`);
+        console.log(`1. Go to: ${colors.cyan}https://sheets.google.com${colors.reset}`);
+        console.log(`2. Create new spreadsheet`);
+        console.log(`3. Copy the ID from URL (long string between /d/ and /edit)`);
+        console.log(`4. Share → "Anyone with link" → "Editor"\n`);
+
+        this.config.spreadsheetId = await prompt('Enter Spreadsheet ID: ');
+      }
+    }
+
+    // Add sheet to existing spreadsheet
+    console.log(`\n${colors.dim}Adding "${this.config.sheetName}" sheet...${colors.reset}`);
+
+    try {
+      // Load credentials
+      let auth;
+      if (this.config.credentialsPath && fs.existsSync(this.config.credentialsPath)) {
+        const credentials = JSON.parse(fs.readFileSync(this.config.credentialsPath, 'utf8'));
+        auth = new google.auth.GoogleAuth({
+          credentials,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets']
+        });
+      } else if (this.config.hasGoogleCLI) {
+        // Use gcloud application default credentials
+        auth = new google.auth.GoogleAuth({
+          scopes: ['https://www.googleapis.com/auth/spreadsheets']
+        });
+      }
+
+      const authClient = await auth.getClient();
+      const sheets = google.sheets({ version: 'v4', auth: authClient });
+
+      // Check if sheet exists
+      const spreadsheet = await sheets.spreadsheets.get({
+        spreadsheetId: this.config.spreadsheetId
+      });
+
+      const existingSheets = spreadsheet.data.sheets.map(s => s.properties.title);
+
+      if (!existingSheets.includes(this.config.sheetName)) {
+        // Create sheet
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: this.config.spreadsheetId,
+          requestBody: {
+            requests: [{
+              addSheet: {
+                properties: {
+                  title: this.config.sheetName,
+                  gridProperties: {
+                    rowCount: 1000,
+                    columnCount: 10
+                  }
+                }
+              }
+            }]
+          }
+        });
+
+        // Add headers
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: this.config.spreadsheetId,
+          range: `${this.config.sheetName}!A1:I1`,
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: [[
+              'sessionId', 'status', 'createdAt', 'expiresAt',
+              'desktopFingerprint', 'phoneFingerprint', 'verified',
+              'userId', 'verifiedAt'
+            ]]
+          }
+        });
+
+        console.log(`${colors.green}✓${colors.reset} Sheet "${this.config.sheetName}" created`);
+      } else {
+        console.log(`${colors.green}✓${colors.reset} Sheet "${this.config.sheetName}" already exists`);
+      }
+
+    } catch (error) {
+      console.error(`${colors.red}✗${colors.reset} Failed to create sheet:`, error.message);
+      console.log(`\n${colors.yellow}You can create it manually:${colors.reset}`);
+      console.log(`1. Open: https://docs.google.com/spreadsheets/d/${this.config.spreadsheetId}/edit`);
+      console.log(`2. Create new sheet named "${this.config.sheetName}"`);
+      console.log(`3. Add header row: sessionId | status | createdAt | expiresAt | desktopFingerprint | phoneFingerprint | verified | userId | verifiedAt`);
+
+      if (!(await confirm('\nContinue anyway?'))) {
+        process.exit(1);
+      }
+    }
+  }
+
+  /**
+   * Setup API key for browser access
+   */
+  async setupAPIKey() {
+    console.log(`\n${colors.bright}${colors.cyan}[3/5] Setting Up API Key...${colors.reset}\n`);
+
+    console.log(`${colors.dim}For browser access, you need a Google API key with Sheets API enabled.${colors.reset}\n`);
+
+    const hasApiKey = await confirm('Do you have a Google API key?', false);
+
+    if (hasApiKey) {
+      this.config.apiKey = await prompt('Enter API key: ');
+    } else {
+      console.log(`\n${colors.yellow}⚠ Manual step required:${colors.reset}`);
+      console.log(`1. Go to: ${colors.cyan}https://console.cloud.google.com/apis/credentials${colors.reset}`);
+      console.log(`2. Click "Create Credentials" → "API key"`);
+      console.log(`3. Click "Restrict Key"`);
+      console.log(`4. Under "API restrictions", select "Restrict key"`);
+      console.log(`5. Check "Google Sheets API"`);
+      console.log(`6. Under "Website restrictions", add: https://soulfra.github.io/*`);
+      console.log(`7. Click "Save"\n`);
+
+      this.config.apiKey = await prompt('Enter API key: ');
+    }
+
+    console.log(`${colors.green}✓${colors.reset} API key configured`);
+  }
+
+  /**
+   * Inject credentials into deployed files
+   */
+  async injectCredentials() {
+    console.log(`\n${colors.bright}${colors.cyan}[4/5] Injecting Credentials...${colors.reset}\n`);
+
+    const files = [
+      path.join(this.config.projectsDir, 'qr-login-gist.html'),
+      path.join(this.config.projectsDir, 'qr-scanner-gist.html'),
+      path.join(this.config.projectsDir, 'sheets-qr-auth.js')
+    ];
+
+    for (const file of files) {
+      if (!fs.existsSync(file)) {
+        console.log(`${colors.yellow}⚠${colors.reset} File not found: ${file}`);
+        continue;
+      }
+
+      let content = fs.readFileSync(file, 'utf8');
+
+      // Replace placeholder values
+      content = content.replace(/1YourSpreadsheetIdHere/g, this.config.spreadsheetId);
+      content = content.replace(/YOUR_GOOGLE_API_KEY/g, this.config.apiKey);
+
+      fs.writeFileSync(file, content, 'utf8');
+
+      console.log(`${colors.green}✓${colors.reset} Updated: ${colors.dim}${path.basename(file)}${colors.reset}`);
+    }
+  }
+
+  /**
+   * Deploy to GitHub Pages
+   */
+  async deploy() {
+    console.log(`\n${colors.bright}${colors.cyan}[5/5] Deploying to GitHub Pages...${colors.reset}\n`);
+
+    try {
+      // Navigate to projects directory
+      process.chdir(this.config.projectsDir);
+
+      // Git add
+      execSync('git add qr-login-gist.html qr-scanner-gist.html sheets-qr-auth.js', { stdio: 'inherit' });
+
+      // Commit
+      execSync('git commit -m "Auto-inject QR login credentials"', { stdio: 'inherit' });
+
+      // Push
+      execSync('git push origin main', { stdio: 'inherit' });
+
+      console.log(`\n${colors.green}✓${colors.reset} Deployed successfully!`);
+
+    } catch (error) {
+      console.error(`${colors.red}✗${colors.reset} Deployment failed:`, error.message);
+      console.log(`\nYou can deploy manually:`);
+      console.log(`  cd ${this.config.projectsDir}`);
+      console.log(`  git add .`);
+      console.log(`  git commit -m "Update QR login credentials"`);
+      console.log(`  git push origin main`);
+    }
+  }
+
+  /**
+   * Display success message
+   */
+  displaySuccess() {
+    console.log(`
+${colors.green}${colors.bright}
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║        ✓ QR Login Setup Complete!                           ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+${colors.reset}
+
+${colors.bright}Your QR login is live at:${colors.reset}
+  ${colors.cyan}https://soulfra.github.io/qr-login-gist.html${colors.reset}
+
+${colors.bright}Configuration:${colors.reset}
+  Spreadsheet: ${colors.cyan}https://docs.google.com/spreadsheets/d/${this.config.spreadsheetId}/edit${colors.reset}
+  Sheet Name: ${colors.cyan}${this.config.sheetName}${colors.reset}
+
+${colors.bright}Next steps:${colors.reset}
+  1. Test: ${colors.cyan}npm run qr:test${colors.reset}
+  2. View sheet: ${colors.cyan}open https://docs.google.com/spreadsheets/d/${this.config.spreadsheetId}/edit${colors.reset}
+
+${colors.dim}Scan the QR code on your iPhone to test login!${colors.reset}
+`);
+  }
+}
+
+// Run setup
+const setup = new QRLoginSetup();
+setup.run().catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
