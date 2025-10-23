@@ -11,6 +11,11 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
 
+  <!-- KaTeX for mathematical notation -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
   <style>
     * {
       margin: 0;
@@ -433,7 +438,7 @@
   </div>
 
   <script>
-    const API_BASE = window.location.origin.replace(':5001', ':11434');
+    const API_BASE = window.location.origin; // Route through agent-router
     let currentModel = 'calos-expert';
     let isGenerating = false;
 
@@ -543,7 +548,7 @@
       scrollToBottom();
 
       try {
-        const response = await fetch(`${API_BASE}/api/generate`, {
+        const response = await fetch(`${API_BASE}/api/ollama/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -585,6 +590,9 @@
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
 
+      // Replace symbol shortcuts (before markdown parsing)
+      content = replaceSymbolShortcuts(content);
+
       // Parse markdown-style code blocks
       content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
         return `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
@@ -605,6 +613,19 @@
       messageDiv.appendChild(contentDiv);
       elements.chatContainer.appendChild(messageDiv);
 
+      // Render LaTeX math if KaTeX is loaded
+      if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(contentDiv, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+
       scrollToBottom();
     }
 
@@ -612,6 +633,29 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function replaceSymbolShortcuts(text) {
+      const shortcuts = {
+        // LaTeX-style
+        '\\\\alpha': 'α', '\\\\beta': 'β', '\\\\gamma': 'γ', '\\\\delta': 'δ',
+        '\\\\pi': 'π', '\\\\sigma': 'σ', '\\\\omega': 'ω', '\\\\Omega': 'Ω',
+        '\\\\sum': '∑', '\\\\prod': '∏', '\\\\int': '∫', '\\\\partial': '∂',
+        '\\\\infty': '∞', '\\\\pm': '±', '\\\\neq': '≠', '\\\\leq': '≤', '\\\\geq': '≥',
+        '\\\\nabla': '∇', '\\\\sqrt': '√',
+
+        // Emoji-style
+        ':alpha:': 'α', ':beta:': 'β', ':gamma:': 'γ', ':delta:': 'δ',
+        ':pi:': 'π', ':sigma:': 'σ', ':omega:': 'ω',
+        ':sum:': '∑', ':integral:': '∫', ':infinity:': '∞',
+        ':plus-minus:': '±', ':not-equal:': '≠'
+      };
+
+      let result = text;
+      for (const [shortcut, symbol] of Object.entries(shortcuts)) {
+        result = result.replace(new RegExp(shortcut, 'g'), symbol);
+      }
+      return result;
     }
 
     function scrollToBottom() {

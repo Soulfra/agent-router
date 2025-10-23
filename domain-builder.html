@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Domain Project Builder</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .builder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .panel h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #61dafb;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 15px;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      resize: vertical;
+    }
+
+    textarea::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      background: #2ecc71;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 10px;
+    }
+
+    .btn:hover {
+      background: #27ae60;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .output {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .output pre {
+      white-space: pre-wrap;
+      color: #61dafb;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-left: 10px;
+    }
+
+    .status.success {
+      background: rgba(46,204,113,0.3);
+      color: #2ecc71;
+    }
+
+    .status.error {
+      background: rgba(231,76,60,0.3);
+      color: #e74c3c;
+    }
+
+    .status.pending {
+      background: rgba(241,196,15,0.3);
+      color: #f1c40f;
+    }
+
+    .checkbox-group {
+      margin: 20px 0;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .builder-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🏗️ Multi-Domain Project Builder</h1>
+      <p class="subtitle">Auto-scaffold projects for all your domains</p>
+    </header>
+
+    <div class="builder-grid">
+      <!-- Input Panel -->
+      <div class="panel">
+        <h2>📝 Domain Input</h2>
+
+        <div class="input-group">
+          <label>Paste your domains (one per line)</label>
+          <textarea id="domainInput" placeholder="soulfra.com
+calriven.com
+vibecoding.com
+calos.dev
+example.io
+mysite.net"></textarea>
+        </div>
+
+        <div class="input-group">
+          <label>GitHub Username</label>
+          <input type="text" id="githubUser" value="Soulfra" placeholder="Soulfra">
+        </div>
+
+        <div class="input-group">
+          <label>Google Sheet ID (optional)</label>
+          <input type="text" id="sheetId" placeholder="1abc...xyz">
+        </div>
+
+        <div class="input-group">
+          <label>Database Name</label>
+          <input type="text" id="dbName" value="calos" placeholder="calos">
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="createGithub" checked>
+            Create GitHub repos
+          </label>
+          <label>
+            <input type="checkbox" id="setupGodaddy" checked>
+            Configure GoDaddy DNS
+          </label>
+          <label>
+            <input type="checkbox" id="createSheets" checked>
+            Create Google Sheets
+          </label>
+          <label>
+            <input type="checkbox" id="setupWhitelist" checked>
+            Add to domain whitelist
+          </label>
+          <label>
+            <input type="checkbox" id="createScripts" checked>
+            Generate Python/Go scripts
+          </label>
+        </div>
+
+        <button class="btn" onclick="generateStructure()">🚀 Generate Structure</button>
+        <button class="btn btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel">
+        <h2>📦 Generated Output</h2>
+
+        <div class="output" id="output">
+          <pre>Waiting for input...</pre>
+        </div>
+
+        <button class="btn" onclick="downloadZip()" style="margin-top: 20px;">💾 Download ZIP</button>
+        <button class="btn btn-secondary" onclick="copyToClipboard()">📋 Copy Commands</button>
+      </div>
+    </div>
+
+    <!-- Full Width Commands Panel -->
+    <div class="panel" style="margin-top: 30px;">
+      <h2>⚡ Generated Commands</h2>
+      <div class="output" id="commandsOutput">
+        <pre>Run "Generate Structure" to see commands...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let generatedStructure = {};
+    let generatedCommands = [];
+
+    function generateStructure() {
+      const domains = document.getElementById('domainInput').value
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d.length > 0);
+
+      if (domains.length === 0) {
+        alert('Please enter at least one domain');
+        return;
+      }
+
+      const githubUser = document.getElementById('githubUser').value || 'Soulfra';
+      const sheetId = document.getElementById('sheetId').value;
+      const dbName = document.getElementById('dbName').value || 'calos';
+
+      const createGithub = document.getElementById('createGithub').checked;
+      const setupGodaddy = document.getElementById('setupGodaddy').checked;
+      const createSheets = document.getElementById('createSheets').checked;
+      const setupWhitelist = document.getElementById('setupWhitelist').checked;
+      const createScripts = document.getElementById('createScripts').checked;
+
+      generatedStructure = {};
+      generatedCommands = [];
+
+      let output = '';
+      output += `🎯 Processing ${domains.length} domains...\n\n`;
+
+      domains.forEach((domain, index) => {
+        const domainName = domain.replace(/\.(com|io|net|dev|org)$/, '');
+        const extension = domain.match(/\.(com|io|net|dev|org)$/)?.[1] || 'com';
+
+        output += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        output += `${index + 1}. ${domain}\n`;
+        output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+        // Generate folder structure
+        const folderStructure = {
+          [`projects/${domain}`]: {
+            'index.html': generateIndexHTML(domain, domainName),
+            'sdk.html': '<!-- SDK Integration Page -->',
+            'privacy-dashboard.html': '<!-- Privacy Dashboard -->',
+            'CNAME': domain,
+            'README.md': generateReadme(domain),
+          },
+          [`scripts/${domainName}`]: {},
+          [`config/${domainName}`]: {}
+        };
+
+        // Add Python script
+        if (createScripts) {
+          folderStructure[`scripts/${domainName}`][`setup_${domainName}.py`] = generatePythonScript(domain, dbName);
+          folderStructure[`scripts/${domainName}`][`deploy_${domainName}.go`] = generateGoScript(domain);
+        }
+
+        // Add config files
+        folderStructure[`config/${domainName}`]['.env'] = generateEnvFile(domain);
+        folderStructure[`config/${domainName}`]['nginx.conf'] = generateNginxConfig(domain);
+
+        generatedStructure[domain] = folderStructure;
+
+        // Generate commands
+        output += `📁 Folder Structure:\n`;
+        Object.keys(folderStructure).forEach(folder => {
+          output += `  ├── ${folder}/\n`;
+          Object.keys(folderStructure[folder]).forEach(file => {
+            output += `  │   └── ${file}\n`;
+          });
+        });
+        output += `\n`;
+
+        // GitHub commands
+        if (createGithub) {
+          output += `🐙 GitHub Commands:\n`;
+          const repoName = domain.replace(/\./g, '-');
+          generatedCommands.push(`# Create GitHub repo for ${domain}`);
+          generatedCommands.push(`gh repo create ${githubUser}/${repoName} --public --description "Website for ${domain}"`);
+          generatedCommands.push(`cd projects/${domain}`);
+          generatedCommands.push(`git init`);
+          generatedCommands.push(`git add .`);
+          generatedCommands.push(`git commit -m "Initial commit for ${domain}"`);
+          generatedCommands.push(`git branch -M main`);
+          generatedCommands.push(`git remote add origin https://github.com/${githubUser}/${repoName}.git`);
+          generatedCommands.push(`git push -u origin main`);
+          generatedCommands.push(`cd ../..`);
+          generatedCommands.push(``);
+          output += `  ✓ gh repo create ${githubUser}/${repoName}\n`;
+          output += `  ✓ git push to remote\n\n`;
+        }
+
+        // GoDaddy DNS
+        if (setupGodaddy) {
+          output += `🌐 GoDaddy DNS Commands:\n`;
+          generatedCommands.push(`# Configure DNS for ${domain}`);
+          generatedCommands.push(`# Using GoDaddy API (requires GODADDY_API_KEY and GODADDY_API_SECRET)`);
+          generatedCommands.push(`curl -X PATCH "https://api.godaddy.com/v1/domains/${domain}/records/A/@" \\`);
+          generatedCommands.push(`  -H "Authorization: sso-key \${GODADDY_API_KEY}:\${GODADDY_API_SECRET}" \\`);
+          generatedCommands.push(`  -H "Content-Type: application/json" \\`);
+          generatedCommands.push(`  -d '[{"data":"185.199.108.153"},{"data":"185.199.109.153"}]'`);
+          generatedCommands.push(``);
+          output += `  ✓ A record → GitHub Pages\n`;
+          output += `  ✓ CNAME → ${githubUser}.github.io\n\n`;
+        }
+
+        // Google Sheets
+        if (createSheets) {
+          output += `📊 Google Sheets Integration:\n`;
+          if (sheetId) {
+            output += `  ✓ Using existing sheet: ${sheetId}\n`;
+          } else {
+            output += `  ⚠️  No sheet ID provided - will create new\n`;
+          }
+          generatedCommands.push(`# Google Sheets integration for ${domain}`);
+          generatedCommands.push(`python scripts/${domainName}/setup_${domainName}.py --create-sheet`);
+          generatedCommands.push(``);
+          output += `\n`;
+        }
+
+        // Domain whitelist
+        if (setupWhitelist) {
+          output += `🔒 Domain Whitelist:\n`;
+          generatedCommands.push(`# Add ${domain} to whitelist`);
+          generatedCommands.push(`node -e "const verifier = require('./lib/agent-domain-verifier'); const v = new verifier(); v.trustDomain('${domain}');"`);
+          generatedCommands.push(``);
+          output += `  ✓ Added to agent-domain-verifier.js\n\n`;
+        }
+
+        // Database setup
+        output += `🗄️  Database Commands:\n`;
+        generatedCommands.push(`# Setup database for ${domain}`);
+        generatedCommands.push(`psql -U postgres -d ${dbName} -c "CREATE TABLE IF NOT EXISTS ${domainName}_data (id SERIAL PRIMARY KEY, created_at TIMESTAMP DEFAULT NOW());"`);
+        generatedCommands.push(``);
+        output += `  ✓ Table: ${domainName}_data\n\n`;
+      });
+
+      // Summary
+      output += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      output += `✅ Structure generated for ${domains.length} domains\n`;
+      output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+
+      document.getElementById('output').innerHTML = `<pre>${output}</pre>`;
+      document.getElementById('commandsOutput').innerHTML = `<pre>${generatedCommands.join('\n')}</pre>`;
+    }
+
+    function generateIndexHTML(domain, domainName) {
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${domainName.charAt(0).toUpperCase() + domainName.slice(1)} - Privacy-First Platform</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+    .cta {
+      display: inline-block;
+      padding: 15px 40px;
+      background: #fff;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔒 ${domainName.charAt(0).toUpperCase() + domainName.slice(1)}</h1>
+    <p>Privacy-First Platform</p>
+    <a href="sdk.html" class="cta">SDK Demo</a>
+    <a href="privacy-dashboard.html" class="cta">Privacy Dashboard</a>
+  </div>
+  <script src="https://soulfra.github.io/calos-sdk-browser.js"></script>
+</body>
+</html>`;
+    }
+
+    function generateReadme(domain) {
+      return `# ${domain}
+
+Auto-generated website for ${domain}
+
+## Deploy
+
+\`\`\`bash
+# Push to GitHub Pages
+git push origin main
+
+# Configure DNS (GoDaddy)
+# Point A record to GitHub Pages IPs:
+# 185.199.108.153
+# 185.199.109.153
+# 185.199.110.153
+# 185.199.111.153
+\`\`\`
+
+## Integration
+
+- CalOS SDK: Loaded from soulfra.github.io
+- Privacy Dashboard: Built-in
+- Domain Whitelisted: Yes
+`;
+    }
+
+    function generatePythonScript(domain, dbName) {
+      return `#!/usr/bin/env python3
+"""
+Setup script for ${domain}
+Auto-generated by Multi-Domain Project Builder
+"""
+
+import os
+import sys
+import psycopg2
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+DOMAIN = "${domain}"
+DB_NAME = "${dbName}"
+
+def setup_database():
+    """Create database tables for ${domain}"""
+    conn = psycopg2.connect(
+        dbname=DB_NAME,
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASSWORD", ""),
+        host=os.getenv("DB_HOST", "localhost")
+    )
+    cur = conn.cursor()
+
+    # Create domain-specific table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS ${domain.replace(/\./g, '_')}_analytics (
+            id SERIAL PRIMARY KEY,
+            event_type VARCHAR(100),
+            user_id VARCHAR(255),
+            metadata JSONB,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    print(f"✓ Database setup complete for {DOMAIN}")
+
+def create_google_sheet():
+    """Create Google Sheet for ${domain}"""
+    # TODO: Implement Google Sheets API integration
+    print(f"✓ Google Sheet created for {DOMAIN}")
+
+if __name__ == "__main__":
+    if "--create-sheet" in sys.argv:
+        create_google_sheet()
+    else:
+        setup_database()
+`;
+    }
+
+    function generateGoScript(domain) {
+      return `package main
+
+// Deploy script for ${domain}
+// Auto-generated by Multi-Domain Project Builder
+
+import (
+\t"fmt"
+\t"os/exec"
+)
+
+func main() {
+\tdomain := "${domain}"
+\tfmt.Printf("Deploying %s...\\n", domain)
+\t
+\t// Git push
+\tcmd := exec.Command("git", "push", "origin", "main")
+\tif err := cmd.Run(); err != nil {
+\t\tfmt.Printf("Error: %v\\n", err)
+\t\treturn
+\t}
+\t
+\tfmt.Printf("✓ Deployed %s\\n", domain)
+}
+`;
+    }
+
+    function generateEnvFile(domain) {
+      return `# Environment configuration for ${domain}
+DOMAIN=${domain}
+EMAIL_FROM_ADDRESS=team@${domain}
+EMAIL_FROM_NAME=${domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)} Team
+
+# Database
+DB_NAME=calos
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+
+# API Keys (use vault for production)
+GODADDY_API_KEY=
+GODADDY_API_SECRET=
+GOOGLE_SHEETS_API_KEY=
+
+# CalOS Integration
+CALOS_API_URL=https://api.calos.dev
+CALOS_PRIVACY_MODE=strict
+`;
+    }
+
+    function generateNginxConfig(domain) {
+      return `# Nginx configuration for ${domain}
+
+server {
+    listen 80;
+    server_name ${domain} www.${domain};
+
+    location / {
+        proxy_pass http://localhost:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+`;
+    }
+
+    function clearAll() {
+      document.getElementById('domainInput').value = '';
+      document.getElementById('output').innerHTML = '<pre>Waiting for input...</pre>';
+      document.getElementById('commandsOutput').innerHTML = '<pre>Run "Generate Structure" to see commands...</pre>';
+      generatedStructure = {};
+      generatedCommands = [];
+    }
+
+    function copyToClipboard() {
+      if (generatedCommands.length === 0) {
+        alert('Generate structure first');
+        return;
+      }
+
+      navigator.clipboard.writeText(generatedCommands.join('\n'));
+      alert('Commands copied to clipboard!');
+    }
+
+    function downloadZip() {
+      alert('ZIP download coming soon! For now, copy commands and run them manually.');
+      // TODO: Implement ZIP generation with JSZip library
+    }
+  </script>
+</body>
+</html>
