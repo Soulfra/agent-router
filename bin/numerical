@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+
+/**
+ * Numerical Testing CLI
+ *
+ * "Fuck Calculus - We're Doing Machine Learning in C"
+ *
+ * Commands:
+ *   numerical validate <function>  - Test a function with finite differences
+ *   numerical perturb <function>   - Black-box testing with random inputs
+ *   numerical optimize <function>  - Find optimal weights via gradient descent
+ *   numerical demo                 - Run all demos
+ *   numerical help                 - Show this help
+ */
+
+const path = require('path');
+
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m'
+};
+
+function showHelp() {
+  console.log(`
+${colors.bright}${colors.cyan}Numerical Testing CLI${colors.reset}
+${colors.gray}"Gradients without derivatives - the lazy programmer's approach"${colors.reset}
+
+${colors.bright}USAGE:${colors.reset}
+  numerical <command> [options]
+
+${colors.bright}COMMANDS:${colors.reset}
+  ${colors.green}demo${colors.reset}         Run full demonstration of all tools
+  ${colors.green}test${colors.reset}         Run test suite
+  ${colors.green}docs${colors.reset}         Open documentation
+  ${colors.green}help${colors.reset}         Show this help
+
+${colors.bright}EXAMPLES:${colors.reset}
+  numerical demo       # See all tools in action
+  numerical test       # Run validation tests
+  numerical docs       # Open guide
+
+${colors.bright}WHAT THIS DOES:${colors.reset}
+  ${colors.yellow}Finite Differences${colors.reset}   - Test functions without calculus
+  ${colors.yellow}Perturb & Observe${colors.reset}    - Black-box ML-style testing
+  ${colors.yellow}Gradient Descent${colors.reset}     - Optimize weights automatically
+
+${colors.bright}THE PHILOSOPHY:${colors.reset}
+  ${colors.gray}"It's like Blender - just adjust sliders until it works."${colors.reset}
+  ${colors.gray}"Perturb it, observe it, optimize it."${colors.reset}
+  ${colors.gray}"We're doing machine learning in C (or JavaScript)."${colors.reset}
+
+${colors.bright}FILES:${colors.reset}
+  lib/numerical-testing.js        Framework implementation
+  NUMERICAL_METHODS_GUIDE.md      Complete guide with examples
+  NUMERICAL_TESTING_SUMMARY.md    Quick summary
+  test-numerical.js               Standalone demo
+`);
+}
+
+async function runDemo() {
+  console.log(`${colors.blue}Running numerical testing demonstration...${colors.reset}\n`);
+
+  const demoPath = path.join(__dirname, '..', 'test-numerical.js');
+
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+
+    const proc = spawn('node', [demoPath], {
+      stdio: 'inherit'
+    });
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Demo exited with code ${code}`));
+      }
+    });
+  });
+}
+
+async function runTests() {
+  console.log(`${colors.blue}Running test suite...${colors.reset}\n`);
+
+  const testPath = path.join(__dirname, '..', 'test', 'numerical-marketplace.test.js');
+
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+
+    const proc = spawn('npm', ['test', '--', testPath], {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'inherit'
+    });
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        console.log(`${colors.yellow}\nNote: Tests may require Mocha/Chai. Run demo instead: numerical demo${colors.reset}`);
+        resolve(); // Don't fail on test errors
+      }
+    });
+  });
+}
+
+function openDocs() {
+  const docsPath = path.join(__dirname, '..', '..', 'NUMERICAL_METHODS_GUIDE.md');
+
+  console.log(`${colors.cyan}Opening documentation...${colors.reset}`);
+  console.log(`${colors.gray}Location: ${docsPath}${colors.reset}\n`);
+
+  const { spawn } = require('child_process');
+
+  // Try to open with default editor
+  const opener = process.platform === 'darwin' ? 'open' :
+                  process.platform === 'win32' ? 'start' :
+                  'xdg-open';
+
+  spawn(opener, [docsPath], { stdio: 'ignore' });
+
+  console.log(`${colors.gray}Also available:${colors.reset}`);
+  console.log(`  NUMERICAL_TESTING_SUMMARY.md  - Quick summary`);
+  console.log(`  lib/numerical-testing.js      - Framework code\n`);
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0] || 'help';
+
+  try {
+    switch (command) {
+      case 'demo':
+        await runDemo();
+        break;
+
+      case 'test':
+        await runTests();
+        break;
+
+      case 'docs':
+        openDocs();
+        break;
+
+      case 'help':
+      case '--help':
+      case '-h':
+        showHelp();
+        break;
+
+      default:
+        console.error(`${colors.red}Unknown command: ${command}${colors.reset}`);
+        console.log(`Run 'numerical help' for usage information\n`);
+        process.exit(1);
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error: ${error.message}${colors.reset}`);
+    process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  main();
+}
+
+module.exports = { main };

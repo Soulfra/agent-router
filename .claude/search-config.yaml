@@ -1,0 +1,111 @@
+# Multi-Model Search Configuration
+# Like nginx.conf - routes requests to free/paid tiers
+#
+# Pattern:
+# 1. Free models (Ollama) do web search → extract snippets
+# 2. Paid models (GPT-4/Claude) reason about snippets
+# 3. Save 50-80% cost
+
+search:
+  # Free models handle web searching (zero cost)
+  providers:
+    - ollama:qwen2.5-coder:32b  # Local, FREE, fast general search
+    - ollama:llama3.1:70b       # Local, FREE, thorough search
+    - ollama:deepseek-r1:14b    # Local, FREE, analytical search
+
+  # Search sources (all free APIs)
+  sources:
+    - duckduckgo  # Free web search
+    - wikipedia   # Free encyclopedia
+
+  # Search settings
+  max_results: 10           # Max search results to fetch
+  max_snippet_length: 1000  # Max chars per snippet
+  cache_ttl: 3600           # Cache for 1 hour (seconds)
+
+  # Routing strategy
+  strategy: free-search-only  # Options: free-search-only, paid-if-needed, hybrid
+
+reasoning:
+  # Paid models analyze search results (only pay for reasoning)
+  providers:
+    - openai:gpt-4              # $0.03/1k tokens (best reasoning)
+    - anthropic:claude-3-5-sonnet-20241022  # $0.015/1k tokens (thorough)
+    - deepseek:deepseek-chat    # $0.002/1k tokens (cheap)
+
+  # Reasoning settings
+  max_context: 8000      # Max tokens to send (fits in all models)
+  temperature: 0.7       # Creativity level
+  max_tokens: 500        # Max response length
+
+  # Cost optimization
+  prefer_cheap: true     # Prefer DeepSeek over GPT-4 when possible
+  fallback_to_free: true # Use Ollama if paid models fail
+
+routing:
+  # nginx-style routing rules
+
+  # Free tier (no external API calls)
+  free:
+    search: ollama         # Use Ollama for search
+    reasoning: ollama      # Use Ollama for reasoning
+    cost: $0.00/query
+
+  # Paid tier (external APIs for reasoning only)
+  paid:
+    search: ollama         # Still use Ollama for search (FREE)
+    reasoning: openai      # Use GPT-4 for reasoning (PAID)
+    cost: $0.015/query     # Only pay for reasoning
+
+  # Hybrid (auto-select based on query complexity)
+  hybrid:
+    simple_queries: free   # Use free tier for simple questions
+    complex_queries: paid  # Use paid tier for complex reasoning
+    threshold: 10          # Words count to determine complexity
+
+  # Default routing strategy
+  default: paid           # Options: free, paid, hybrid
+
+  # Fallback chain (if one fails, try next)
+  fallback:
+    - ollama              # Try free models first
+    - deepseek            # Then cheap paid models
+    - openai              # Then expensive models
+    - anthropic           # Finally Claude
+
+# Cost limits (prevent overspending)
+cost_limits:
+  max_per_hour: 1.00      # Max $1/hour
+  max_per_day: 10.00      # Max $10/day
+  max_per_month: 200.00   # Max $200/month
+
+  # Actions when limit hit
+  on_limit_hit: fallback_to_free  # Options: error, fallback_to_free, queue
+
+# Privacy settings
+privacy:
+  use_local_only: false         # If true, ONLY use Ollama (zero cost, max privacy)
+  log_queries: true             # Log queries for analytics
+  log_to_console: false         # Don't leak queries to console
+  encrypt_logs: true            # Encrypt query logs in vault
+
+# Cache settings
+cache:
+  enabled: true                 # Enable caching
+  ttl: 3600                     # Default TTL (1 hour)
+  max_size: 100                 # Max cache entries
+
+  # Cache invalidation
+  invalidate_on_error: true     # Clear cache if search fails
+
+# Performance settings
+performance:
+  parallel_searches: false      # Run all searches in parallel (faster but more load)
+  max_concurrent: 5             # Max parallel requests
+  timeout: 60000                # Request timeout (60s)
+
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    max_per_minute: 10          # Max 10 searches/minute
+    max_per_hour: 100           # Max 100 searches/hour

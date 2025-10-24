@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Project Manager - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1400px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+    .project-card { background: #0a0a15; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; transition: all 0.3s; }
+    .project-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3); }
+    .project-card.active { border-left-color: #4caf50; }
+    .project-card.inactive { opacity: 0.6; border-left-color: #888; }
+    .project-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; }
+    .project-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+    .project-status { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .project-status.active { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+    .project-status.inactive { background: rgba(136, 136, 136, 0.2); color: #888; }
+    .project-desc { font-size: 13px; color: #888; margin-bottom: 15px; line-height: 1.5; }
+    .project-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+    .project-stat { text-align: center; background: #1a1a2e; padding: 10px; border-radius: 5px; }
+    .project-stat-value { font-size: 20px; font-weight: bold; color: #667eea; }
+    .project-stat-label { font-size: 10px; color: #888; margin-top: 3px; }
+    .project-actions { display: flex; gap: 8px; }
+    .project-actions button { padding: 8px 12px; font-size: 12px; }
+    input, textarea, select { padding: 10px; background: #0a0a15; border: 1px solid #2a2a3e; border-radius: 5px; color: #e0e0e0; font-family: inherit; width: 100%; margin-bottom: 15px; }
+    textarea { resize: vertical; font-size: 13px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: #1a1a2e; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h2 { color: #667eea; }
+    .close-btn { cursor: pointer; font-size: 24px; color: #888; }
+    .close-btn:hover { color: #e0e0e0; }
+    .quick-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .stat-box { background: #0a0a15; padding: 20px; border-radius: 10px; text-align: center; }
+    .stat-box-value { font-size: 36px; font-weight: bold; color: #667eea; margin-bottom: 5px; }
+    .stat-box-label { font-size: 12px; color: #888; }
+    .env-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 5px; }
+    .env-badge.production { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+    .env-badge.staging { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+    .env-badge.development { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
+  </style>
+</head>
+<body>
+  <h1>Multi-Project Manager</h1>
+  <p class="subtitle">Manage multiple projects and environments from one dashboard</p>
+
+  <div class="quick-stats">
+    <div class="stat-box">
+      <div class="stat-box-value" id="total-projects">0</div>
+      <div class="stat-box-label">Total Projects</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-value" id="active-projects">0</div>
+      <div class="stat-box-label">Active</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-value" id="total-api-calls">0</div>
+      <div class="stat-box-label">Total API Calls</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-value" id="total-cost">$0</div>
+      <div class="stat-box-label">Total Cost (MTD)</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">Your Projects</h2>
+      <button onclick="openNewProjectModal()">+ New Project</button>
+    </div>
+
+    <div class="projects-grid" id="projects-grid">
+      <p style="color: #888; text-align: center; padding: 40px; grid-column: 1/-1;">No projects yet. Create your first project!</p>
+    </div>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="modal" id="new-project-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create New Project</h2>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+      </div>
+
+      <input type="text" id="project-name" placeholder="Project Name">
+      <textarea id="project-desc" rows="3" placeholder="Project Description"></textarea>
+
+      <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 12px;">Environment:</label>
+      <select id="project-env">
+        <option value="development">Development</option>
+        <option value="staging">Staging</option>
+        <option value="production">Production</option>
+      </select>
+
+      <label style="display: block; margin-bottom: 5px; color: #aaa; font-size: 12px;">API Provider:</label>
+      <select id="project-provider">
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic</option>
+        <option value="google">Google AI</option>
+        <option value="azure">Azure OpenAI</option>
+      </select>
+
+      <button onclick="createProject()" style="width: 100%; margin-top: 10px;">Create Project</button>
+    </div>
+  </div>
+
+  <!-- View Project Modal -->
+  <div class="modal" id="view-project-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="view-project-name">Project Details</h2>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+      </div>
+
+      <div id="project-details"></div>
+    </div>
+  </div>
+
+  <script>
+    let projects = [];
+
+    function loadProjects() {
+      const saved = localStorage.getItem('multi-projects');
+      if (saved) {
+        projects = JSON.parse(saved);
+        renderProjects();
+        updateStats();
+      }
+    }
+
+    function saveProjects() {
+      localStorage.setItem('multi-projects', JSON.stringify(projects));
+      updateStats();
+    }
+
+    function openNewProjectModal() {
+      document.getElementById('new-project-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('new-project-modal').classList.remove('active');
+      document.getElementById('view-project-modal').classList.remove('active');
+    }
+
+    function createProject() {
+      const name = document.getElementById('project-name').value;
+      const desc = document.getElementById('project-desc').value;
+      const env = document.getElementById('project-env').value;
+      const provider = document.getElementById('project-provider').value;
+
+      if (!name) {
+        alert('Please enter a project name');
+        return;
+      }
+
+      const project = {
+        id: Date.now(),
+        name,
+        description: desc || 'No description',
+        environment: env,
+        provider,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        apiCalls: 0,
+        cost: 0,
+        users: 1
+      };
+
+      projects.push(project);
+      saveProjects();
+      renderProjects();
+      closeModal();
+
+      // Clear form
+      document.getElementById('project-name').value = '';
+      document.getElementById('project-desc').value = '';
+    }
+
+    function renderProjects() {
+      const grid = document.getElementById('projects-grid');
+
+      if (projects.length === 0) {
+        grid.innerHTML = '<p style="color: #888; text-align: center; padding: 40px; grid-column: 1/-1;">No projects yet. Create your first project!</p>';
+        return;
+      }
+
+      grid.innerHTML = projects.map(project => `
+        <div class="project-card ${project.status}">
+          <div class="project-header">
+            <div>
+              <div class="project-name">
+                ${project.name}
+                <span class="env-badge ${project.environment}">${project.environment}</span>
+              </div>
+              <div style="font-size: 11px; color: #888; margin-top: 3px;">${project.provider.toUpperCase()}</div>
+            </div>
+            <div class="project-status ${project.status}">${project.status}</div>
+          </div>
+
+          <div class="project-desc">${project.description}</div>
+
+          <div class="project-stats">
+            <div class="project-stat">
+              <div class="project-stat-value">${(project.apiCalls || 0).toLocaleString()}</div>
+              <div class="project-stat-label">API Calls</div>
+            </div>
+            <div class="project-stat">
+              <div class="project-stat-value">$${(project.cost || 0).toFixed(2)}</div>
+              <div class="project-stat-label">Cost (MTD)</div>
+            </div>
+            <div class="project-stat">
+              <div class="project-stat-value">${project.users || 1}</div>
+              <div class="project-stat-label">Users</div>
+            </div>
+          </div>
+
+          <div class="project-actions">
+            <button onclick="viewProject(${project.id})">View</button>
+            <button onclick="toggleStatus(${project.id})">${project.status === 'active' ? 'Pause' : 'Activate'}</button>
+            <button onclick="deleteProject(${project.id})" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function viewProject(id) {
+      const project = projects.find(p => p.id === id);
+      if (!project) return;
+
+      document.getElementById('view-project-name').textContent = project.name;
+      document.getElementById('project-details').innerHTML = `
+        <div style="margin-bottom: 15px;">
+          <strong>Environment:</strong> <span class="env-badge ${project.environment}">${project.environment}</span>
+        </div>
+        <div style="margin-bottom: 15px;">
+          <strong>Provider:</strong> ${project.provider.toUpperCase()}
+        </div>
+        <div style="margin-bottom: 15px;">
+          <strong>Status:</strong> <span class="project-status ${project.status}">${project.status}</span>
+        </div>
+        <div style="margin-bottom: 15px;">
+          <strong>Created:</strong> ${new Date(project.createdAt).toLocaleDateString()}
+        </div>
+        <div style="margin-bottom: 15px;">
+          <strong>Description:</strong><br>${project.description}
+        </div>
+        <div style="background: #0a0a15; padding: 15px; border-radius: 8px; margin-top: 20px;">
+          <div style="font-weight: bold; margin-bottom: 10px;">Usage Statistics</div>
+          <div style="margin-bottom: 8px;">API Calls: ${(project.apiCalls || 0).toLocaleString()}</div>
+          <div style="margin-bottom: 8px;">Total Cost: $${(project.cost || 0).toFixed(2)}</div>
+          <div>Active Users: ${project.users || 1}</div>
+        </div>
+      `;
+
+      document.getElementById('view-project-modal').classList.add('active');
+    }
+
+    function toggleStatus(id) {
+      const project = projects.find(p => p.id === id);
+      if (project) {
+        project.status = project.status === 'active' ? 'inactive' : 'active';
+        saveProjects();
+        renderProjects();
+      }
+    }
+
+    function deleteProject(id) {
+      if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+        projects = projects.filter(p => p.id !== id);
+        saveProjects();
+        renderProjects();
+      }
+    }
+
+    function updateStats() {
+      const total = projects.length;
+      const active = projects.filter(p => p.status === 'active').length;
+      const totalCalls = projects.reduce((sum, p) => sum + (p.apiCalls || 0), 0);
+      const totalCost = projects.reduce((sum, p) => sum + (p.cost || 0), 0);
+
+      document.getElementById('total-projects').textContent = total;
+      document.getElementById('active-projects').textContent = active;
+      document.getElementById('total-api-calls').textContent = totalCalls.toLocaleString();
+      document.getElementById('total-cost').textContent = '$' + totalCost.toFixed(2);
+    }
+
+    // Demo: Simulate some usage
+    function simulateUsage() {
+      projects.forEach(project => {
+        if (project.status === 'active') {
+          project.apiCalls = (project.apiCalls || 0) + Math.floor(Math.random() * 1000);
+          project.cost = (project.cost || 0) + Math.random() * 5;
+        }
+      });
+      saveProjects();
+      renderProjects();
+    }
+
+    window.addEventListener('load', () => {
+      loadProjects();
+
+      // Simulate usage every 10 seconds (demo only)
+      setInterval(simulateUsage, 10000);
+    });
+  </script>
+</body>
+</html>

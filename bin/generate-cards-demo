@@ -1,0 +1,140 @@
+#!/usr/bin/env node
+/**
+ * Demo script: Generate engineering cards from agent-router codebase
+ *
+ * This demonstrates how Cal AI can analyze code and generate educational
+ * culture pack cards for teaching engineering through roasting.
+ *
+ * Usage:
+ *   ./bin/generate-cards-demo
+ *   ./bin/generate-cards-demo --project /path/to/project
+ *   ./bin/generate-cards-demo --ai  # Use AI enhancement
+ */
+
+const path = require('path');
+const EngineeringCardGenerator = require('../lib/engineering-card-generator');
+const Anthropic = require('@anthropic-ai/sdk');
+
+async function main() {
+  const args = process.argv.slice(2);
+  const projectPath = args.includes('--project')
+    ? args[args.indexOf('--project') + 1]
+    : path.join(__dirname, '..');
+  const useAI = args.includes('--ai');
+
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  ENGINEERING CARD GENERATOR DEMO');
+  console.log('  Teaching Gen Z through roasting 🔥');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  // Initialize generator
+  const options = {};
+
+  if (useAI && process.env.ANTHROPIC_API_KEY) {
+    options.anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY
+    });
+    console.log('✓ AI enhancement enabled (Cal will help)\n');
+  }
+
+  const generator = new EngineeringCardGenerator(options);
+
+  // Generate cards
+  console.log(`Analyzing codebase: ${projectPath}\n`);
+
+  const cards = useAI
+    ? await generator.generateWithAI(projectPath, { maxFiles: 20 })
+    : await generator.generateFromCodebase(projectPath, { maxFiles: 30 });
+
+  if (cards.length === 0) {
+    console.log('No patterns detected. Try a larger codebase!\n');
+    return;
+  }
+
+  // Display results
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  GENERATED CARDS');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  // Group by rarity
+  const byRarity = cards.reduce((acc, card) => {
+    if (!acc[card.rarity]) acc[card.rarity] = [];
+    acc[card.rarity].push(card);
+    return acc;
+  }, {});
+
+  const rarityEmojis = {
+    common: '⚪',
+    rare: '🔵',
+    epic: '🟣',
+    legendary: '🟠',
+    mythic: '🔴'
+  };
+
+  for (const rarity of ['mythic', 'legendary', 'epic', 'rare', 'common']) {
+    const rarityCards = byRarity[rarity];
+    if (!rarityCards) continue;
+
+    console.log(`${rarityEmojis[rarity]} ${rarity.toUpperCase()} (${rarityCards.length} cards)`);
+    console.log('─'.repeat(50));
+
+    for (const card of rarityCards.slice(0, 3)) {
+      console.log(`  Prompt:   ${card.prompt}`);
+      console.log(`  Response: ${card.response}`);
+      console.log(`  Pattern:  ${card.metadata.pattern} (${card.metadata.type})`);
+      console.log(`  Found in: ${card.metadata.files.join(', ')}`);
+
+      if (card.metadata.roast) {
+        console.log(`  Roast:    ${card.metadata.roast}`);
+      }
+
+      if (card.metadata.cringeScore) {
+        console.log(`  Cringe:   ${card.metadata.cringeScore}/100`);
+      }
+
+      console.log('');
+    }
+
+    if (rarityCards.length > 3) {
+      console.log(`  ... and ${rarityCards.length - 3} more\n`);
+    }
+  }
+
+  // Create culture pack
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  CREATING CULTURE PACK');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  const packId = `generated-${Date.now()}`;
+  const pack = await generator.createCulturePack(cards, packId, {
+    name: 'Agent Router Engineering Pack',
+    description: 'Real patterns from CALOS Agent Router codebase',
+    emoji: '🤖',
+    controversial: true,
+    teachingTool: true
+  });
+
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  PACK SUMMARY');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  console.log(`Pack ID:     ${pack.packId}`);
+  console.log(`Name:        ${pack.name}`);
+  console.log(`Rarity:      ${pack.rarity}`);
+  console.log(`Prompts:     ${pack.prompts.length}`);
+  console.log(`Responses:   ${pack.responses.length}`);
+  console.log(`Teaching:    ${pack.teachingTool ? 'Yes ✓' : 'No'}`);
+  console.log(`\nRarity Distribution:`);
+
+  for (const [rarity, count] of Object.entries(pack.metadata.rarityDistribution)) {
+    console.log(`  ${rarityEmojis[rarity]} ${rarity}: ${count}`);
+  }
+
+  console.log(`\nSaved to: data/culture-packs/${pack.packId}.json`);
+  console.log('\nNow load this pack in the card game to teach through roasting! 🔥\n');
+}
+
+main().catch(err => {
+  console.error('Error:', err);
+  process.exit(1);
+});

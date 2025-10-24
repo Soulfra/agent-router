@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Culture Profile | CALOS™</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px 32px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .header-left p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    /* Health Score Card */
+    .health-score {
+      background: linear-gradient(135deg, #1a1a1a, #252525);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      border: 1px solid #333;
+      text-align: center;
+    }
+
+    .health-score h2 {
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .health-value {
+      font-size: 72px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .health-label {
+      font-size: 16px;
+      color: #888;
+    }
+
+    /* Grid Layout */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* Card */
+    .card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #333;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-icon {
+      font-size: 20px;
+    }
+
+    /* Stats */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #252525;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #888;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+
+    /* Feature List */
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #252525;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .feature-name {
+      font-size: 14px;
+      color: #e0e0e0;
+    }
+
+    .feature-count {
+      font-size: 13px;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    /* Upsell Card */
+    .upsell-card {
+      background: linear-gradient(135deg, #ff9f1c, #ff6b35);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      color: white;
+    }
+
+    .upsell-card.priority-high {
+      background: linear-gradient(135deg, #ff4444, #ff6b35);
+    }
+
+    .upsell-card.priority-medium {
+      background: linear-gradient(135deg, #ff9f1c, #ffbf00);
+    }
+
+    .upsell-card.priority-low {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .upsell-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .upsell-type {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .upsell-priority {
+      font-size: 10px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .upsell-text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Heatmap */
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 4px;
+      margin-top: 12px;
+    }
+
+    .heatmap-cell {
+      aspect-ratio: 1;
+      background: #252525;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .heatmap-cell[data-intensity="low"] {
+      background: rgba(102, 126, 234, 0.3);
+    }
+
+    .heatmap-cell[data-intensity="medium"] {
+      background: rgba(102, 126, 234, 0.6);
+    }
+
+    .heatmap-cell[data-intensity="high"] {
+      background: rgba(102, 126, 234, 0.9);
+    }
+
+    .heatmap-label {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .heatmap-label span {
+      font-size: 10px;
+      color: #666;
+      text-align: center;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .badge-tech {
+      background: rgba(79, 172, 254, 0.2);
+      color: #4facfe;
+      border: 1px solid #4facfe;
+    }
+
+    .badge-integration {
+      background: rgba(240, 147, 251, 0.2);
+      color: #f093fb;
+      border: 1px solid #f093fb;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #888;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(102, 126, 234, 0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .heatmap {
+        grid-template-columns: repeat(12, 1fr);
+      }
+    }
+  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1 id="customer-name">Customer Culture Profile</h1>
+      <p id="install-id"></p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-back" onclick="window.location.href='/enterprise-dashboard.html'">← Back to Dashboard</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 16px;">Analyzing customer culture...</p>
+    </div>
+
+    <div id="content" style="display: none;">
+      <!-- Health Score -->
+      <div class="health-score">
+        <h2>Health Score</h2>
+        <div class="health-value" id="health-score">-</div>
+        <div class="health-label" id="health-label">-</div>
+      </div>
+
+      <!-- Subscription Info -->
+      <div class="grid-3">
+        <div class="card">
+          <h3><span class="card-icon">📦</span> Tier</h3>
+          <div class="stat-value" id="tier" style="font-size: 24px; margin-top: 12px;">-</div>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📅</span> Days Active</h3>
+          <div class="stat-value" id="days-active" style="font-size: 24px; margin-top: 12px;">-</div>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">📊</span> Total Events</h3>
+          <div class="stat-value" id="total-events" style="font-size: 24px; margin-top: 12px;">-</div>
+        </div>
+      </div>
+
+      <!-- Feature Usage & Team Insights -->
+      <div class="grid-2">
+        <div class="card">
+          <h3><span class="card-icon">🎯</span> Top Features</h3>
+          <ul class="feature-list" id="top-features"></ul>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">👥</span> Team Insights</h3>
+          <div class="stat-row">
+            <span class="stat-label">Estimated Team Size</span>
+            <span class="stat-value" id="team-size">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Max Concurrent Users</span>
+            <span class="stat-value" id="max-concurrent">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Events Per Day</span>
+            <span class="stat-value" id="events-per-day">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Activity Level</span>
+            <span class="stat-value" id="intensity">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Working Hours Heatmap -->
+      <div class="card">
+        <h3><span class="card-icon">⏰</span> Working Hours Distribution</h3>
+        <div class="heatmap" id="heatmap"></div>
+        <div class="heatmap-label" id="heatmap-labels"></div>
+      </div>
+
+      <!-- Behavior & Performance -->
+      <div class="grid-2">
+        <div class="card">
+          <h3><span class="card-icon">🎬</span> Behavior</h3>
+          <div class="stat-row">
+            <span class="stat-label">Peak Day</span>
+            <span class="stat-value" id="peak-day">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Peak Hour</span>
+            <span class="stat-value" id="peak-hour">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Avg Session Duration</span>
+            <span class="stat-value" id="session-duration">-</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3><span class="card-icon">⚡</span> Performance</h3>
+          <div class="stat-row">
+            <span class="stat-label">Total Errors</span>
+            <span class="stat-value" id="total-errors">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Error Rate</span>
+            <span class="stat-value" id="error-rate">-</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Slow Requests</span>
+            <span class="stat-value" id="slow-requests">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Stack -->
+      <div class="card">
+        <h3><span class="card-icon">🛠️</span> Tech Stack</h3>
+        <div id="tech-stack"></div>
+      </div>
+
+      <!-- Upsell Opportunities -->
+      <div class="card">
+        <h3><span class="card-icon">💰</span> Upsell Opportunities</h3>
+        <div id="upsells"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let installId = null;
+
+    /**
+     * Initialize
+     */
+    async function init() {
+      // Get install ID from URL
+      const params = new URLSearchParams(window.location.search);
+      installId = params.get('install_id');
+
+      if (!installId) {
+        // No install ID - show customer selector
+        await showCustomerSelector();
+        return;
+      }
+
+      document.getElementById('install-id').textContent = `Install ID: ${installId}`;
+
+      // Load culture profile
+      await loadCultureProfile();
+    }
+
+    /**
+     * Show customer selector (when no install_id provided)
+     */
+    async function showCustomerSelector() {
+      try {
+        const response = await fetch('/api/enterprise/customers');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        const customers = data.customers;
+
+        if (customers.length === 0) {
+          document.getElementById('loading').innerHTML = `
+            <div style="text-align: center; padding: 60px;">
+              <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+              <h2 style="color: #e0e0e0; margin-bottom: 12px;">No Customers Yet</h2>
+              <p style="color: #888; margin-bottom: 24px;">Create your first license in the enterprise dashboard</p>
+              <button class="btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;"
+                      onclick="window.location.href='/enterprise-dashboard.html'">
+                Go to Enterprise Dashboard
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        // Render customer selector
+        const cardsHtml = customers.map(customer => `
+          <div class="customer-card" onclick="selectCustomer('${customer.install_id}')">
+            <div class="customer-header">
+              <div class="customer-name">${customer.domain || customer.username || 'Unknown'}</div>
+              <span class="tier-badge tier-${customer.tier_slug}">${customer.tier_slug}</span>
+            </div>
+            <div class="customer-info">
+              <div class="customer-stat">
+                <span class="stat-label">Status</span>
+                <span class="status-badge status-${customer.status}">${customer.status}</span>
+              </div>
+              <div class="customer-stat">
+                <span class="stat-label">Created</span>
+                <span class="stat-value">${new Date(customer.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div class="customer-install-id">${customer.install_id.substring(0, 16)}...</div>
+          </div>
+        `).join('');
+
+        document.getElementById('loading').innerHTML = `
+          <div style="padding: 40px;">
+            <h2 style="font-size: 32px; color: #e0e0e0; margin-bottom: 24px; text-align: center;">
+              Select a Customer to Analyze
+            </h2>
+            <div class="customer-grid">
+              ${cardsHtml}
+            </div>
+          </div>
+        `;
+
+        // Add styles for customer selector
+        const style = document.createElement('style');
+        style.textContent = `
+          .customer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+
+          .customer-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+          }
+
+          .customer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+          }
+
+          .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          }
+
+          .customer-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e0e0e0;
+          }
+
+          .customer-info {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+          }
+
+          .customer-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .customer-install-id {
+            font-size: 11px;
+            color: #666;
+            font-family: monospace;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #252525;
+          }
+
+          .tier-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+
+          .tier-community {
+            background: #e0e7ff;
+            color: #4c51bf;
+          }
+
+          .tier-pro {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+          }
+
+          .tier-enterprise {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+          }
+
+          .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .status-active {
+            background: rgba(68, 204, 68, 0.2);
+            color: #44cc44;
+            border: 1px solid #44cc44;
+          }
+
+          .status-trial {
+            background: rgba(255, 191, 0, 0.2);
+            color: #ffbf00;
+            border: 1px solid #ffbf00;
+          }
+
+          .status-past-due {
+            background: rgba(255, 107, 53, 0.2);
+            color: #ff6b35;
+            border: 1px solid #ff6b35;
+          }
+
+          .status-canceled {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+            border: 1px solid #ff4444;
+          }
+        `;
+        document.head.appendChild(style);
+
+      } catch (error) {
+        console.error('[Culture Profile] Failed to load customers:', error);
+        document.getElementById('loading').innerHTML = `
+          <div style="text-align: center; padding: 60px; color: #ff4444;">
+            <p style="font-size: 18px; margin-bottom: 12px;">Failed to load customers</p>
+            <p style="font-size: 14px; color: #888;">${error.message}</p>
+            <button class="btn" style="background: #667eea; color: white; margin-top: 20px;"
+                    onclick="window.location.href='/enterprise-dashboard.html'">
+              Go to Enterprise Dashboard
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Select customer from selector
+     */
+    function selectCustomer(selectedInstallId) {
+      // Update URL and reload
+      window.location.href = `/culture-profile.html?install_id=${selectedInstallId}`;
+    }
+
+    /**
+     * Load culture profile
+     */
+    async function loadCultureProfile() {
+      try {
+        const response = await fetch(`/api/enterprise/customer/${installId}/culture`);
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        const culture = data.culture;
+
+        // Hide loading, show content
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+
+        // Render profile
+        renderCultureProfile(culture);
+      } catch (error) {
+        console.error('[Culture Profile] Failed to load:', error);
+        document.getElementById('loading').innerHTML = `
+          <div style="color: #ff4444;">
+            <p>Failed to load culture profile</p>
+            <p style="font-size: 14px; margin-top: 8px;">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Render culture profile
+     */
+    function renderCultureProfile(culture) {
+      // Customer name
+      document.getElementById('customer-name').textContent = culture.subscription?.domain || 'Customer Culture Profile';
+
+      // Health score
+      const healthScore = culture.healthScore || 0;
+      document.getElementById('health-score').textContent = healthScore;
+      document.getElementById('health-label').textContent = getHealthLabel(healthScore);
+
+      // Subscription
+      document.getElementById('tier').textContent = (culture.subscription?.tier || 'unknown').toUpperCase();
+      document.getElementById('days-active').textContent = culture.subscription?.daysActive || 0;
+      document.getElementById('total-events').textContent = (culture.features?.total || 0).toLocaleString();
+
+      // Top features
+      const topFeaturesHtml = (culture.features?.mostUsed || []).slice(0, 5).map(feature => `
+        <li class="feature-item">
+          <span class="feature-name">${feature.feature}</span>
+          <span class="feature-count">${feature.count.toLocaleString()} uses</span>
+        </li>
+      `).join('');
+      document.getElementById('top-features').innerHTML = topFeaturesHtml || '<p style="color: #888;">No data</p>';
+
+      // Team insights
+      document.getElementById('team-size').textContent = culture.team?.estimatedSize || 0;
+      document.getElementById('max-concurrent').textContent = culture.team?.maxConcurrentUsers || 0;
+      document.getElementById('events-per-day').textContent = culture.team?.eventsPerDay || 0;
+      document.getElementById('intensity').textContent = (culture.team?.intensity || 'low').toUpperCase();
+
+      // Working hours heatmap
+      renderHeatmap(culture.behavior?.workingHours?.hourlyDistribution || []);
+
+      // Behavior
+      document.getElementById('peak-day').textContent = culture.behavior?.peakDay || 'N/A';
+      document.getElementById('peak-hour').textContent = culture.behavior?.workingHours?.peakHour || 'N/A';
+      document.getElementById('session-duration').textContent = `${culture.behavior?.sessionDuration || 0} min`;
+
+      // Performance
+      document.getElementById('total-errors').textContent = culture.performance?.totalErrors || 0;
+      document.getElementById('error-rate').textContent = `${(culture.performance?.errorRate || 0).toFixed(2)}%`;
+      document.getElementById('slow-requests').textContent = culture.performance?.slowRequests || 0;
+
+      // Tech stack
+      const techStack = culture.techStack || {};
+      const techHtml = `
+        <div style="margin-bottom: 16px;">
+          ${techStack.platforms?.length > 0 ? techStack.platforms.map(p => `<span class="badge badge-tech">${p}</span>`).join('') : '<span style="color: #888;">No platforms detected</span>'}
+        </div>
+        <div>
+          ${techStack.integrations?.length > 0 ? techStack.integrations.map(i => `<span class="badge badge-integration">${i}</span>`).join('') : '<span style="color: #888;">No integrations detected</span>'}
+        </div>
+      `;
+      document.getElementById('tech-stack').innerHTML = techHtml;
+
+      // Upsells
+      const upsells = culture.upsells || [];
+      if (upsells.length === 0) {
+        document.getElementById('upsells').innerHTML = '<p style="color: #888;">No upsell opportunities identified</p>';
+      } else {
+        const upsellsHtml = upsells.map(upsell => `
+          <div class="upsell-card priority-${upsell.priority}">
+            <div class="upsell-header">
+              <span class="upsell-type">${upsell.type.replace(/_/g, ' ')}</span>
+              <span class="upsell-priority">${upsell.priority}</span>
+            </div>
+            <div class="upsell-text">${upsell.recommendation}</div>
+          </div>
+        `).join('');
+        document.getElementById('upsells').innerHTML = upsellsHtml;
+      }
+    }
+
+    /**
+     * Render working hours heatmap
+     */
+    function renderHeatmap(hourlyDistribution) {
+      const heatmap = document.getElementById('heatmap');
+      const labels = document.getElementById('heatmap-labels');
+
+      if (!hourlyDistribution || hourlyDistribution.length === 0) {
+        heatmap.innerHTML = '<p style="color: #888;">No data</p>';
+        return;
+      }
+
+      // Find max for normalization
+      const max = Math.max(...hourlyDistribution);
+
+      // Render cells
+      const cells = hourlyDistribution.map((count, hour) => {
+        const intensity = count === 0 ? 'none'
+          : count / max > 0.7 ? 'high'
+          : count / max > 0.3 ? 'medium'
+          : 'low';
+
+        return `<div class="heatmap-cell" data-intensity="${intensity}" title="${hour}:00 - ${count} events"></div>`;
+      }).join('');
+
+      heatmap.innerHTML = cells;
+
+      // Render labels (every 3 hours)
+      const labelHtml = hourlyDistribution.map((_, hour) => {
+        return hour % 3 === 0 ? `<span>${hour}</span>` : '<span></span>';
+      }).join('');
+
+      labels.innerHTML = labelHtml;
+    }
+
+    /**
+     * Get health label
+     */
+    function getHealthLabel(score) {
+      if (score >= 80) return 'Excellent';
+      if (score >= 60) return 'Good';
+      if (score >= 40) return 'Fair';
+      if (score >= 20) return 'Poor';
+      return 'Critical';
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

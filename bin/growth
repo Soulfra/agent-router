@@ -1,0 +1,537 @@
+#!/usr/bin/env node
+
+/**
+ * Idea Growth Tracking CLI
+ *
+ * "we can build our index while piggybacking... dogfeed based off what our own users want to do"
+ *
+ * Track idea momentum, not just votes.
+ * Real-time growth analytics with React-style state management.
+ *
+ * Commands:
+ *   growth track <ideaId> <activityType>  - Track activity
+ *   growth state <ideaId>                 - Get current growth state
+ *   growth trending                       - Show trending ideas
+ *   growth high-potential                 - Show high-potential ideas
+ *   growth inflection                     - Show ideas at inflection points
+ *   growth dogfood                        - CALOS usage dashboard
+ *   growth migrate <ideaId>               - Migrate high-potential idea
+ *   growth watch <ideaId>                 - Watch idea growth in real-time
+ *   growth stats                          - System statistics
+ *   growth help                           - Show this help
+ */
+
+require('dotenv').config();
+const path = require('path');
+const { Pool } = require('pg');
+
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m'
+};
+
+const ROOT_DIR = path.join(__dirname, '..');
+
+// Load libraries
+const IdeaGrowthTracker = require('../lib/idea-growth-tracker');
+const IdeaStateManager = require('../lib/idea-state-manager');
+const GooglePiggyback = require('../lib/google-piggyback');
+
+// ============================================================================
+// Database
+// ============================================================================
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
+const growthTracker = new IdeaGrowthTracker({ pool });
+const stateManager = new IdeaStateManager({ pool, growthTracker });
+const googlePiggyback = new GooglePiggyback({ pool });
+
+// Setup effects
+stateManager.setupDefaultEffects();
+
+// ============================================================================
+// Help
+// ============================================================================
+
+function showHelp() {
+  console.log(`
+${colors.bright}${colors.cyan}Idea Growth Tracking CLI${colors.reset}
+
+${colors.gray}"Track what users ACTUALLY DO with ideas, not just votes"${colors.reset}
+
+${colors.bright}USAGE:${colors.reset}
+  growth <command> [options]
+
+${colors.bright}COMMANDS:${colors.reset}
+
+  ${colors.bright}Activity Tracking:${colors.reset}
+  ${colors.green}track <ideaId> <type>${colors.reset}     Track activity (viewed, forked, implemented, etc.)
+  ${colors.gray}                           Example: growth track idea_123 implemented${colors.reset}
+
+  ${colors.bright}Growth State:${colors.reset}
+  ${colors.green}state <ideaId>${colors.reset}            Get current growth state
+  ${colors.green}timeline <ideaId>${colors.reset}         Show growth history (time series)
+
+  ${colors.bright}Discovery:${colors.reset}
+  ${colors.green}trending${colors.reset}                  Show trending ideas (accelerating growth)
+  ${colors.green}high-potential${colors.reset}            Show high-potential ideas (score > 50)
+  ${colors.green}inflection${colors.reset}                Show ideas at inflection points
+
+  ${colors.bright}Dogfooding:${colors.reset}
+  ${colors.green}dogfood${colors.reset}                   CALOS usage dashboard (our own ideas)
+
+  ${colors.bright}Migration:${colors.reset}
+  ${colors.green}migrate <ideaId>${colors.reset}          Migrate high-potential idea to marketplace
+  ${colors.green}needs-migration${colors.reset}           List ideas needing migration
+
+  ${colors.bright}Real-time:${colors.reset}
+  ${colors.green}watch <ideaId>${colors.reset}            Watch idea growth in real-time
+
+  ${colors.bright}Analytics:${colors.reset}
+  ${colors.green}stats${colors.reset}                     System-wide statistics
+  ${colors.green}heatmap${colors.reset}                   Activity heatmap (what users are doing)
+
+  ${colors.bright}General:${colors.reset}
+  ${colors.green}help${colors.reset}                      Show this help
+
+${colors.bright}ACTIVITY TYPES:${colors.reset}
+  ${colors.yellow}viewed${colors.reset}       - Looked at idea (weight: 1)
+  ${colors.yellow}forked${colors.reset}       - Copied to use (weight: 5)
+  ${colors.yellow}implemented${colors.reset}  - Actually built it (weight: 20) ${colors.bright}← HIGHEST VALUE${colors.reset}
+  ${colors.yellow}referenced${colors.reset}   - Mentioned in work (weight: 10)
+  ${colors.yellow}iterated${colors.reset}     - Built on top of it (weight: 15)
+
+${colors.bright}EXAMPLES:${colors.reset}
+  ${colors.gray}# Track that you implemented an idea${colors.reset}
+  growth track idea_growth_tracker implemented
+
+  ${colors.gray}# See trending ideas${colors.reset}
+  growth trending
+
+  ${colors.gray}# Watch idea grow in real-time${colors.reset}
+  growth watch idea_growth_tracker
+
+  ${colors.gray}# Dogfooding: track CALOS usage${colors.reset}
+  growth dogfood
+`);
+}
+
+// ============================================================================
+// Commands
+// ============================================================================
+
+async function trackActivity(ideaId, activityType, metadata = {}) {
+  try {
+    console.log(`\n${colors.cyan}📊 Tracking activity...${colors.reset}`);
+    console.log(`   Idea: ${colors.bright}${ideaId}${colors.reset}`);
+    console.log(`   Type: ${colors.bright}${activityType}${colors.reset}\n`);
+
+    // Add default userId if not provided
+    if (!metadata.userId) {
+      metadata.userId = process.env.USER || 'cli_user';
+    }
+
+    const result = await stateManager.updateState(ideaId, activityType, metadata);
+
+    console.log(`${colors.green}✓ Activity tracked${colors.reset}\n`);
+
+    // Show growth metrics
+    console.log(`${colors.bright}Growth Metrics:${colors.reset}`);
+    console.log(`  Velocity:     ${result.growth.velocity.current.toFixed(2)}`);
+    console.log(`  Acceleration: ${result.growth.acceleration.current.toFixed(2)}`);
+    console.log(`  Momentum:     ${result.growth.momentum.toFixed(2)}`);
+    console.log(`  Potential:    ${result.growth.potential}/100`);
+    console.log(`  Stage:        ${result.growth.stage.emoji} ${result.growth.stage.type}\n`);
+
+    // Show inflection if detected
+    if (result.inflection.isInflection) {
+      console.log(`${colors.yellow}${result.inflection.emoji} INFLECTION POINT DETECTED${colors.reset}`);
+      console.log(`  Type: ${colors.bright}${result.inflection.type}${colors.reset}`);
+      console.log(`  ${result.inflection.message}\n`);
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showState(ideaId) {
+  try {
+    const state = await stateManager.getState(ideaId);
+
+    if (!state || !state.initialized) {
+      console.log(`${colors.yellow}No growth data available for ${ideaId}${colors.reset}`);
+      process.exit(0);
+    }
+
+    console.log(`\n${colors.cyan}${colors.bright}Idea: ${ideaId}${colors.reset}\n`);
+
+    const g = state.growth;
+
+    console.log(`${colors.bright}Growth Stage:${colors.reset} ${g.stage.emoji} ${g.stage.type}`);
+    console.log(`${g.stage.description}\n`);
+
+    console.log(`${colors.bright}Metrics:${colors.reset}`);
+    console.log(`  Potential Score:  ${g.potential}/100`);
+    console.log(`  Momentum:         ${g.momentum.toFixed(2)}`);
+    console.log(`  Velocity:         ${g.velocity.current.toFixed(2)}`);
+    console.log(`  Acceleration:     ${g.acceleration.current.toFixed(2)}`);
+    console.log(`  Unique Users:     ${g.uniqueUsers}`);
+    console.log(`  Total Activities: ${g.totalActivities}\n`);
+
+    console.log(`${colors.bright}Updated:${colors.reset} ${state.updatedAt.toLocaleString()}\n`);
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showTrending() {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM v_trending_ideas
+      LIMIT 10
+    `);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No trending ideas yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    console.log(`\n${colors.cyan}${colors.bright}🚀 Trending Ideas (Accelerating Growth)${colors.reset}\n`);
+
+    result.rows.forEach((row, i) => {
+      console.log(`${colors.bright}${i + 1}. ${row.title}${colors.reset}`);
+      console.log(`   ID:          ${row.idea_id}`);
+      console.log(`   Category:    ${row.category}`);
+      console.log(`   Potential:   ${row.potential_score}/100`);
+      console.log(`   Momentum:    ${parseFloat(row.momentum).toFixed(2)}`);
+      console.log(`   Velocity:    ${parseFloat(row.velocity).toFixed(2)} (↑)`);
+      console.log(`   Acceleration: ${parseFloat(row.acceleration).toFixed(2)}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showHighPotential() {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM v_high_potential_ideas
+      LIMIT 20
+    `);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No high-potential ideas yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    console.log(`\n${colors.cyan}${colors.bright}📈 High-Potential Ideas (Score > 50)${colors.reset}\n`);
+
+    result.rows.forEach((row, i) => {
+      console.log(`${colors.bright}${i + 1}. ${row.title}${colors.reset}`);
+      console.log(`   ID:        ${row.idea_id}`);
+      console.log(`   Source:    ${row.source}`);
+      console.log(`   Category:  ${row.category}`);
+      console.log(`   Potential: ${row.potential_score}/100`);
+      console.log(`   Stage:     ${row.growth_stage}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showInflections() {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM v_ideas_at_inflection
+      LIMIT 20
+    `);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No inflection points detected yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    console.log(`\n${colors.cyan}${colors.bright}⚡ Ideas at Inflection Points${colors.reset}\n`);
+
+    result.rows.forEach((row, i) => {
+      console.log(`${row.emoji} ${colors.bright}${row.title}${colors.reset}`);
+      console.log(`   ID:       ${row.idea_id}`);
+      console.log(`   Type:     ${colors.yellow}${row.inflection_type}${colors.reset}`);
+      console.log(`   Message:  ${row.message}`);
+      console.log(`   Change:   ${row.previous_velocity.toFixed(2)} → ${row.current_velocity.toFixed(2)} (Δ ${row.velocity_change.toFixed(2)})`);
+      console.log(`   Time:     ${new Date(row.updated_at).toLocaleString()}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showDogfooding() {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM v_dogfooding_dashboard
+      ORDER BY potential_score DESC NULLS LAST
+      LIMIT 20
+    `);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No CALOS ideas tracked yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    console.log(`\n${colors.cyan}${colors.bright}🐕 Dogfooding Dashboard (CALOS Usage)${colors.reset}\n`);
+    console.log(`${colors.gray}Track what we actually build and use${colors.reset}\n`);
+
+    result.rows.forEach((row, i) => {
+      console.log(`${colors.bright}${i + 1}. ${row.title}${colors.reset}`);
+      console.log(`   ID:           ${row.idea_id}`);
+      console.log(`   Category:     ${row.category}`);
+      console.log(`   Implementers: ${row.implementers || 0}`);
+      console.log(`   Forkers:      ${row.forkers || 0}`);
+      console.log(`   Iterators:    ${row.iterators || 0}`);
+      console.log(`   Potential:    ${row.potential_score || 'N/A'}/100`);
+      console.log(`   Stage:        ${row.growth_stage || 'N/A'}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function migrateIdea(ideaId) {
+  try {
+    console.log(`\n${colors.cyan}🚚 Migrating idea to marketplace...${colors.reset}`);
+    console.log(`   Idea: ${colors.bright}${ideaId}${colors.reset}\n`);
+
+    // Check if needs migration
+    const check = await pool.query(`
+      SELECT needs_migration($1, 70) as should_migrate
+    `, [ideaId]);
+
+    if (!check.rows[0].should_migrate) {
+      console.log(`${colors.yellow}Idea does not meet migration threshold (70)${colors.reset}`);
+      process.exit(0);
+    }
+
+    // Get idea details
+    const ideaDetails = await pool.query(`
+      SELECT * FROM idea_index WHERE idea_id = $1
+    `, [ideaId]);
+
+    if (ideaDetails.rows.length === 0) {
+      console.log(`${colors.red}Idea not found: ${ideaId}${colors.reset}`);
+      process.exit(1);
+    }
+
+    const idea = ideaDetails.rows[0];
+
+    // Migrate
+    const migrated = await pool.query(`
+      INSERT INTO marketplace_ideas (
+        creator_id,
+        title,
+        description,
+        category,
+        metadata,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `, [
+      process.env.USER || 'cli_user',
+      idea.title,
+      'Migrated from external source',
+      idea.category,
+      JSON.stringify({ source: idea.source, originalId: ideaId }),
+      idea.created_at
+    ]);
+
+    const marketplaceId = migrated.rows[0].id;
+
+    // Update index
+    await pool.query(`
+      UPDATE idea_index
+      SET marketplace_idea_id = $1, migrated_at = NOW()
+      WHERE idea_id = $2
+    `, [marketplaceId, ideaId]);
+
+    console.log(`${colors.green}✓ Idea migrated to marketplace${colors.reset}`);
+    console.log(`   Marketplace ID: ${colors.bright}${marketplaceId}${colors.reset}\n`);
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showStats() {
+  try {
+    const stats = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM idea_index) as total_ideas,
+        (SELECT COUNT(*) FROM idea_activities) as total_activities,
+        (SELECT COUNT(DISTINCT idea_id) FROM idea_growth_state) as ideas_with_growth,
+        (SELECT COUNT(*) FROM v_high_potential_ideas WHERE potential_score >= 70) as high_potential_count,
+        (SELECT COUNT(*) FROM v_trending_ideas) as trending_count,
+        (SELECT COUNT(*) FROM v_ideas_at_inflection WHERE inflection_type = 'TAKEOFF') as takeoff_count
+    `);
+
+    const activityBreakdown = await pool.query(`
+      SELECT activity_type, COUNT(*) as count
+      FROM idea_activities
+      WHERE timestamp > NOW() - INTERVAL '7 days'
+      GROUP BY activity_type
+      ORDER BY count DESC
+    `);
+
+    const s = stats.rows[0];
+
+    console.log(`\n${colors.cyan}${colors.bright}📊 Growth Tracking Statistics${colors.reset}\n`);
+
+    console.log(`${colors.bright}Overall:${colors.reset}`);
+    console.log(`  Total Ideas:       ${s.total_ideas}`);
+    console.log(`  Ideas with Growth: ${s.ideas_with_growth}`);
+    console.log(`  Total Activities:  ${s.total_activities}\n`);
+
+    console.log(`${colors.bright}High-Value Ideas:${colors.reset}`);
+    console.log(`  High Potential:    ${s.high_potential_count} (≥70 score)`);
+    console.log(`  Trending:          ${s.trending_count}`);
+    console.log(`  Taking Off:        ${s.takeoff_count}\n`);
+
+    if (activityBreakdown.rows.length > 0) {
+      console.log(`${colors.bright}Activity Breakdown (Last 7 Days):${colors.reset}`);
+      activityBreakdown.rows.forEach(row => {
+        console.log(`  ${row.activity_type.padEnd(15)} ${row.count}`);
+      });
+      console.log('');
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function watchIdea(ideaId) {
+  try {
+    console.log(`\n${colors.cyan}👀 Watching ${ideaId}...${colors.reset}`);
+    console.log(`${colors.gray}Press Ctrl+C to stop${colors.reset}\n`);
+
+    // Show initial state
+    await showState(ideaId);
+
+    // Subscribe to changes
+    stateManager.subscribe(ideaId, (newState) => {
+      console.log(`${colors.yellow}━━━ State Change ━━━${colors.reset}`);
+      console.log(`Time: ${new Date().toLocaleString()}`);
+      console.log(`Potential: ${newState.growth.potential}/100`);
+      console.log(`Stage: ${newState.growth.stage.emoji} ${newState.growth.stage.type}\n`);
+
+      if (newState.inflection.isInflection) {
+        console.log(`${colors.bright}${newState.inflection.emoji} ${newState.inflection.type}${colors.reset}`);
+        console.log(`${newState.inflection.message}\n`);
+      }
+    });
+
+    // Keep process alive
+    await new Promise(() => {});
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === 'help') {
+    showHelp();
+    process.exit(0);
+  }
+
+  try {
+    switch (command) {
+      case 'track':
+        if (args.length < 3) {
+          console.error(`${colors.red}Usage: growth track <ideaId> <activityType> [metadata]${colors.reset}`);
+          process.exit(1);
+        }
+        await trackActivity(args[1], args[2]);
+        break;
+
+      case 'state':
+        if (args.length < 2) {
+          console.error(`${colors.red}Usage: growth state <ideaId>${colors.reset}`);
+          process.exit(1);
+        }
+        await showState(args[1]);
+        break;
+
+      case 'trending':
+        await showTrending();
+        break;
+
+      case 'high-potential':
+        await showHighPotential();
+        break;
+
+      case 'inflection':
+        await showInflections();
+        break;
+
+      case 'dogfood':
+        await showDogfooding();
+        break;
+
+      case 'migrate':
+        if (args.length < 2) {
+          console.error(`${colors.red}Usage: growth migrate <ideaId>${colors.reset}`);
+          process.exit(1);
+        }
+        await migrateIdea(args[1]);
+        break;
+
+      case 'stats':
+        await showStats();
+        break;
+
+      case 'watch':
+        if (args.length < 2) {
+          console.error(`${colors.red}Usage: growth watch <ideaId>${colors.reset}`);
+          process.exit(1);
+        }
+        await watchIdea(args[1]);
+        break;
+
+      default:
+        console.error(`${colors.red}Unknown command: ${command}${colors.reset}`);
+        console.log(`Run ${colors.cyan}growth help${colors.reset} for available commands`);
+        process.exit(1);
+    }
+
+    await pool.end();
+  } catch (error) {
+    console.error(`${colors.red}Fatal error:${colors.reset} ${error.message}`);
+    await pool.end();
+    process.exit(1);
+  }
+}
+
+main();

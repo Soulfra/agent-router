@@ -1,0 +1,69 @@
+# Vercel Ignore File
+# Files/folders that should NOT be deployed to Vercel
+
+# Development
+node_modules/
+.env
+.env.local
+*.log
+npm-debug.log*
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (deploy to GitHub Pages instead)
+docs/
+README.md
+CHANGELOG.md
+
+# iOS app (separate deployment)
+ios/
+
+# Config files not needed in production
+config/google-sheets-credentials.json
+config/google-service-account.json
+
+# Data files (use Google Sheets instead)
+data/
+*.json
+*.csv
+*.db
+*.sqlite
+
+# Routes (Express routes, not needed for Vercel functions)
+routes/
+
+# Main router (not needed, using serverless functions)
+router.js
+
+# Test files
+test/
+*.test.js
+*.spec.js
+
+# Scripts
+scripts/
+bin/
+
+# GitHub workflows
+.github/

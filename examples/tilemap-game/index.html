@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tilemap Game - Soulfra</title>
+  <style>
+    /* Global styles with Soulfra brand colors */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    /* Game canvas */
+    #gameCanvas {
+      border: 4px solid #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      background: #1a1a2e;
+      display: block;
+      margin: 0 auto 20px;
+      cursor: pointer;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid #ffffff;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 20px;
+      border-radius: 6px;
+    }
+
+    /* Instructions */
+    .instructions {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    .instructions h3 {
+      margin-bottom: 10px;
+    }
+
+    .instructions ul {
+      list-style-position: inside;
+      line-height: 1.8;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      #gameCanvas {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 Tilemap Game</h1>
+    <p class="subtitle">A creative collaboration by Soulfra</p>
+
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+
+    <div class="controls">
+      <button id="btnReset">Reset Game</button>
+      <button id="btnRandomize">Randomize Map</button>
+      <button id="btnTogglePause">Pause</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">Score: <span id="scoreDisplay">0</span></div>
+      <div class="stat">Moves: <span id="movesDisplay">0</span></div>
+      <div class="stat">Time: <span id="timeDisplay">0:00</span></div>
+    </div>
+
+    <div class="instructions">
+      <h3>How to Play</h3>
+      <ul>
+        <li>Use arrow keys to move the player (blue tile)</li>
+        <li>Collect coins (yellow tiles) to increase score</li>
+        <li>Avoid obstacles (red tiles)</li>
+        <li>Click on tiles to change them</li>
+        <li>Reach the goal (green tile) to win!</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Game constants
+    const TILE_SIZE = 32;
+    const GRID_WIDTH = 20;
+    const GRID_HEIGHT = 15;
+
+    // Tile types
+    const TILE_EMPTY = 0;
+    const TILE_WALL = 1;
+    const TILE_PLAYER = 2;
+    const TILE_COIN = 3;
+    const TILE_GOAL = 4;
+
+    // Tile colors (Soulfra-themed)
+    const TILE_COLORS = {
+      [TILE_EMPTY]: '#1a1a2e',
+      [TILE_WALL]: '#764ba2',
+      [TILE_PLAYER]: '#667eea',
+      [TILE_COIN]: '#ffd700',
+      [TILE_GOAL]: '#4ade80'
+    };
+
+    // Game state
+    let gameState = {
+      map: [],
+      player: { x: 1, y: 1 },
+      score: 0,
+      moves: 0,
+      time: 0,
+      paused: false,
+      gameStartTime: Date.now(),
+      timerInterval: null
+    };
+
+    // Canvas setup
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Initialize game
+    function initGame() {
+      let mapValid = false;
+      let attempts = 0;
+
+      // Keep generating until we get a solvable map
+      while (!mapValid && attempts < 10) {
+        attempts++;
+
+        // Create empty map
+        gameState.map = Array(GRID_HEIGHT).fill(null).map(() =>
+          Array(GRID_WIDTH).fill(TILE_EMPTY)
+        );
+
+        // Add walls around border
+        for (let x = 0; x < GRID_WIDTH; x++) {
+          gameState.map[0][x] = TILE_WALL;
+          gameState.map[GRID_HEIGHT - 1][x] = TILE_WALL;
+        }
+
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          gameState.map[y][0] = TILE_WALL;
+          gameState.map[y][GRID_WIDTH - 1] = TILE_WALL;
+        }
+
+        // Add some random walls
+        for (let i = 0; i < 30; i++) {
+          const x = Math.floor(Math.random() * (GRID_WIDTH - 2)) + 1;
+          const y = Math.floor(Math.random() * (GRID_HEIGHT - 2)) + 1;
+          // Don't place walls on start or goal positions
+          if (!(x === 1 && y === 1) && !(x === GRID_WIDTH - 2 && y === GRID_HEIGHT - 2)) {
+            gameState.map[y][x] = TILE_WALL;
+          }
+        }
+
+        // Place player
+        gameState.player = { x: 1, y: 1 };
+        gameState.map[gameState.player.y][gameState.player.x] = TILE_EMPTY; // Temp empty for pathfinding
+
+        // Place goal
+        gameState.map[GRID_HEIGHT - 2][GRID_WIDTH - 2] = TILE_EMPTY; // Temp empty for pathfinding
+
+        // Verify path exists from start to goal
+        mapValid = isPathExists({ x: 1, y: 1 }, { x: GRID_WIDTH - 2, y: GRID_HEIGHT - 2 });
+
+        if (mapValid) {
+          // Add coins along the path and in open areas
+          for (let i = 0; i < 20; i++) {
+            const x = Math.floor(Math.random() * (GRID_WIDTH - 2)) + 1;
+            const y = Math.floor(Math.random() * (GRID_HEIGHT - 2)) + 1;
+            if (gameState.map[y][x] === TILE_EMPTY &&
+                !(x === 1 && y === 1) &&
+                !(x === GRID_WIDTH - 2 && y === GRID_HEIGHT - 2)) {
+              gameState.map[y][x] = TILE_COIN;
+            }
+          }
+
+          // Now place player and goal
+          gameState.map[gameState.player.y][gameState.player.x] = TILE_PLAYER;
+          gameState.map[GRID_HEIGHT - 2][GRID_WIDTH - 2] = TILE_GOAL;
+        }
+      }
+
+      if (!mapValid) {
+        console.warn('Failed to generate valid map after 10 attempts, using simpler layout');
+        // Fallback: create a simple maze with guaranteed path
+        createSimpleMaze();
+      }
+
+      // Reset stats
+      gameState.score = 0;
+      gameState.moves = 0;
+      gameState.time = 0;
+      gameState.gameStartTime = Date.now();
+
+      updateStats();
+      startTimer();
+    }
+
+    // BFS pathfinding to verify path exists
+    function isPathExists(start, goal) {
+      const queue = [start];
+      const visited = new Set();
+      visited.add(`${start.x},${start.y}`);
+
+      const directions = [
+        { x: 0, y: -1 }, // Up
+        { x: 0, y: 1 },  // Down
+        { x: -1, y: 0 }, // Left
+        { x: 1, y: 0 }   // Right
+      ];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+
+        // Check if we reached the goal
+        if (current.x === goal.x && current.y === goal.y) {
+          return true;
+        }
+
+        // Explore neighbors
+        for (const dir of directions) {
+          const newX = current.x + dir.x;
+          const newY = current.y + dir.y;
+          const key = `${newX},${newY}`;
+
+          // Check bounds
+          if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
+            continue;
+          }
+
+          // Check if already visited
+          if (visited.has(key)) {
+            continue;
+          }
+
+          // Check if walkable (not a wall)
+          if (gameState.map[newY][newX] === TILE_WALL) {
+            continue;
+          }
+
+          visited.add(key);
+          queue.push({ x: newX, y: newY });
+        }
+      }
+
+      return false; // No path found
+    }
+
+    // Fallback: create simple guaranteed-solvable maze
+    function createSimpleMaze() {
+      // Clear map
+      gameState.map = Array(GRID_HEIGHT).fill(null).map(() =>
+        Array(GRID_WIDTH).fill(TILE_EMPTY)
+      );
+
+      // Add walls around border
+      for (let x = 0; x < GRID_WIDTH; x++) {
+        gameState.map[0][x] = TILE_WALL;
+        gameState.map[GRID_HEIGHT - 1][x] = TILE_WALL;
+      }
+
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        gameState.map[y][0] = TILE_WALL;
+        gameState.map[y][GRID_WIDTH - 1] = TILE_WALL;
+      }
+
+      // Add a few walls but leave clear path
+      for (let x = 5; x < 15; x++) {
+        if (x % 2 === 0) {
+          for (let y = 2; y < GRID_HEIGHT - 2; y++) {
+            if (y !== 7) { // Leave gaps
+              gameState.map[y][x] = TILE_WALL;
+            }
+          }
+        }
+      }
+
+      // Add coins
+      for (let y = 1; y < GRID_HEIGHT - 1; y++) {
+        for (let x = 1; x < GRID_WIDTH - 1; x++) {
+          if (gameState.map[y][x] === TILE_EMPTY && Math.random() < 0.1) {
+            gameState.map[y][x] = TILE_COIN;
+          }
+        }
+      }
+
+      // Place player and goal
+      gameState.player = { x: 1, y: 1 };
+      gameState.map[1][1] = TILE_PLAYER;
+      gameState.map[GRID_HEIGHT - 2][GRID_WIDTH - 2] = TILE_GOAL;
+    }
+
+    // Draw game
+    function draw() {
+      // Clear canvas
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw tiles
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        for (let x = 0; x < GRID_WIDTH; x++) {
+          const tile = gameState.map[y][x];
+          ctx.fillStyle = TILE_COLORS[tile];
+          ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1);
+
+          // Add glow effect for player
+          if (tile === TILE_PLAYER) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#667eea';
+            ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1);
+            ctx.shadowBlur = 0;
+          }
+        }
+      }
+    }
+
+    // Move player
+    function movePlayer(dx, dy) {
+      if (gameState.paused) return;
+
+      const newX = gameState.player.x + dx;
+      const newY = gameState.player.y + dy;
+
+      // Check bounds
+      if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
+        return;
+      }
+
+      const targetTile = gameState.map[newY][newX];
+
+      // Can't move into walls
+      if (targetTile === TILE_WALL) {
+        return;
+      }
+
+      // Collect coin
+      if (targetTile === TILE_COIN) {
+        gameState.score += 10;
+      }
+
+      // Check for goal
+      if (targetTile === TILE_GOAL) {
+        alert(`🎉 You won! Score: ${gameState.score}, Moves: ${gameState.moves}`);
+        initGame();
+        return;
+      }
+
+      // Move player
+      gameState.map[gameState.player.y][gameState.player.x] = TILE_EMPTY;
+      gameState.player.x = newX;
+      gameState.player.y = newY;
+      gameState.map[newY][newX] = TILE_PLAYER;
+
+      gameState.moves++;
+      updateStats();
+      draw();
+    }
+
+    // Update stats display
+    function updateStats() {
+      document.getElementById('scoreDisplay').textContent = gameState.score;
+      document.getElementById('movesDisplay').textContent = gameState.moves;
+    }
+
+    // Timer
+    function startTimer() {
+      if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+      }
+
+      gameState.timerInterval = setInterval(() => {
+        if (!gameState.paused) {
+          gameState.time = Math.floor((Date.now() - gameState.gameStartTime) / 1000);
+          const minutes = Math.floor(gameState.time / 60);
+          const seconds = gameState.time % 60;
+          document.getElementById('timeDisplay').textContent =
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+      }, 1000);
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          movePlayer(0, -1);
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          movePlayer(0, 1);
+          e.preventDefault();
+          break;
+        case 'ArrowLeft':
+          movePlayer(-1, 0);
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          movePlayer(1, 0);
+          e.preventDefault();
+          break;
+      }
+    });
+
+    // Mouse click to toggle tiles
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+      const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+
+      if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+        const currentTile = gameState.map[y][x];
+
+        // Don't change player or goal tiles
+        if (currentTile === TILE_PLAYER || currentTile === TILE_GOAL) {
+          return;
+        }
+
+        // Cycle through tile types
+        gameState.map[y][x] = (currentTile + 1) % 4;
+        draw();
+      }
+    });
+
+    // Button controls
+    document.getElementById('btnReset').addEventListener('click', () => {
+      initGame();
+      draw();
+    });
+
+    document.getElementById('btnRandomize').addEventListener('click', () => {
+      // Randomize non-essential tiles
+      for (let y = 1; y < GRID_HEIGHT - 1; y++) {
+        for (let x = 1; x < GRID_WIDTH - 1; x++) {
+          if (gameState.map[y][x] !== TILE_PLAYER && gameState.map[y][x] !== TILE_GOAL) {
+            gameState.map[y][x] = Math.floor(Math.random() * 4);
+          }
+        }
+      }
+      draw();
+    });
+
+    document.getElementById('btnTogglePause').addEventListener('click', () => {
+      gameState.paused = !gameState.paused;
+      document.getElementById('btnTogglePause').textContent =
+        gameState.paused ? 'Resume' : 'Pause';
+    });
+
+    // Initialize and start game
+    initGame();
+    draw();
+  </script>
+</body>
+</html>

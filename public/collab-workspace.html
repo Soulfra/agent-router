@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Workspace - CALOS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Layout */
+    .workspace-container {
+      display: grid;
+      grid-template-rows: 50px 1fr;
+      height: 100vh;
+    }
+
+    /* Header */
+    .workspace-header {
+      background: #2d2d30;
+      border-bottom: 1px solid #3e3e42;
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .workspace-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cccccc;
+    }
+
+    .participants {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .participant {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+      position: relative;
+    }
+
+    .participant.human {
+      background: #007acc;
+      color: white;
+    }
+
+    .participant.agent {
+      background: #6c5ce7;
+      color: white;
+    }
+
+    .participant.online::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      background: #00ff00;
+      border: 2px solid #2d2d30;
+      border-radius: 50%;
+    }
+
+    .voice-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .btn-voice {
+      background: #00b894;
+      color: white;
+    }
+
+    .btn-voice.active {
+      background: #d63031;
+    }
+
+    /* Main content */
+    .workspace-main {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      height: 100%;
+    }
+
+    /* File tree */
+    .file-tree {
+      background: #252526;
+      border-right: 1px solid #3e3e42;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .file-tree-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #cccccc;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .file-item {
+      padding: 0.4rem 0.5rem;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      color: #cccccc;
+      margin-bottom: 0.25rem;
+    }
+
+    .file-item:hover {
+      background: #2a2d2e;
+    }
+
+    .file-item.active {
+      background: #37373d;
+      color: #ffffff;
+    }
+
+    .file-item.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .file-item.locked::before {
+      content: '🔒 ';
+    }
+
+    /* Editor area */
+    .editor-container {
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+    }
+
+    .editor-tabs {
+      background: #2d2d30;
+      border-bottom: 1px solid #3e3e42;
+      display: flex;
+      gap: 2px;
+      padding: 0 1rem;
+      min-height: 35px;
+    }
+
+    .editor-tab {
+      padding: 0.5rem 1rem;
+      background: #2d2d30;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: #969696;
+      border-bottom: 2px solid transparent;
+    }
+
+    .editor-tab.active {
+      background: #1e1e1e;
+      color: #ffffff;
+      border-bottom-color: #007acc;
+    }
+
+    .editor-tab:hover {
+      color: #ffffff;
+    }
+
+    .editor-tab .close {
+      margin-left: 0.5rem;
+      opacity: 0.7;
+    }
+
+    .editor-tab .close:hover {
+      opacity: 1;
+    }
+
+    .editor-content {
+      flex: 1;
+      position: relative;
+    }
+
+    .CodeMirror {
+      height: 100%;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Cursors for other participants */
+    .remote-cursor {
+      position: absolute;
+      width: 2px;
+      background: #007acc;
+      z-index: 1000;
+    }
+
+    .remote-cursor.agent {
+      background: #6c5ce7;
+    }
+
+    .remote-cursor-label {
+      position: absolute;
+      top: -20px;
+      left: 0;
+      background: #007acc;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .remote-cursor-label.agent {
+      background: #6c5ce7;
+    }
+
+    /* Right panel (git + terminal) */
+    .right-panel {
+      background: #252526;
+      border-left: 1px solid #3e3e42;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-tabs {
+      background: #2d2d30;
+      border-bottom: 1px solid #3e3e42;
+      display: flex;
+    }
+
+    .panel-tab {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: #969696;
+      border-bottom: 2px solid transparent;
+      flex: 1;
+      text-align: center;
+    }
+
+    .panel-tab.active {
+      color: #ffffff;
+      border-bottom-color: #007acc;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    /* Git UI (LazyGit style) */
+    .git-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .git-section-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #cccccc;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .git-file {
+      padding: 0.4rem 0.5rem;
+      background: #2a2d2e;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .git-file:hover {
+      background: #37373d;
+    }
+
+    .git-file.staged {
+      border-left: 3px solid #00b894;
+    }
+
+    .git-file .status {
+      color: #00b894;
+      font-weight: 600;
+    }
+
+    .git-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-git {
+      padding: 0.5rem;
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      flex: 1;
+    }
+
+    .btn-git:hover {
+      background: #005a9e;
+    }
+
+    /* Terminal */
+    .terminal {
+      background: #1e1e1e;
+      border: 1px solid #3e3e42;
+      border-radius: 4px;
+      padding: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      height: 300px;
+      overflow-y: auto;
+    }
+
+    .terminal-line {
+      margin-bottom: 0.25rem;
+      color: #d4d4d4;
+    }
+
+    .terminal-line.input {
+      color: #00ff00;
+    }
+
+    .terminal-line.error {
+      color: #ff0000;
+    }
+
+    .terminal-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .terminal-input input {
+      flex: 1;
+      background: #3e3e42;
+      border: 1px solid #515151;
+      color: #d4d4d4;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    /* Chat */
+    .chat-messages {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+
+    .chat-message {
+      margin-bottom: 1rem;
+    }
+
+    .chat-message-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-message-author {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .chat-message-author.human {
+      color: #007acc;
+    }
+
+    .chat-message-author.agent {
+      color: #6c5ce7;
+    }
+
+    .chat-message-time {
+      font-size: 0.75rem;
+      color: #969696;
+    }
+
+    .chat-message-body {
+      font-size: 0.875rem;
+      color: #cccccc;
+      padding-left: 2.5rem;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-input input {
+      flex: 1;
+      background: #3e3e42;
+      border: 1px solid #515151;
+      color: #d4d4d4;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+
+    .btn-send {
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .btn-send:hover {
+      background: #005a9e;
+    }
+
+    /* Status bar */
+    .status-message {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2d2d30;
+      color: #cccccc;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      font-size: 0.875rem;
+      z-index: 1000;
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Loading */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #3e3e42;
+      border-top-color: #007acc;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="workspace-container">
+    <!-- Header -->
+    <div class="workspace-header">
+      <div class="workspace-title">
+        <span id="workspaceName">My Workspace</span>
+      </div>
+
+      <div class="participants" id="participants">
+        <!-- Dynamic participant avatars -->
+      </div>
+
+      <div class="voice-controls">
+        <button class="btn btn-voice" id="voiceBtn">
+          🎤 Voice Chat
+        </button>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="workspace-main">
+      <!-- File tree -->
+      <div class="file-tree">
+        <div class="file-tree-title">Files</div>
+        <div id="fileList">
+          <div class="file-item" data-file="index.js">📄 index.js</div>
+          <div class="file-item" data-file="router.js">📄 router.js</div>
+          <div class="file-item" data-file="package.json">📄 package.json</div>
+          <div class="file-item" data-file="README.md">📄 README.md</div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor-container">
+        <div class="editor-tabs" id="editorTabs">
+          <!-- Dynamic tabs -->
+        </div>
+        <div class="editor-content">
+          <textarea id="editor"></textarea>
+        </div>
+      </div>
+
+      <!-- Right panel (Git + Terminal + Chat) -->
+      <div class="right-panel">
+        <div class="panel-tabs">
+          <div class="panel-tab active" data-panel="git">Git</div>
+          <div class="panel-tab" data-panel="terminal">Terminal</div>
+          <div class="panel-tab" data-panel="chat">Chat</div>
+        </div>
+
+        <div class="panel-content">
+          <!-- Git panel -->
+          <div id="gitPanel" class="panel active">
+            <div class="git-section">
+              <div class="git-section-title">Changed Files</div>
+              <div id="gitChangedFiles">
+                <div class="git-file">
+                  <span>index.js</span>
+                  <span class="status">M</span>
+                </div>
+                <div class="git-file">
+                  <span>router.js</span>
+                  <span class="status">M</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="git-section">
+              <div class="git-section-title">Staged Files</div>
+              <div id="gitStagedFiles">
+                <div class="git-file staged">
+                  <span>README.md</span>
+                  <span class="status">A</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="git-actions">
+              <button class="btn-git" onclick="gitStageAll()">Stage All</button>
+              <button class="btn-git" onclick="gitCommit()">Commit</button>
+              <button class="btn-git" onclick="gitPush()">Push</button>
+            </div>
+          </div>
+
+          <!-- Terminal panel -->
+          <div id="terminalPanel" class="panel" style="display: none;">
+            <div class="terminal" id="terminalOutput">
+              <div class="terminal-line">$ Welcome to collaborative terminal</div>
+              <div class="terminal-line">$ Both you and Claude can run commands here</div>
+            </div>
+            <div class="terminal-input">
+              <input type="text" id="terminalInput" placeholder="Enter command..." />
+              <button class="btn-send" onclick="runTerminalCommand()">Run</button>
+            </div>
+          </div>
+
+          <!-- Chat panel -->
+          <div id="chatPanel" class="panel" style="display: none;">
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-message">
+                <div class="chat-message-header">
+                  <span class="chat-message-author agent">Claude</span>
+                  <span class="chat-message-time">2:30 PM</span>
+                </div>
+                <div class="chat-message-body">
+                  I'm ready to help you code! What should we work on?
+                </div>
+              </div>
+            </div>
+            <div class="chat-input">
+              <input type="text" id="chatInput" placeholder="Type a message..." />
+              <button class="btn-send" onclick="sendChatMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+
+  <script>
+    // Configuration
+    const WORKSPACE_ID = new URLSearchParams(window.location.search).get('id') || 'demo-workspace';
+    const USER_ID = 'user-' + Math.random().toString(36).substr(2, 9);
+    const WS_URL = `ws://${window.location.host}/ws/workspace`;
+
+    // State
+    let workspace = null;
+    let ws = null;
+    let editor = null;
+    let openFiles = [];
+    let activeFile = null;
+    let voiceEnabled = false;
+
+    // Initialize CodeMirror
+    editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+      mode: 'javascript',
+      theme: 'monokai',
+      lineNumbers: true,
+      autoCloseBrackets: true,
+      matchBrackets: true,
+      indentUnit: 2,
+      tabSize: 2,
+      lineWrapping: true
+    });
+
+    // Connect to WebSocket
+    function connectWebSocket() {
+      ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        console.log('[Workspace] Connected');
+        joinWorkspace();
+      };
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        handleMessage(message);
+      };
+
+      ws.onerror = (error) => {
+        console.error('[Workspace] WebSocket error:', error);
+        showStatus('Connection error', 'error');
+      };
+
+      ws.onclose = () => {
+        console.log('[Workspace] Disconnected');
+        showStatus('Disconnected. Reconnecting...', 'warning');
+        setTimeout(connectWebSocket, 3000);
+      };
+    }
+
+    // Join workspace
+    function joinWorkspace() {
+      sendMessage({
+        type: 'join_workspace',
+        workspaceId: WORKSPACE_ID,
+        userId: USER_ID,
+        userType: 'human'
+      });
+
+      showStatus('Joined workspace');
+    }
+
+    // Handle incoming messages
+    function handleMessage(message) {
+      console.log('[Workspace] Message:', message);
+
+      switch (message.type) {
+        case 'workspace_state':
+          workspace = message.workspace;
+          updateParticipants();
+          break;
+
+        case 'participant_joined':
+          showStatus(`${message.participantType} joined`);
+          updateParticipants();
+          break;
+
+        case 'participant_left':
+          showStatus(`Participant left`);
+          updateParticipants();
+          break;
+
+        case 'file_update':
+          applyFileUpdate(message);
+          break;
+
+        case 'cursor_update':
+          updateRemoteCursor(message);
+          break;
+
+        case 'file_locked':
+          markFileLocked(message.filePath, message.participantId);
+          break;
+
+        case 'file_unlocked':
+          markFileUnlocked(message.filePath);
+          break;
+
+        case 'chat_message':
+          addChatMessage(message);
+          break;
+
+        case 'voice_channel_enabled':
+          voiceEnabled = true;
+          updateVoiceButton();
+          break;
+      }
+    }
+
+    // Send message
+    function sendMessage(message) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(message));
+      }
+    }
+
+    // Update participants list
+    function updateParticipants() {
+      if (!workspace) return;
+
+      const participantsEl = document.getElementById('participants');
+      participantsEl.innerHTML = workspace.participants
+        .filter(p => p.presence === 'online')
+        .map(p => `
+          <div class="participant ${p.type} online" title="${p.participantId}">
+            ${p.type === 'human' ? '👤' : '🤖'}
+          </div>
+        `)
+        .join('');
+    }
+
+    // File operations
+    document.querySelectorAll('.file-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const filePath = item.dataset.file;
+        openFile(filePath);
+      });
+    });
+
+    function openFile(filePath) {
+      // Request file lock
+      sendMessage({
+        type: 'lock_file',
+        workspaceId: WORKSPACE_ID,
+        filePath,
+        participantId: USER_ID
+      });
+
+      // Open file (load content via API)
+      // For demo, just switch active file
+      activeFile = filePath;
+      document.querySelectorAll('.file-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.file === filePath);
+      });
+
+      showStatus(`Opened ${filePath}`);
+    }
+
+    // Editor change detection
+    editor.on('change', (cm, change) => {
+      if (change.origin === 'remote') return; // Ignore remote changes
+
+      sendMessage({
+        type: 'file_update',
+        workspaceId: WORKSPACE_ID,
+        filePath: activeFile,
+        operation: {
+          type: change.origin === '+delete' ? 'delete' : 'insert',
+          position: editor.indexFromPos(change.from),
+          text: change.text.join('\n')
+        },
+        participantId: USER_ID
+      });
+    });
+
+    // Cursor tracking
+    editor.on('cursorActivity', () => {
+      const cursor = editor.getCursor();
+      sendMessage({
+        type: 'cursor_update',
+        workspaceId: WORKSPACE_ID,
+        participantId: USER_ID,
+        filePath: activeFile,
+        position: { line: cursor.line, column: cursor.ch }
+      });
+    });
+
+    // Voice controls
+    document.getElementById('voiceBtn').addEventListener('click', () => {
+      voiceEnabled = !voiceEnabled;
+
+      sendMessage({
+        type: 'enable_voice_channel',
+        workspaceId: WORKSPACE_ID,
+        participantId: USER_ID
+      });
+
+      updateVoiceButton();
+      showStatus(voiceEnabled ? 'Voice enabled' : 'Voice disabled');
+    });
+
+    function updateVoiceButton() {
+      const btn = document.getElementById('voiceBtn');
+      btn.classList.toggle('active', voiceEnabled);
+      btn.textContent = voiceEnabled ? '🔴 Voice On' : '🎤 Voice Chat';
+    }
+
+    // Panel switching
+    document.querySelectorAll('.panel-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const panelName = tab.dataset.panel;
+
+        // Update tabs
+        document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update panels
+        document.getElementById('gitPanel').style.display = panelName === 'git' ? 'block' : 'none';
+        document.getElementById('terminalPanel').style.display = panelName === 'terminal' ? 'block' : 'none';
+        document.getElementById('chatPanel').style.display = panelName === 'chat' ? 'block' : 'none';
+      });
+    });
+
+    // Git operations
+    function gitStageAll() {
+      sendMessage({
+        type: 'git_command',
+        workspaceId: WORKSPACE_ID,
+        command: 'stage_all',
+        participantId: USER_ID
+      });
+      showStatus('Staged all files');
+    }
+
+    function gitCommit() {
+      const message = prompt('Commit message:');
+      if (!message) return;
+
+      sendMessage({
+        type: 'git_command',
+        workspaceId: WORKSPACE_ID,
+        command: 'commit',
+        message,
+        participantId: USER_ID
+      });
+      showStatus('Committed changes');
+    }
+
+    function gitPush() {
+      sendMessage({
+        type: 'git_command',
+        workspaceId: WORKSPACE_ID,
+        command: 'push',
+        participantId: USER_ID
+      });
+      showStatus('Pushed to remote');
+    }
+
+    // Terminal
+    function runTerminalCommand() {
+      const input = document.getElementById('terminalInput');
+      const command = input.value.trim();
+      if (!command) return;
+
+      addTerminalLine(`$ ${command}`, 'input');
+      input.value = '';
+
+      sendMessage({
+        type: 'terminal_command',
+        workspaceId: WORKSPACE_ID,
+        command,
+        participantId: USER_ID
+      });
+    }
+
+    function addTerminalLine(text, type = 'output') {
+      const terminal = document.getElementById('terminalOutput');
+      const line = document.createElement('div');
+      line.className = `terminal-line ${type}`;
+      line.textContent = text;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Chat
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      sendMessage({
+        type: 'chat_message',
+        workspaceId: WORKSPACE_ID,
+        participantId: USER_ID,
+        message
+      });
+
+      addChatMessage({
+        participantId: USER_ID,
+        participantType: 'human',
+        message,
+        timestamp: Date.now()
+      });
+
+      input.value = '';
+    }
+
+    function addChatMessage(data) {
+      const messages = document.getElementById('chatMessages');
+      const time = new Date(data.timestamp).toLocaleTimeString();
+
+      const el = document.createElement('div');
+      el.className = 'chat-message';
+      el.innerHTML = `
+        <div class="chat-message-header">
+          <span class="chat-message-author ${data.participantType}">${data.participantId}</span>
+          <span class="chat-message-time">${time}</span>
+        </div>
+        <div class="chat-message-body">${data.message}</div>
+      `;
+
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Status messages
+    function showStatus(message, type = 'info') {
+      const existing = document.querySelector('.status-message');
+      if (existing) existing.remove();
+
+      const el = document.createElement('div');
+      el.className = 'status-message';
+      el.textContent = message;
+      document.body.appendChild(el);
+
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    // Initialize
+    connectWebSocket();
+
+    console.log('[Workspace] Initialized');
+  </script>
+</body>
+</html>

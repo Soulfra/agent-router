@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CALOS Brand Registry - 12 Brands</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #1a1a1a;
+      --border: #333;
+      --text: #ffffff;
+      --text-secondary: #999;
+      --primary: #3498db;
+      --secondary: #2ecc71;
+      --accent: #e74c3c;
+      --deployed: #2ecc71;
+      --planned: #f39c12;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+
+    header {
+      max-width: 1400px;
+      margin: 0 auto 3rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .stat {
+      background: var(--surface);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .controls {
+      max-width: 1400px;
+      margin: 0 auto 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--primary);
+      background: rgba(52, 152, 219, 0.1);
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .brand-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .brand-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .brand-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      border-color: var(--primary);
+    }
+
+    .brand-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .brand-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .brand-domain {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .brand-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-deployed {
+      background: rgba(46, 204, 113, 0.2);
+      color: var(--deployed);
+      border: 1px solid var(--deployed);
+    }
+
+    .status-planned {
+      background: rgba(243, 156, 18, 0.2);
+      color: var(--planned);
+      border: 1px solid var(--planned);
+    }
+
+    .brand-tagline {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    .brand-colors {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .color-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+    }
+
+    .brand-meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .brand-features {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .features-list {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .features-list li {
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .features-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .tier-foundation {
+      background: rgba(52, 152, 219, 0.2);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .tier-business {
+      background: rgba(155, 89, 182, 0.2);
+      color: #9b59b6;
+      border: 1px solid #9b59b6;
+    }
+
+    .tier-creative {
+      background: rgba(230, 126, 34, 0.2);
+      color: #e67e22;
+      border: 1px solid #e67e22;
+    }
+
+    .tier-additional {
+      background: rgba(149, 165, 166, 0.2);
+      color: #95a5a6;
+      border: 1px solid #95a5a6;
+    }
+
+    .sync-indicator {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .sync-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--deployed);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .stats {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .brand-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏢 CALOS Brand Registry</h1>
+    <p class="subtitle">12 Interconnected Brands • Single Source of Truth</p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="totalBrands">12</div>
+        <div class="stat-label">Total Brands</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="deployedCount">1</div>
+        <div class="stat-label">Deployed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="plannedCount">11</div>
+        <div class="stat-label">Planned</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="foundation">Foundation</button>
+      <button class="filter-btn" data-filter="business">Business</button>
+      <button class="filter-btn" data-filter="creative">Creative</button>
+      <button class="filter-btn" data-filter="additional">Additional</button>
+    </div>
+    <div class="filter-group">
+      <button class="filter-btn" data-filter="deployed">Deployed Only</button>
+      <button class="filter-btn" data-filter="planned">Planned Only</button>
+    </div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search brands by name, domain, or tagline...">
+    </div>
+  </div>
+
+  <div id="brandGrid" class="brand-grid">
+    <div class="loading">Loading brands from registry...</div>
+  </div>
+
+  <div class="sync-indicator">
+    <div class="sync-dot"></div>
+    <span>Live sync enabled</span>
+  </div>
+
+  <script>
+    let registry = null;
+    let filteredBrands = [];
+
+    // Load registry
+    async function loadRegistry() {
+      try {
+        const response = await fetch('./BRANDS_REGISTRY.json');
+        registry = await response.json();
+
+        // Update stats
+        document.getElementById('totalBrands').textContent = registry.totalBrands;
+        document.getElementById('deployedCount').textContent =
+          registry.brands.filter(b => b.status === 'deployed').length;
+        document.getElementById('plannedCount').textContent =
+          registry.brands.filter(b => b.status === 'planned').length;
+
+        // Initial render
+        filteredBrands = registry.brands;
+        renderBrands();
+
+      } catch (error) {
+        console.error('Error loading registry:', error);
+        document.getElementById('brandGrid').innerHTML =
+          '<div class="loading" style="color: var(--accent);">Error loading brands. Make sure BRANDS_REGISTRY.json exists.</div>';
+      }
+    }
+
+    // Render brands
+    function renderBrands() {
+      const grid = document.getElementById('brandGrid');
+
+      if (filteredBrands.length === 0) {
+        grid.innerHTML = '<div class="loading">No brands match your filters.</div>';
+        return;
+      }
+
+      grid.innerHTML = filteredBrands
+        .sort((a, b) => a.launchOrder - b.launchOrder)
+        .map(brand => `
+          <div class="brand-card" data-tier="${brand.tier}" data-status="${brand.status}">
+            <div class="brand-header">
+              <div>
+                <div class="tier-badge tier-${brand.tier}">${brand.tier}</div>
+                <div class="brand-name">${brand.name}</div>
+                <div class="brand-domain">${brand.domain}</div>
+              </div>
+              <div class="brand-status status-${brand.status}">
+                ${brand.status}
+              </div>
+            </div>
+
+            <div class="brand-tagline">${brand.tagline}</div>
+
+            <div class="brand-colors">
+              <div class="color-swatch" style="background: ${brand.colors.primary}" title="Primary: ${brand.colors.primary}"></div>
+              <div class="color-swatch" style="background: ${brand.colors.secondary}" title="Secondary: ${brand.colors.secondary}"></div>
+              <div class="color-swatch" style="background: ${brand.colors.accent}" title="Accent: ${brand.colors.accent}"></div>
+            </div>
+
+            <div class="brand-meta">
+              <div class="meta-item">
+                <span class="meta-label">Type:</span>
+                <span>${brand.type}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Launch:</span>
+                <span>#${brand.launchOrder}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">GitHub:</span>
+                <span>${brand.github.status}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">GoDaddy:</span>
+                <span>${brand.godaddy.status}</span>
+              </div>
+            </div>
+
+            <div class="brand-features">
+              <ul class="features-list">
+                ${brand.features.slice(0, 3).map(f => `<li>${f}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        `).join('');
+    }
+
+    // Filter handlers
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+
+        if (filter === 'all') {
+          filteredBrands = registry.brands;
+        } else if (filter === 'deployed' || filter === 'planned') {
+          filteredBrands = registry.brands.filter(b => b.status === filter);
+        } else {
+          filteredBrands = registry.brands.filter(b => b.tier === filter);
+        }
+
+        renderBrands();
+      });
+    });
+
+    // Search handler
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+
+      filteredBrands = registry.brands.filter(b =>
+        b.name.toLowerCase().includes(query) ||
+        b.domain.toLowerCase().includes(query) ||
+        b.tagline.toLowerCase().includes(query) ||
+        b.type.toLowerCase().includes(query)
+      );
+
+      renderBrands();
+    });
+
+    // Load on page load
+    loadRegistry();
+
+    // Auto-refresh every 60 seconds
+    setInterval(loadRegistry, 60000);
+  </script>
+</body>
+</html>

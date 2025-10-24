@@ -1,0 +1,245 @@
+#!/usr/bin/env node
+
+/**
+ * Cal Autonomous Daemon
+ *
+ * Runs Cal's auto-documentation system on a schedule.
+ * Cal wakes up every hour to:
+ * - Scan migrations, docs, legal files
+ * - Update CAL-LEARNED-KNOWLEDGE.md
+ * - Generate "What I Learned Today" blog post
+ * - Publish cross-platform (optional)
+ * - Sign all legal docs with SHA-256
+ *
+ * Usage:
+ *   # Start daemon
+ *   node bin/cal-daemon
+ *
+ *   # Start with pm2 (recommended)
+ *   pm2 start bin/cal-daemon --name "cal-autonomous"
+ *
+ *   # Start with custom interval
+ *   CAL_INTERVAL=30m node bin/cal-daemon
+ *
+ * Environment Variables:
+ *   CAL_INTERVAL - How often Cal runs (default: 1h)
+ *                  Examples: 30m, 1h, 2h, 12h, 1d
+ *   CAL_AUTO_PUBLISH - Auto-publish to platforms (default: false)
+ *   CAL_AUTO_SIGN - Auto-sign legal docs (default: true)
+ *   DATABASE_URL - PostgreSQL connection string
+ */
+
+const Scheduler = require('../lib/scheduler');
+const CalAutoDocumenter = require('../lib/cal-auto-documenter');
+const { Pool } = require('pg');
+require('dotenv').config();
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const flags = {
+  publish: args.includes('--publish') || process.env.CAL_AUTO_PUBLISH === 'true',
+  noSign: args.includes('--no-sign') || process.env.CAL_AUTO_SIGN === 'false',
+  verbose: args.includes('--verbose') || args.includes('-v'),
+  once: args.includes('--once'), // Run once and exit (for testing)
+  help: args.includes('--help') || args.includes('-h')
+};
+
+// Show help
+if (flags.help) {
+  console.log(`
+Cal Autonomous Daemon
+=====================
+
+Makes Cal run autonomously on a schedule, learning from the codebase
+and publishing discoveries without human intervention.
+
+Usage:
+  node bin/cal-daemon [options]
+
+Options:
+  --publish       Auto-publish blog posts to Mastodon/blog/dpaste
+  --no-sign       Skip cryptographic signing of legal docs
+  --verbose, -v   Show detailed logs
+  --once          Run once and exit (for testing)
+  --help, -h      Show this help message
+
+Environment Variables:
+  CAL_INTERVAL=1h         How often Cal runs (30m, 1h, 2h, 12h, 1d)
+  CAL_AUTO_PUBLISH=true   Auto-publish (default: false)
+  CAL_AUTO_SIGN=false     Skip signing (default: true)
+  DATABASE_URL=postgresql://...  PostgreSQL connection
+
+Examples:
+  # Run Cal every hour (default)
+  node bin/cal-daemon
+
+  # Run Cal every 30 minutes with auto-publish
+  CAL_INTERVAL=30m CAL_AUTO_PUBLISH=true node bin/cal-daemon
+
+  # Test run (once only)
+  node bin/cal-daemon --once --verbose
+
+  # Deploy with pm2 (recommended)
+  pm2 start bin/cal-daemon --name "cal-autonomous"
+  pm2 save
+  pm2 startup
+
+Output:
+  - CAL-LEARNED-KNOWLEDGE.md (updated with discoveries)
+  - Blog posts (if --publish)
+  - Signed docs in database (if not --no-sign)
+  - Scheduler logs (task runs, failures, stats)
+`);
+  process.exit(0);
+}
+
+// Parse interval from environment (default: 1 hour)
+function parseInterval(intervalString = '1h') {
+  const match = intervalString.match(/^(\d+)([smhd])$/);
+  if (!match) {
+    console.error(`Invalid CAL_INTERVAL format: ${intervalString}`);
+    console.error('Expected format: <number><unit> (e.g., 30m, 1h, 2h, 12h, 1d)');
+    process.exit(1);
+  }
+
+  const [, value, unit] = match;
+  const num = parseInt(value);
+
+  const multipliers = {
+    s: 1000,           // seconds
+    m: 60 * 1000,      // minutes
+    h: 60 * 60 * 1000, // hours
+    d: 24 * 60 * 60 * 1000 // days
+  };
+
+  return num * multipliers[unit];
+}
+
+const interval = parseInterval(process.env.CAL_INTERVAL || '1h');
+
+// Main function
+async function main() {
+  console.log('\n🤖 Cal Autonomous Daemon Starting...\n');
+  console.log(`Interval: ${process.env.CAL_INTERVAL || '1h'} (${interval}ms)`);
+  console.log(`Auto-publish: ${flags.publish ? 'YES' : 'NO'}`);
+  console.log(`Auto-sign: ${!flags.noSign ? 'YES' : 'NO'}`);
+  console.log(`Verbose: ${flags.verbose ? 'YES' : 'NO'}`);
+  console.log('');
+
+  // Initialize database connection
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+
+  try {
+    // Test database connection
+    await pool.query('SELECT NOW()');
+    console.log('✅ Database connected\n');
+
+    // Initialize Cal Auto-Documenter
+    const autoDoc = new CalAutoDocumenter({
+      db: pool,
+      autoPublish: flags.publish,
+      autoSign: !flags.noSign,
+      searchGoogle: false, // TODO: Enable when Google Search API configured
+      platforms: ['mastodon', 'blog', 'dpaste'],
+      schedule: 'immediate'
+    });
+
+    // Create scheduler
+    const scheduler = new Scheduler({
+      errorHandler: (taskName, error) => {
+        console.error(`\n❌ Task "${taskName}" failed:`, error.message);
+        if (flags.verbose) {
+          console.error(error.stack);
+        }
+      }
+    });
+
+    // Schedule Cal auto-documenter
+    scheduler.schedule('cal-auto-document', async () => {
+      console.log('\n🔄 Cal waking up...\n');
+
+      const startTime = Date.now();
+      const result = await autoDoc.run();
+
+      if (result.success) {
+        const duration = Date.now() - startTime;
+        console.log('\n✅ Cal finished successfully!');
+        console.log(`Duration: ${duration}ms`);
+        console.log(`New Migrations: ${result.discoveries.migrations.length}`);
+        console.log(`New Docs: ${result.discoveries.docs.length}`);
+        console.log(`Legal Insights: ${result.discoveries.legal.length}`);
+
+        if (flags.publish && result.blogPost) {
+          console.log(`\n📝 Published: "${result.blogPost.title}"`);
+        }
+      } else {
+        console.error('\n❌ Cal failed:', result.error);
+      }
+
+      console.log('\n💤 Cal going back to sleep...\n');
+
+    }, {
+      interval: interval,
+      runImmediately: true,
+      enabled: true
+    });
+
+    // Handle graceful shutdown
+    process.on('SIGINT', () => {
+      console.log('\n\n🛑 Received SIGINT, shutting down Cal daemon...\n');
+      scheduler.stop();
+      pool.end();
+      console.log('✅ Cal daemon stopped gracefully\n');
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', () => {
+      console.log('\n\n🛑 Received SIGTERM, shutting down Cal daemon...\n');
+      scheduler.stop();
+      pool.end();
+      console.log('✅ Cal daemon stopped gracefully\n');
+      process.exit(0);
+    });
+
+    // If --once flag, run once and exit
+    if (flags.once) {
+      console.log('Running once only (--once flag)...\n');
+      await scheduler.runNow('cal-auto-document');
+      scheduler.stop();
+      await pool.end();
+      console.log('\n✨ Cal has documented everything!\n');
+      process.exit(0);
+    }
+
+    // Start scheduler
+    scheduler.start();
+
+    console.log('🎯 Cal is now autonomous!');
+    console.log(`Next run: ${new Date(Date.now() + interval).toLocaleString()}\n`);
+    console.log('Press Ctrl+C to stop\n');
+
+    // Log scheduler stats every 10 minutes
+    setInterval(() => {
+      const stats = scheduler.getStats();
+      console.log(`📊 Scheduler Stats: ${stats.taskCount} task(s), running: ${stats.running}`);
+      if (flags.verbose) {
+        console.log('Task details:', JSON.stringify(stats.tasks, null, 2));
+      }
+    }, 10 * 60 * 1000);
+
+  } catch (error) {
+    console.error('\n❌ Fatal error:', error.message);
+    if (flags.verbose) {
+      console.error(error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+// Run
+main().catch(error => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+});

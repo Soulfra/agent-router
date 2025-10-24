@@ -1,0 +1,411 @@
+#!/usr/bin/env node
+
+/**
+ * Gmail Webhook Setup Wizard
+ *
+ * Interactive CLI tool to help users configure:
+ * - Gmail Send-As aliases (Tier 1)
+ * - Gmail Webhook Relay (Tier 3)
+ *
+ * Usage:
+ *   npm run gmail:setup
+ *   ./bin/gmail-setup
+ */
+
+const readline = require('readline');
+const { google } = require('googleapis');
+const { Pool } = require('pg');
+const GmailWebhookRelay = require('../lib/gmail-webhook-relay');
+const GmailSendAsManager = require('../lib/gmail-send-as-manager');
+
+// Initialize services
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
+const webhookRelay = new GmailWebhookRelay({ pool });
+const sendAsManager = new GmailSendAsManager({ pool });
+
+// OAuth2 client
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
+
+// Colors for terminal output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m'
+};
+
+// Create readline interface
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// Helper to prompt user
+const prompt = (question) => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
+};
+
+// Helper to display banner
+function displayBanner() {
+  console.log(`
+${colors.cyan}${colors.bright}
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║            Gmail Webhook Setup Wizard                        ║
+║            CALOS Platform                                    ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+${colors.reset}
+
+${colors.dim}Set up Gmail webhooks and Send-As aliases for your CALOS account${colors.reset}
+`);
+}
+
+// Helper to display menu
+function displayMainMenu() {
+  console.log(`
+${colors.bright}What would you like to set up?${colors.reset}
+
+${colors.cyan}1.${colors.reset} Gmail Send-As Alias (Tier 1 - Simple)
+   ${colors.dim}Send emails from custom addresses via Gmail API${colors.reset}
+
+${colors.cyan}2.${colors.reset} Gmail Webhook Relay (Tier 3 - Advanced)
+   ${colors.dim}Full Mailchimp-style relay with custom From addresses${colors.reset}
+
+${colors.cyan}3.${colors.reset} View Current Configuration
+   ${colors.dim}See your existing Send-As aliases and webhook configs${colors.reset}
+
+${colors.cyan}4.${colors.reset} Exit
+`);
+}
+
+// OAuth flow
+async function performOAuthFlow() {
+  console.log(`\n${colors.yellow}${colors.bright}Step 1: Authorize CALOS to access your Gmail${colors.reset}\n`);
+
+  const scopes = [
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.settings.basic',
+    'https://www.googleapis.com/auth/gmail.settings.sharing'
+  ];
+
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: scopes,
+    prompt: 'consent'
+  });
+
+  console.log(`${colors.bright}Please visit this URL to authorize:${colors.reset}\n`);
+  console.log(`${colors.blue}${authUrl}${colors.reset}\n`);
+
+  const code = await prompt('Enter the authorization code: ');
+
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    console.log(`\n${colors.green}✓ Authorization successful!${colors.reset}\n`);
+    return tokens;
+  } catch (error) {
+    console.error(`\n${colors.red}✗ Authorization failed: ${error.message}${colors.reset}\n`);
+    throw error;
+  }
+}
+
+// Setup Send-As alias (Tier 1)
+async function setupSendAsAlias() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}Gmail Send-As Alias Setup (Tier 1)${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  console.log(`${colors.dim}Send emails from custom addresses via Gmail.`);
+  console.log(`Note: Some email clients may show "on behalf of" label.${colors.reset}\n`);
+
+  // Get user ID
+  const userId = await prompt('Enter your user ID: ');
+
+  // Perform OAuth
+  const tokens = await performOAuthFlow();
+
+  console.log(`\n${colors.yellow}${colors.bright}Step 2: Configure your Send-As alias${colors.reset}\n`);
+
+  // Get alias details
+  const sendAsEmail = await prompt('Custom email address (e.g., support@mycompany.com): ');
+  const displayName = await prompt('Display name (e.g., My Company Support): ');
+  const replyToAddress = await prompt(`Reply-to address (press Enter for ${sendAsEmail}): `) || sendAsEmail;
+  const signature = await prompt('Email signature (press Enter to skip): ');
+  const isDefaultInput = await prompt('Set as default Send-As address? (y/n): ');
+  const isDefault = isDefaultInput.toLowerCase() === 'y';
+
+  console.log(`\n${colors.dim}Creating Send-As alias...${colors.reset}`);
+
+  try {
+    const alias = await sendAsManager.addSendAsAlias(
+      userId,
+      tokens.access_token,
+      tokens.refresh_token,
+      {
+        sendAsEmail,
+        displayName,
+        replyToAddress,
+        signature: signature || undefined,
+        isDefault
+      }
+    );
+
+    console.log(`\n${colors.green}${colors.bright}✓ Send-As alias created successfully!${colors.reset}\n`);
+
+    console.log(`${colors.bright}Details:${colors.reset}`);
+    console.log(`  Email: ${colors.cyan}${alias.sendAsEmail}${colors.reset}`);
+    console.log(`  Display Name: ${colors.cyan}${alias.displayName}${colors.reset}`);
+    console.log(`  Verification Status: ${colors.yellow}${alias.verificationStatus}${colors.reset}`);
+
+    if (alias.needsVerification) {
+      console.log(`\n${colors.yellow}${colors.bright}⚠ Verification Required${colors.reset}`);
+      console.log(`${colors.dim}Gmail has sent a verification email to ${sendAsEmail}.${colors.reset}`);
+      console.log(`${colors.dim}Please check the inbox and click the verification link.${colors.reset}`);
+      console.log(`${colors.dim}You cannot send emails until the alias is verified.${colors.reset}`);
+    } else {
+      console.log(`\n${colors.green}✓ Alias is verified and ready to use!${colors.reset}`);
+    }
+
+  } catch (error) {
+    console.error(`\n${colors.red}✗ Error creating Send-As alias: ${error.message}${colors.reset}\n`);
+  }
+}
+
+// Setup Webhook Relay (Tier 3)
+async function setupWebhookRelay() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}Gmail Webhook Relay Setup (Tier 3)${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  console.log(`${colors.dim}Full Mailchimp-style email relay with custom From addresses.`);
+  console.log(`Relay emails through CALOS servers with professional branding.${colors.reset}\n`);
+
+  // Get user ID
+  const userId = await prompt('Enter your user ID: ');
+
+  // Perform OAuth
+  const tokens = await performOAuthFlow();
+
+  // Get Gmail profile
+  oauth2Client.setCredentials(tokens);
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+  const profile = await gmail.users.getProfile({ userId: 'me' });
+  const emailAddress = profile.data.emailAddress;
+
+  console.log(`\n${colors.green}✓ Gmail account: ${emailAddress}${colors.reset}\n`);
+
+  console.log(`${colors.yellow}${colors.bright}Step 2: Configure relay settings${colors.reset}\n`);
+
+  // Get relay configuration
+  const relayFromAddress = await prompt(`Custom From address (press Enter for noreply@calos.ai): `) || 'noreply@calos.ai';
+
+  console.log(`\n${colors.bright}Optional: Set up relay rules to filter which emails get relayed${colors.reset}`);
+  const subjectContains = await prompt('Only relay emails with subject containing (press Enter to skip): ');
+  const fromDomain = await prompt('Only relay emails from domain (press Enter to skip): ');
+
+  const relayRules = {};
+  if (subjectContains) relayRules.subject_contains = subjectContains;
+  if (fromDomain) relayRules.from_domain = fromDomain;
+
+  console.log(`\n${colors.dim}Creating webhook configuration...${colors.reset}`);
+
+  try {
+    const config = await webhookRelay.createWebhookConfig({
+      userId,
+      emailAddress,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      relayFromAddress,
+      relayRules: Object.keys(relayRules).length > 0 ? relayRules : undefined,
+      enabled: true
+    });
+
+    console.log(`\n${colors.green}${colors.bright}✓ Webhook relay configured successfully!${colors.reset}\n`);
+
+    console.log(`${colors.bright}Configuration:${colors.reset}`);
+    console.log(`  Gmail Account: ${colors.cyan}${emailAddress}${colors.reset}`);
+    console.log(`  Relay From: ${colors.cyan}${relayFromAddress}${colors.reset}`);
+    console.log(`  Status: ${colors.green}Enabled${colors.reset}`);
+
+    if (Object.keys(relayRules).length > 0) {
+      console.log(`\n${colors.bright}Relay Rules:${colors.reset}`);
+      if (relayRules.subject_contains) {
+        console.log(`  Subject contains: ${colors.cyan}${relayRules.subject_contains}${colors.reset}`);
+      }
+      if (relayRules.from_domain) {
+        console.log(`  From domain: ${colors.cyan}${relayRules.from_domain}${colors.reset}`);
+      }
+    }
+
+    console.log(`\n${colors.yellow}${colors.bright}⚠ Important: Configure Gmail Pub/Sub${colors.reset}`);
+    console.log(`${colors.dim}You need to set up Gmail Pub/Sub webhook to complete the integration.${colors.reset}`);
+    console.log(`${colors.dim}Follow the tutorial at: docs/GMAIL_WEBHOOK_TUTORIAL.md${colors.reset}`);
+
+  } catch (error) {
+    console.error(`\n${colors.red}✗ Error creating webhook configuration: ${error.message}${colors.reset}\n`);
+  }
+}
+
+// View current configuration
+async function viewConfiguration() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}Current Configuration${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  const userId = await prompt('Enter your user ID: ');
+
+  // Get Send-As aliases from database
+  console.log(`\n${colors.bright}Send-As Aliases:${colors.reset}\n`);
+
+  const aliases = await sendAsManager.getSendAsAliasesFromDB(userId);
+
+  if (aliases.length === 0) {
+    console.log(`${colors.dim}  No Send-As aliases configured.${colors.reset}`);
+  } else {
+    aliases.forEach((alias, index) => {
+      console.log(`${colors.cyan}${index + 1}.${colors.reset} ${alias.send_as_email}`);
+      console.log(`   Display Name: ${alias.display_name}`);
+      console.log(`   Status: ${alias.verification_status === 'accepted' ? colors.green + 'Verified' : colors.yellow + alias.verification_status}${colors.reset}`);
+      console.log(`   Default: ${alias.is_default ? 'Yes' : 'No'}`);
+      console.log('');
+    });
+  }
+
+  // Get webhook configs from database
+  console.log(`${colors.bright}Webhook Relay Configs:${colors.reset}\n`);
+
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM gmail_webhook_configs
+      WHERE user_id = $1
+    `, [userId]);
+
+    const configs = result.rows;
+
+    if (configs.length === 0) {
+      console.log(`${colors.dim}  No webhook relay configurations.${colors.reset}`);
+    } else {
+      configs.forEach((config, index) => {
+        console.log(`${colors.cyan}${index + 1}.${colors.reset} ${config.email_address}`);
+        console.log(`   Relay From: ${config.relay_from_address}`);
+        console.log(`   Status: ${config.enabled ? colors.green + 'Enabled' : colors.red + 'Disabled'}${colors.reset}`);
+        console.log(`   Last Webhook: ${config.last_webhook_at || 'Never'}`);
+        console.log('');
+      });
+    }
+
+    // Get statistics
+    console.log(`${colors.bright}Statistics:${colors.reset}\n`);
+
+    const emailStats = await sendAsManager.getEmailStats(userId);
+    const relayStats = await webhookRelay.getRelayStats(userId);
+
+    console.log(`${colors.bright}Send-As Emails:${colors.reset}`);
+    console.log(`  Total Sent: ${colors.cyan}${emailStats.total_sent || 0}${colors.reset}`);
+    console.log(`  Successful: ${colors.green}${emailStats.successful || 0}${colors.reset}`);
+    console.log(`  Failed: ${colors.red}${emailStats.failed || 0}${colors.reset}`);
+
+    console.log(`\n${colors.bright}Relayed Emails:${colors.reset}`);
+    console.log(`  Total Relayed: ${colors.cyan}${relayStats.total_relayed || 0}${colors.reset}`);
+    console.log(`  Successful: ${colors.green}${relayStats.successful || 0}${colors.reset}`);
+    console.log(`  Failed: ${colors.red}${relayStats.failed || 0}${colors.reset}`);
+
+  } catch (error) {
+    console.error(`\n${colors.red}✗ Error fetching configuration: ${error.message}${colors.reset}\n`);
+  }
+}
+
+// Main function
+async function main() {
+  displayBanner();
+
+  let running = true;
+
+  while (running) {
+    displayMainMenu();
+
+    const choice = await prompt(`${colors.bright}Enter your choice (1-4):${colors.reset} `);
+
+    switch (choice) {
+      case '1':
+        await setupSendAsAlias();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '2':
+        await setupWebhookRelay();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '3':
+        await viewConfiguration();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '4':
+        console.log(`\n${colors.green}Thanks for using CALOS Gmail Setup!${colors.reset}\n`);
+        running = false;
+        break;
+
+      default:
+        console.log(`\n${colors.red}Invalid choice. Please enter 1-4.${colors.reset}\n`);
+        break;
+    }
+  }
+
+  rl.close();
+  await pool.end();
+  process.exit(0);
+}
+
+// Error handling
+process.on('unhandledRejection', (error) => {
+  console.error(`\n${colors.red}✗ Unexpected error: ${error.message}${colors.reset}\n`);
+  rl.close();
+  pool.end();
+  process.exit(1);
+});
+
+process.on('SIGINT', () => {
+  console.log(`\n\n${colors.yellow}Setup interrupted. Goodbye!${colors.reset}\n`);
+  rl.close();
+  pool.end();
+  process.exit(0);
+});
+
+// Check environment
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
+  console.error(`\n${colors.red}✗ Error: Missing Google OAuth credentials${colors.reset}`);
+  console.error(`${colors.dim}Please set the following environment variables:${colors.reset}`);
+  console.error(`  - GOOGLE_CLIENT_ID`);
+  console.error(`  - GOOGLE_CLIENT_SECRET`);
+  console.error(`  - GOOGLE_REDIRECT_URI\n`);
+  process.exit(1);
+}
+
+if (!process.env.DATABASE_URL) {
+  console.error(`\n${colors.red}✗ Error: Missing database connection${colors.reset}`);
+  console.error(`${colors.dim}Please set DATABASE_URL environment variable${colors.reset}\n`);
+  process.exit(1);
+}
+
+// Run
+main();

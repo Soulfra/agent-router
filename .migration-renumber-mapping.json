@@ -1,0 +1,433 @@
+{
+  "timestamp": "2025-10-14T18:24:52.045Z",
+  "dryRun": true,
+  "totalMigrations": 71,
+  "mapping": [
+    {
+      "old": "001_add_time_differentials.sql",
+      "new": "001_add_time_differentials.sql",
+      "oldNumber": 1,
+      "newNumber": 1
+    },
+    {
+      "old": "002_add_pricing_tables.sql",
+      "new": "002_add_pricing_tables.sql",
+      "oldNumber": 2,
+      "newNumber": 2
+    },
+    {
+      "old": "003_add_data_replication.sql",
+      "new": "003_add_data_replication.sql",
+      "oldNumber": 3,
+      "newNumber": 3
+    },
+    {
+      "old": "004_add_knowledge_system.sql",
+      "new": "004_add_knowledge_system.sql",
+      "oldNumber": 4,
+      "newNumber": 4
+    },
+    {
+      "old": "005_add_algo_trading_tables.sql",
+      "new": "005_add_algo_trading_tables.sql",
+      "oldNumber": 5,
+      "newNumber": 5
+    },
+    {
+      "old": "005_add_iiif_system.sql",
+      "new": "006_add_iiif_system.sql",
+      "oldNumber": 5,
+      "newNumber": 6
+    },
+    {
+      "old": "006_add_guardian_tables.sql",
+      "new": "007_add_guardian_tables.sql",
+      "oldNumber": 6,
+      "newNumber": 7
+    },
+    {
+      "old": "007_add_domain_portfolio.sql",
+      "new": "008_add_domain_portfolio.sql",
+      "oldNumber": 7,
+      "newNumber": 8
+    },
+    {
+      "old": "007_add_profile_swiper.sql",
+      "new": "009_add_profile_swiper.sql",
+      "oldNumber": 7,
+      "newNumber": 9
+    },
+    {
+      "old": "008_add_developer_system.sql",
+      "new": "010_add_developer_system.sql",
+      "oldNumber": 8,
+      "newNumber": 10
+    },
+    {
+      "old": "008_add_domain_challenges.sql",
+      "new": "011_add_domain_challenges.sql",
+      "oldNumber": 8,
+      "newNumber": 11
+    },
+    {
+      "old": "008_add_onboarding_system.sql",
+      "new": "012_add_onboarding_system.sql",
+      "oldNumber": 8,
+      "newNumber": 12
+    },
+    {
+      "old": "009_add_domain_voting.sql",
+      "new": "013_add_domain_voting.sql",
+      "oldNumber": 9,
+      "newNumber": 13
+    },
+    {
+      "old": "009_add_elo_system.sql",
+      "new": "014_add_elo_system.sql",
+      "oldNumber": 9,
+      "newNumber": 14
+    },
+    {
+      "old": "010_add_code_index.sql",
+      "new": "015_add_code_index.sql",
+      "oldNumber": 10,
+      "newNumber": 15
+    },
+    {
+      "old": "010_add_user_auth.sql",
+      "new": "016_add_user_auth.sql",
+      "oldNumber": 10,
+      "newNumber": 16
+    },
+    {
+      "old": "011_add_admin_roles.sql",
+      "new": "017_add_admin_roles.sql",
+      "oldNumber": 11,
+      "newNumber": 17
+    },
+    {
+      "old": "011_add_rooms_and_credentials.sql",
+      "new": "018_add_rooms_and_credentials.sql",
+      "oldNumber": 11,
+      "newNumber": 18
+    },
+    {
+      "old": "011_add_skills_system.sql",
+      "new": "019_add_skills_system.sql",
+      "oldNumber": 11,
+      "newNumber": 19
+    },
+    {
+      "old": "012_add_actions_effects.sql",
+      "new": "020_add_actions_effects.sql",
+      "oldNumber": 12,
+      "newNumber": 20
+    },
+    {
+      "old": "013_add_scheduling_verification.sql",
+      "new": "021_add_scheduling_verification.sql",
+      "oldNumber": 13,
+      "newNumber": 21
+    },
+    {
+      "old": "013_oauth_providers.sql",
+      "new": "022_oauth_providers.sql",
+      "oldNumber": 13,
+      "newNumber": 22
+    },
+    {
+      "old": "014_add_elo_spam_prevention.sql",
+      "new": "023_add_elo_spam_prevention.sql",
+      "oldNumber": 14,
+      "newNumber": 23
+    },
+    {
+      "old": "014_add_mailer_campaigns.sql",
+      "new": "024_add_mailer_campaigns.sql",
+      "oldNumber": 14,
+      "newNumber": 24
+    },
+    {
+      "old": "014_email_router.sql",
+      "new": "025_email_router.sql",
+      "oldNumber": 14,
+      "newNumber": 25
+    },
+    {
+      "old": "015_add_game_leagues.sql",
+      "new": "026_add_game_leagues.sql",
+      "oldNumber": 15,
+      "newNumber": 26
+    },
+    {
+      "old": "015_add_user_devices.sql",
+      "new": "027_add_user_devices.sql",
+      "oldNumber": 15,
+      "newNumber": 27
+    },
+    {
+      "old": "016_add_lofi_system.sql",
+      "new": "028_add_lofi_system.sql",
+      "oldNumber": 16,
+      "newNumber": 28
+    },
+    {
+      "old": "016_oauth_provider_system.sql",
+      "new": "029_oauth_provider_system.sql",
+      "oldNumber": 16,
+      "newNumber": 29
+    },
+    {
+      "old": "017_payments_and_recruiting.sql",
+      "new": "030_payments_and_recruiting.sql",
+      "oldNumber": 17,
+      "newNumber": 30
+    },
+    {
+      "old": "018_model_council.sql",
+      "new": "031_model_council.sql",
+      "oldNumber": 18,
+      "newNumber": 31
+    },
+    {
+      "old": "019_autonomous_mode.sql",
+      "new": "032_autonomous_mode.sql",
+      "oldNumber": 19,
+      "newNumber": 32
+    },
+    {
+      "old": "020_platform_licensing.sql",
+      "new": "033_platform_licensing.sql",
+      "oldNumber": 20,
+      "newNumber": 33
+    },
+    {
+      "old": "020_session_blocks.sql",
+      "new": "034_session_blocks.sql",
+      "oldNumber": 20,
+      "newNumber": 34
+    },
+    {
+      "old": "021_usage_based_pricing.sql",
+      "new": "035_usage_based_pricing.sql",
+      "oldNumber": 21,
+      "newNumber": 35
+    },
+    {
+      "old": "022_add_user_profiles_system.sql",
+      "new": "036_add_user_profiles_system.sql",
+      "oldNumber": 22,
+      "newNumber": 36
+    },
+    {
+      "old": "023_add_model_versions_system.sql",
+      "new": "037_add_model_versions_system.sql",
+      "oldNumber": 23,
+      "newNumber": 37
+    },
+    {
+      "old": "024_add_model_wrappers_system.sql",
+      "new": "038_add_model_wrappers_system.sql",
+      "oldNumber": 24,
+      "newNumber": 38
+    },
+    {
+      "old": "025_add_device_pairing_system.sql",
+      "new": "039_add_device_pairing_system.sql",
+      "oldNumber": 25,
+      "newNumber": 39
+    },
+    {
+      "old": "025_model_usage_tracking.sql",
+      "new": "040_model_usage_tracking.sql",
+      "oldNumber": 25,
+      "newNumber": 40
+    },
+    {
+      "old": "026_add_training_tasks_system.sql",
+      "new": "041_add_training_tasks_system.sql",
+      "oldNumber": 26,
+      "newNumber": 41
+    },
+    {
+      "old": "026_bucket_system.sql",
+      "new": "042_bucket_system.sql",
+      "oldNumber": 26,
+      "newNumber": 42
+    },
+    {
+      "old": "027_add_account_warming_system.sql",
+      "new": "043_add_account_warming_system.sql",
+      "oldNumber": 27,
+      "newNumber": 43
+    },
+    {
+      "old": "027_request_lifecycle.sql",
+      "new": "044_request_lifecycle.sql",
+      "oldNumber": 27,
+      "newNumber": 44
+    },
+    {
+      "old": "028_add_experiments_system.sql",
+      "new": "045_add_experiments_system.sql",
+      "oldNumber": 28,
+      "newNumber": 45
+    },
+    {
+      "old": "029_calos_platform_api_keys.sql",
+      "new": "046_calos_platform_api_keys.sql",
+      "oldNumber": 29,
+      "newNumber": 46
+    },
+    {
+      "old": "030_credits_system.sql",
+      "new": "047_credits_system.sql",
+      "oldNumber": 30,
+      "newNumber": 47
+    },
+    {
+      "old": "030_model_benchmarks.sql",
+      "new": "048_model_benchmarks.sql",
+      "oldNumber": 30,
+      "newNumber": 48
+    },
+    {
+      "old": "031_bucket_artifacts.sql",
+      "new": "049_bucket_artifacts.sql",
+      "oldNumber": 31,
+      "newNumber": 49
+    },
+    {
+      "old": "031_documentation_registry.sql",
+      "new": "050_documentation_registry.sql",
+      "oldNumber": 31,
+      "newNumber": 50
+    },
+    {
+      "old": "032_domain_code_library.sql",
+      "new": "051_domain_code_library.sql",
+      "oldNumber": 32,
+      "newNumber": 51
+    },
+    {
+      "old": "032_vanity_handles.sql",
+      "new": "052_vanity_handles.sql",
+      "oldNumber": 32,
+      "newNumber": 52
+    },
+    {
+      "old": "033_context_airlock.sql",
+      "new": "053_context_airlock.sql",
+      "oldNumber": 33,
+      "newNumber": 53
+    },
+    {
+      "old": "033_encryption_paths.sql",
+      "new": "054_encryption_paths.sql",
+      "oldNumber": 33,
+      "newNumber": 54
+    },
+    {
+      "old": "034_domain_parameters.sql",
+      "new": "055_domain_parameters.sql",
+      "oldNumber": 34,
+      "newNumber": 55
+    },
+    {
+      "old": "034_telegram_bot.sql",
+      "new": "056_telegram_bot.sql",
+      "oldNumber": 34,
+      "newNumber": 56
+    },
+    {
+      "old": "035_voucher_system.sql",
+      "new": "057_voucher_system.sql",
+      "oldNumber": 35,
+      "newNumber": 57
+    },
+    {
+      "old": "035_workflows_system.sql",
+      "new": "058_workflows_system.sql",
+      "oldNumber": 35,
+      "newNumber": 58
+    },
+    {
+      "old": "036_affiliate_system.sql",
+      "new": "059_affiliate_system.sql",
+      "oldNumber": 36,
+      "newNumber": 59
+    },
+    {
+      "old": "036_automated_flows.sql",
+      "new": "060_automated_flows.sql",
+      "oldNumber": 36,
+      "newNumber": 60
+    },
+    {
+      "old": "036_feature_gates.sql",
+      "new": "061_feature_gates.sql",
+      "oldNumber": 36,
+      "newNumber": 61
+    },
+    {
+      "old": "037_component_relationships.sql",
+      "new": "062_component_relationships.sql",
+      "oldNumber": 37,
+      "newNumber": 62
+    },
+    {
+      "old": "037_identity_resolution.sql",
+      "new": "063_identity_resolution.sql",
+      "oldNumber": 37,
+      "newNumber": 63
+    },
+    {
+      "old": "037_mailbox_system.sql",
+      "new": "064_mailbox_system.sql",
+      "oldNumber": 37,
+      "newNumber": 64
+    },
+    {
+      "old": "038_app_store.sql",
+      "new": "065_app_store.sql",
+      "oldNumber": 38,
+      "newNumber": 65
+    },
+    {
+      "old": "039_asset_system.sql",
+      "new": "066_asset_system.sql",
+      "oldNumber": 39,
+      "newNumber": 66
+    },
+    {
+      "old": "040_fix_oauth_providers.sql",
+      "new": "067_fix_oauth_providers.sql",
+      "oldNumber": 40,
+      "newNumber": 67
+    },
+    {
+      "old": "040_session_analytics.sql",
+      "new": "068_session_analytics.sql",
+      "oldNumber": 40,
+      "newNumber": 68
+    },
+    {
+      "old": "041_add_bounce_tracking.sql",
+      "new": "069_add_bounce_tracking.sql",
+      "oldNumber": 41,
+      "newNumber": 69
+    },
+    {
+      "old": "041_dependency_vendoring.sql",
+      "new": "070_dependency_vendoring.sql",
+      "oldNumber": 41,
+      "newNumber": 70
+    },
+    {
+      "old": "042_model_discovery_system.sql",
+      "new": "071_model_discovery_system.sql",
+      "oldNumber": 42,
+      "newNumber": 71
+    }
+  ]
+}

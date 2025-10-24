@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS AI Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #252525;
+      --border-color: #333;
+      --text-primary: #e0e0e0;
+      --text-secondary: #888;
+      --accent-blue: #0080ff;
+      --accent-green: #00ff88;
+      --accent-red: #ff4444;
+      --accent-yellow: #ffaa00;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      height: 60px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tier-badge {
+      background: var(--bg-tertiary);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .tier-badge.oss { border-color: var(--accent-green); color: var(--accent-green); }
+    .tier-badge.starter { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .tier-badge.pro { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+    .tier-badge.enterprise { border-color: var(--accent-red); color: var(--accent-red); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .credits-badge {
+      background: var(--bg-tertiary);
+      padding: 8px 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+
+    .credits-amount {
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .user-menu {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Layout */
+    .container {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .nav-item.active {
+      background: var(--bg-tertiary);
+      border-left-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel-header {
+      margin-bottom: 30px;
+    }
+
+    .panel-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .panel-subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0066cc;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: var(--bg-primary);
+    }
+
+    .btn-danger {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Stats card */
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 600;
+    }
+
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.blue { color: var(--accent-blue); }
+    .stat-value.red { color: var(--accent-red); }
+    .stat-value.yellow { color: var(--accent-yellow); }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      transition: width 0.3s ease;
+    }
+
+    /* API Key item */
+    .api-key-item {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .api-key-info {
+      flex: 1;
+    }
+
+    .api-key-provider {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .api-key-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .api-key-status.active {
+      color: var(--accent-green);
+    }
+
+    .api-key-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Project card */
+    .project-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .project-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 128, 255, 0.2);
+    }
+
+    .project-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .project-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .project-model {
+      font-size: 12px;
+      color: var(--accent-blue);
+      font-weight: 500;
+    }
+
+    .project-stats {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Chat interface */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 200px);
+    }
+
+    .chat-header {
+      padding: 15px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .model-selector {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .cost-preview {
+      font-size: 12px;
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--bg-primary);
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+
+    .chat-message {
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .chat-message.user {
+      background: var(--bg-secondary);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .chat-message.assistant {
+      background: var(--bg-tertiary);
+      border-left: 3px solid var(--accent-green);
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .message-content {
+      line-height: 1.6;
+    }
+
+    .chat-input-area {
+      padding: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0 0 12px 12px;
+    }
+
+    .chat-input {
+      width: 100%;
+      padding: 15px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      min-height: 60px;
+    }
+
+    .chat-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .complexity-indicator {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .complexity-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .complexity-badge.simple {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--accent-green);
+    }
+
+    .complexity-badge.moderate {
+      background: rgba(255, 170, 0, 0.2);
+      color: var(--accent-yellow);
+    }
+
+    .complexity-badge.complex {
+      background: rgba(255, 68, 68, 0.2);
+      color: var(--accent-red);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-primary);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-primary);
+    }
+
+    /* Loading */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Pricing table */
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .pricing-table th,
+    .pricing-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .pricing-table th {
+      background: var(--bg-tertiary);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .pricing-table tr:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .model-name {
+      font-weight: 600;
+    }
+
+    .provider-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    .provider-badge.openai { background: rgba(0, 255, 136, 0.2); color: var(--accent-green); }
+    .provider-badge.anthropic { background: rgba(0, 128, 255, 0.2); color: var(--accent-blue); }
+    .provider-badge.deepseek { background: rgba(255, 170, 0, 0.2); color: var(--accent-yellow); }
+    .provider-badge.ollama { background: rgba(255, 68, 68, 0.2); color: var(--accent-red); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+    }
+
+    /* Brand Presentation Styles */
+    .brand-option,
+    .template-option {
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .brand-option:hover,
+    .template-option:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .brand-option.active,
+    .template-option.active {
+      border-color: var(--accent-blue);
+      background: rgba(0, 128, 255, 0.1);
+    }
+
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .slide-thumbnail {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .slide-thumbnail:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .slide-number {
+      background: var(--accent-blue);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .slide-preview h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .slide-preview p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">CalOS AI</div>
+      <div class="tier-badge cloud" id="tierBadge">Loading...</div>
+    </div>
+    <div class="header-right">
+      <div class="credits-badge">
+        <span class="credits-amount" id="creditsAmount">$0.00</span> credits
+      </div>
+      <div class="user-menu" onclick="alert('User menu coming soon!')">U</div>
+    </div>
+  </div>
+
+  <!-- Main container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="switchPanel('projects', event)">
+          <span class="nav-icon">📁</span>
+          <span>Projects</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('apiKeys', event)">
+          <span class="nav-icon">🔑</span>
+          <span>API Keys</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('usage', event)">
+          <span class="nav-icon">📊</span>
+          <span>Usage & Limits</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('pricing', event)">
+          <span class="nav-icon">💰</span>
+          <span>Model Pricing</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('billing', event)">
+          <span class="nav-icon">💳</span>
+          <span>Billing & Tier</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('settings', event)">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('brandPresentation', event)">
+          <span class="nav-icon">📊</span>
+          <span>Brand Presentations</span>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <!-- Projects Panel -->
+      <div id="projectsPanel" class="panel active">
+        <div class="panel-header">
+          <h1 class="panel-title">Projects</h1>
+          <p class="panel-subtitle">Organize your AI conversations and experiments</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Your Projects</div>
+            <button class="btn btn-primary" onclick="showCreateProjectModal()">+ New Project</button>
+          </div>
+
+          <div id="projectsList" class="grid-3">
+            <div class="empty-state">
+              <div class="empty-state-icon">📁</div>
+              <div class="empty-state-title">No projects yet</div>
+              <div class="empty-state-text">Create your first project to get started</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Keys Panel -->
+      <div id="apiKeysPanel" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">API Keys (BYOK)</h1>
+          <p class="panel-subtitle">Manage your own API keys securely encrypted with AES-256-GCM</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Your API Keys</div>
+            <button class="btn btn-primary" onclick="showAddKeyModal()">+ Add API Key</button>
+          </div>
+
+          <div id="apiKeysList">
+            <div class="empty-state">
+              <div class="empty-state-icon">🔑</div>
+              <div class="empty-state-title">No API keys configured</div>
+              <div class="empty-state-text">Add your own API keys to use your preferred providers</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 15px;">How BYOK Works</div>
+          <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+            Your API keys are encrypted with AES-256-GCM and stored securely. CalOS uses a contextual key retrieval system:
+          </p>
+          <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+            <li><strong>Tenant BYOK</strong> → Your organization's keys (highest priority)</li>
+            <li><strong>User Keys</strong> → Your personal API keys</li>
+            <li><strong>System Keys</strong> → Fallback to platform keys (charges apply)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Usage Panel -->
+      <div id="usagePanel" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Usage & Limits</h1>
+          <p class="panel-subtitle">Track your token usage and tier limits</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="stat-card">
+            <div class="stat-label">Tokens This Month</div>
+            <div class="stat-value blue" id="tokensUsed">0</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="tokensProgress" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">API Calls</div>
+            <div class="stat-value green" id="apiCalls">0</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">Domains Used</div>
+            <div class="stat-value yellow" id="domainsUsed">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-title" style="margin-bottom: 15px;">Monthly Cost Breakdown</div>
+          <div id="costBreakdown">
+            <div class="empty-state">
+              <div class="empty-state-text">No usage this month</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Panel -->
+      <div id="pricingPanel" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Real-Time Model Pricing</h1>
+          <p class="panel-subtitle">Live pricing data from provider APIs</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Available Models</div>
+            <button class="btn btn-secondary btn-sm" onclick="refreshPricing()">🔄 Refresh</button>
+          </div>
+
+          <table class="pricing-table" id="pricingTable">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Input (per 1K tokens)</th>
+                <th>Output (per 1K tokens)</th>
+                <th>Quality</th>
+                <th>Speed</th>
+              </tr>
+            </thead>
+            <tbody id="pricingTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                  Loading pricing data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Billing Panel -->
+      <div id="billingPanel" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Billing & Tier</h1>
+          <p class="panel-subtitle">Manage your subscription and tier</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 20px;">Current Tier</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 24px; font-weight: 600; margin-bottom: 8px;" id="currentTierName">Loading...</div>
+              <div style="color: var(--text-secondary);" id="currentTierDesc">-</div>
+            </div>
+            <button class="btn btn-success" onclick="alert('Upgrade functionality coming soon!')">Upgrade Tier</button>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 20px;">
+          <div class="card">
+            <div class="card-title" style="margin-bottom: 15px;">Tier Features</div>
+            <div id="tierFeatures" style="color: var(--text-secondary); line-height: 1.8;">
+              Loading...
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="margin-bottom: 15px;">Usage Quotas</div>
+            <div id="tierQuotas" style="color: var(--text-secondary); line-height: 1.8;">
+              Loading...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Panel -->
+      <div id="settingsPanel" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Settings</h1>
+          <p class="panel-subtitle">Configure your platform preferences</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 15px;">Platform Mode</div>
+          <div class="form-group">
+            <label class="form-label">Mode</label>
+            <select class="form-select" id="platformMode" onchange="alert('Mode switching requires server restart')">
+              <option value="cloud">Cloud (with billing)</option>
+              <option value="oss">Open Source (self-hosted)</option>
+            </select>
+            <p style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+              Set <code>CALOS_MODE=oss</code> in your .env file for open source mode
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Brand Presentation Panel -->
+      <div id="brandPresentationPanel" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Brand Presentation Builder</h1>
+          <p class="panel-subtitle">Generate professional pitch decks, brand guidelines, and presentations</p>
+        </div>
+
+        <!-- Brand Selector -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 15px;">Select Brand</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="brand-option active" onclick="selectBrand('calos')" data-brand="calos" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌐</div>
+              <div style="font-weight: 600;">CALOS</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Operating System for AI Agents
+              </div>
+            </div>
+
+            <div class="brand-option" onclick="selectBrand('soulfra')" data-brand="soulfra" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔐</div>
+              <div style="font-weight: 600;">Soulfra</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Universal Identity Without KYC
+              </div>
+            </div>
+
+            <div class="brand-option" onclick="selectBrand('deathtodata')" data-brand="deathtodata" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💀</div>
+              <div style="font-weight: 600;">DeathToData</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Search Engine Philosophy
+              </div>
+            </div>
+
+            <div class="brand-option" onclick="selectBrand('roughsparks')" data-brand="roughsparks" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚡</div>
+              <div style="font-weight: 600;">RoughSparks</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Creative Sparks for Builders
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template Selector -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 15px;">Select Template</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="template-option active" onclick="selectTemplate('pitchDeck')" data-template="pitchDeck" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📈</div>
+              <div style="font-weight: 600;">Pitch Deck</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Investor presentation (10 slides)
+              </div>
+            </div>
+
+            <div class="template-option" onclick="selectTemplate('brandGuidelines')" data-template="brandGuidelines" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎨</div>
+              <div style="font-weight: 600;">Brand Guidelines</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Logo, colors, voice (7 slides)
+              </div>
+            </div>
+
+            <div class="template-option" onclick="selectTemplate('domainModels')" data-template="domainModels" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🧠</div>
+              <div style="font-weight: 600;">Domain Models</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                AI model showcase (8 slides)
+              </div>
+            </div>
+
+            <div class="template-option" onclick="selectTemplate('productRoadmap')" data-template="productRoadmap" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🗺️</div>
+              <div style="font-weight: 600;">Product Roadmap</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                2025 vision and milestones
+              </div>
+            </div>
+
+            <div class="template-option" onclick="selectTemplate('feedbackLoop')" data-template="feedbackLoop" style="background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔄</div>
+              <div style="font-weight: 600;">Feedback Loop</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Community engagement (6 slides)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Format -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 15px;">Export Format</div>
+          <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="format" value="pdf" checked onchange="selectFormat('pdf')">
+              <span>📄 PDF (for investors)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="format" value="gif" onchange="selectFormat('gif')">
+              <span>🎞️ GIF (for Twitter)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="format" value="mp4" onchange="selectFormat('mp4')">
+              <span>🎥 MP4 (for LinkedIn)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="format" value="markdown" onchange="selectFormat('markdown')">
+              <span>📝 Markdown (for docs)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="card">
+          <button id="generateBtn" class="btn btn-primary" onclick="generatePresentation()"
+                  style="width: 100%; padding: 1rem; font-size: 1rem;">
+            🎨 Generate Presentation
+          </button>
+        </div>
+
+        <!-- Status -->
+        <div id="generationStatus"></div>
+
+        <!-- Preview Area -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 15px;">Preview</div>
+          <div id="previewArea">
+            <div class="empty-state">
+              <div class="empty-state-icon">🎨</div>
+              <div class="empty-state-title">No presentation generated yet</div>
+              <div class="empty-state-text">Select a brand and template, then click Generate Presentation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Project Modal -->
+  <div id="createProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Create New Project</div>
+        <button class="modal-close" onclick="hideCreateProjectModal()">×</button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); createProject();">
+        <div class="form-group">
+          <label class="form-label">Project Name</label>
+          <input type="text" class="form-input" id="projectName" placeholder="My AI Project" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="projectDescription" placeholder="What is this project about?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Default Model</label>
+          <select class="form-select" id="projectModel">
+            <option value="auto">Auto (ModelClarityEngine will choose)</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+            <option value="deepseek-chat">DeepSeek Chat</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+          <button type="button" class="btn btn-secondary" onclick="hideCreateProjectModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add API Key Modal -->
+  <div id="addKeyModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Add API Key</div>
+        <button class="modal-close" onclick="hideAddKeyModal()">×</button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); addApiKey();">
+        <div class="form-group">
+          <label class="form-label">Provider</label>
+          <select class="form-select" id="keyProvider" required>
+            <option value="">Select a provider</option>
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="together">Together AI</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <input type="password" class="form-input" id="keyValue" placeholder="sk-..." required>
+          <p style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+            Your key will be encrypted with AES-256-GCM before storage
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+          <button type="button" class="btn btn-secondary" onclick="hideAddKeyModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Key</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/platform.js"></script>
+</body>
+</html>

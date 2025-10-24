@@ -51,6 +51,12 @@ class MissionControl {
       }
     );
 
+    // AI Analytics (optional)
+    this.aiCostAnalytics = options.aiCostAnalytics;
+    this.aiCostAlerts = options.aiCostAlerts;
+    this.aiABTesting = options.aiABTesting;
+    this.aiInstanceRegistry = options.aiInstanceRegistry;
+
     this.running = false;
   }
 

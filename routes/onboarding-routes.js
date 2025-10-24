@@ -8,9 +8,46 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
+const ResumeParser = require('../lib/resume-parser');
+const TalentRanker = require('../lib/talent-ranker');
 
 // Database connection (injected via initRoutes)
 let db = null;
+
+// Configure multer for resume uploads
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '../uploads/resumes');
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: (req, file, cb) => {
+    const sessionId = req.body.sessionId || 'anonymous';
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname);
+    cb(null, `resume_${sessionId}_${timestamp}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowedExts = ['.pdf', '.docx', '.txt'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowedExts.includes(ext)) {
+      return cb(new Error(`Invalid file type. Allowed: ${allowedExts.join(', ')}`));
+    }
+    cb(null, true);
+  }
+});
 
 /**
  * Initialize routes with database connection
@@ -433,6 +470,126 @@ router.get('/leaderboard', async (req, res) => {
   } catch (error) {
     console.error('[Onboarding] Leaderboard error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/onboarding/upload-resume
+ * Upload and parse resume as part of onboarding
+ */
+router.post('/upload-resume', upload.single('resume'), async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No resume file uploaded' });
+    }
+
+    // Get profile
+    const profileResult = await db.query(`
+      SELECT id, user_id, earned_amount
+      FROM user_profiles
+      WHERE session_id = $1
+    `, [sessionId]);
+
+    if (profileResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const profile = profileResult.rows[0];
+
+    // Parse resume
+    const resumeParser = new ResumeParser();
+    const parsed = await resumeParser.parseResume(req.file.path);
+
+    if (!parsed) {
+      // Clean up file
+      await fs.unlink(req.file.path);
+      return res.status(500).json({ error: 'Failed to parse resume' });
+    }
+
+    // Store parsed data in user_profiles
+    await db.query(`
+      UPDATE user_profiles
+      SET
+        resume_skills = $1,
+        resume_file_path = $2,
+        resume_parsed_data = $3
+      WHERE id = $4
+    `, [
+      JSON.stringify(parsed.skills),
+      req.file.path,
+      JSON.stringify(parsed),
+      profile.id
+    ]);
+
+    // If user_id exists, also update job_applications table
+    if (profile.user_id) {
+      await db.query(`
+        INSERT INTO job_applications (
+          user_id, parsed_resume, resume_file_path, status
+        ) VALUES ($1, $2, $3, 'pending')
+        ON CONFLICT (user_id) DO UPDATE SET
+          parsed_resume = EXCLUDED.parsed_resume,
+          resume_file_path = EXCLUDED.resume_file_path,
+          updated_at = NOW()
+      `, [profile.user_id, JSON.stringify(parsed), req.file.path]);
+
+      // Calculate talent score
+      const talentRanker = new TalentRanker(db);
+      const score = await talentRanker.scoreCandidate(profile.user_id);
+
+      if (score) {
+        await talentRanker.saveRanking(profile.user_id, score);
+      }
+    }
+
+    // Award bonus for uploading resume
+    const resumeBonus = 25; // $25 bonus for resume upload
+    const newEarned = parseFloat(profile.earned_amount) + resumeBonus;
+
+    await db.query(`
+      UPDATE user_profiles
+      SET earned_amount = $1
+      WHERE id = $2
+    `, [newEarned, profile.id]);
+
+    res.json({
+      success: true,
+      message: 'Resume uploaded and parsed successfully',
+      bonusEarned: resumeBonus,
+      totalEarned: newEarned,
+      parsed: {
+        contact: parsed.contact,
+        skills: parsed.skills,
+        experience: parsed.experience,
+        education: parsed.education,
+        projects: parsed.projects,
+        summary: parsed.summary,
+        wordCount: parsed.wordCount
+      }
+    });
+
+  } catch (error) {
+    console.error('[Onboarding] Resume upload error:', error);
+
+    // Clean up file if it exists
+    if (req.file?.path) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkError) {
+        console.error('[Onboarding] Error cleaning up file:', unlinkError);
+      }
+    }
+
+    res.status(500).json({
+      error: 'Failed to upload resume',
+      details: error.message
+    });
   }
 });
 

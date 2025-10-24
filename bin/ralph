@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+
+/**
+ * Ralph CLI - Natural Language Interface to Ollama (Local)
+ *
+ * "Ralph and his signs for bash"
+ *
+ * Usage:
+ *   ralph compress this context into a haiku
+ *   ralph what models are available?
+ *   ralph summarize this text
+ *   ralph help me brainstorm ideas
+ *
+ * Features:
+ * - Natural language commands via Wake Word Router
+ * - Local Ollama models (FREE, privacy-first)
+ * - Context compression (haiku mode)
+ * - Creative tasks, brainstorming
+ */
+
+const path = require('path');
+
+// Import dependencies
+const WakeWordRouter = require('../lib/wake-word-router');
+const AIInstanceRegistry = require('../lib/ai-instance-registry');
+const TimeAwareAI = require('../lib/time-aware-ai');
+const ContextHaikuCompressor = require('../lib/context-haiku');
+const MultiLLMRouter = require('../lib/multi-llm-router');
+const LocalTodoCache = require('../lib/local-todo-cache');
+const { Pool } = require('pg');
+
+// Colors for terminal output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  gray: '\x1b[90m',
+  magenta: '\x1b[35m'
+};
+
+async function main() {
+  // Get user input from command line
+  const args = process.argv.slice(2);
+
+  if (args.length === 0) {
+    printUsage();
+    process.exit(0);
+  }
+
+  const input = args.join(' ');
+
+  console.log(`${colors.magenta}[Ralph]${colors.reset} ${input}`);
+  console.log('');
+
+  try {
+    // Initialize database connection (optional for Ralph)
+    let db = null;
+
+    try {
+      db = new Pool({
+        user: process.env.DB_USER || 'matthewmauer',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'soulfra',
+        port: process.env.DB_PORT || 5432
+      });
+    } catch (error) {
+      // Ralph works fine without database
+    }
+
+    // Initialize core components
+    const multiLLMRouter = new MultiLLMRouter();
+
+    const aiInstanceRegistry = new AIInstanceRegistry({
+      multiLLMRouter
+    });
+
+    const timeAwareAI = new TimeAwareAI({
+      aiInstanceRegistry
+    });
+
+    const contextHaiku = new ContextHaikuCompressor({
+      db
+    });
+
+    const localTodoCache = new LocalTodoCache({});
+
+    // Check for special Ralph commands
+    if (input.toLowerCase().includes('compress') || input.toLowerCase().includes('haiku')) {
+      await handleContextCompression(input, contextHaiku);
+    } else if (input.toLowerCase().includes('models') || input.toLowerCase().includes('available')) {
+      await handleListModels();
+    } else {
+      // Use wake word router for general queries
+      const wakeWordRouter = new WakeWordRouter({
+        decisionTodo: localTodoCache,
+        aiInstanceRegistry,
+        timeAwareAI
+      });
+
+      // Force route to Ralph instance
+      const result = await aiInstanceRegistry.ask('ralph', {
+        prompt: input
+      });
+
+      displayAIResponse(result);
+    }
+
+    // Cleanup
+    if (db) {
+      await db.end();
+    }
+
+    process.exit(0);
+
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * Handle context compression
+ */
+async function handleContextCompression(input, contextHaiku) {
+  // Extract context from input (simplified - in production, would read from file or stdin)
+  const context = input.replace(/compress|haiku|into|this|context/gi, '').trim();
+
+  if (!context || context.length < 10) {
+    console.log(`${colors.yellow}Please provide context to compress.${colors.reset}`);
+    console.log(`${colors.gray}Example: ralph compress "Long text here..." into a haiku${colors.reset}`);
+    return;
+  }
+
+  console.log(`${colors.cyan}Compressing context (${context.length} chars)...${colors.reset}\n`);
+
+  try {
+    const result = await contextHaiku.compress({
+      context,
+      level: 'haiku',
+      model: 'mistral:latest'
+    });
+
+    console.log(`${colors.green}✓ Compressed:${colors.reset}\n`);
+    console.log(result.compressed);
+    console.log('');
+    console.log(`${colors.gray}Original: ${result.originalLength} chars${colors.reset}`);
+    console.log(`${colors.gray}Compressed: ${result.compressedLength} chars${colors.reset}`);
+    console.log(`${colors.gray}Ratio: ${result.compressionRatio}${colors.reset}`);
+
+  } catch (error) {
+    console.error(`${colors.red}Compression failed:${colors.reset} ${error.message}`);
+  }
+}
+
+/**
+ * Handle list models
+ */
+async function handleListModels() {
+  console.log(`${colors.cyan}Checking available Ollama models...${colors.reset}\n`);
+
+  try {
+    const axios = require('axios');
+    const ollamaUrl = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+
+    const response = await axios.get(`${ollamaUrl}/api/tags`, { timeout: 5000 });
+
+    if (response.data.models && response.data.models.length > 0) {
+      console.log(`${colors.green}✓ Found ${response.data.models.length} model(s):${colors.reset}\n`);
+
+      for (const model of response.data.models) {
+        const size = (model.size / 1024 / 1024 / 1024).toFixed(1);
+        console.log(`  ${colors.bright}${model.name}${colors.reset}`);
+        console.log(`  ${colors.gray}Size: ${size} GB${colors.reset}`);
+        console.log(`  ${colors.gray}Modified: ${new Date(model.modified_at).toLocaleDateString()}${colors.reset}\n`);
+      }
+    } else {
+      console.log(`${colors.yellow}No models found.${colors.reset}`);
+      console.log(`${colors.gray}Run: ollama pull mistral${colors.reset}`);
+    }
+
+  } catch (error) {
+    if (error.code === 'ECONNREFUSED') {
+      console.error(`${colors.red}Ollama is not running.${colors.reset}`);
+      console.log(`${colors.gray}Start Ollama: ollama serve${colors.reset}`);
+    } else {
+      console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Display AI response
+ */
+function displayAIResponse(result) {
+  console.log(`${colors.green}[Ralph - ${result.instance.model}]${colors.reset}\n`);
+  console.log(result.text);
+  console.log('');
+  console.log(`${colors.gray}Model: ${result.model}${colors.reset}`);
+  console.log(`${colors.gray}Tokens: ${result.usage?.total_tokens || 'N/A'}${colors.reset}`);
+  console.log(`${colors.gray}Cost: FREE (local)${colors.reset}`);
+  console.log(`${colors.gray}Source: ${result.source}${colors.reset}`);
+}
+
+/**
+ * Print usage
+ */
+function printUsage() {
+  console.log(`${colors.bright}Ralph - Local Ollama AI Assistant${colors.reset}\n`);
+  console.log('Usage:');
+  console.log('  ralph <natural language input>\n');
+  console.log('Examples:');
+  console.log(`  ${colors.magenta}ralph compress this text into a haiku${colors.reset}`);
+  console.log(`  ${colors.magenta}ralph what models are available?${colors.reset}`);
+  console.log(`  ${colors.magenta}ralph help me brainstorm ideas for...${colors.reset}`);
+  console.log(`  ${colors.magenta}ralph summarize this article${colors.reset}`);
+  console.log(`  ${colors.magenta}ralph write a creative story about...${colors.reset}\n`);
+  console.log('Features:');
+  console.log(`  ${colors.green}✓${colors.reset} Local Ollama models (privacy-first)`);
+  console.log(`  ${colors.green}✓${colors.reset} Context compression (haiku mode)`);
+  console.log(`  ${colors.green}✓${colors.reset} Creative tasks & brainstorming`);
+  console.log(`  ${colors.green}✓${colors.reset} FREE (no API costs)`);
+  console.log(`  ${colors.green}✓${colors.reset} Works offline\n`);
+  console.log('Special Commands:');
+  console.log(`  ${colors.cyan}compress${colors.reset} - Compress text into haiku`);
+  console.log(`  ${colors.cyan}models${colors.reset} - List available Ollama models\n`);
+}
+
+// Run
+main().catch(error => {
+  console.error(`${colors.red}Fatal error:${colors.reset} ${error.message}`);
+  process.exit(1);
+});

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎴 Watch Game Live - Battle.net Style</title>
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    /* Battle.net style header */
+    .header {
+      background: rgba(0,0,0,0.3);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .header h1 {
+      font-size: 1.8em;
+      color: #667eea;
+    }
+
+    .viewer-count {
+      background: rgba(102, 126, 234, 0.2);
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: 1px solid #667eea;
+    }
+
+    .viewer-count .count {
+      color: #667eea;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    /* Main game area */
+    .game-container {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+
+    /* Left sidebar - Players */
+    .players-sidebar {
+      width: 250px;
+      background: rgba(0,0,0,0.3);
+      padding: 20px;
+      border-right: 2px solid #667eea;
+      overflow-y: auto;
+    }
+
+    .player-card {
+      background: rgba(102, 126, 234, 0.1);
+      border: 2px solid #667eea;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+
+    .player-card.active {
+      background: rgba(102, 126, 234, 0.3);
+      border-color: #ffc107;
+      box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+      transform: scale(1.05);
+    }
+
+    .player-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      margin: 0 auto 10px;
+    }
+
+    .player-name {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .player-stats {
+      display: flex;
+      justify-content: space-around;
+      font-size: 0.9em;
+      color: #aaa;
+    }
+
+    .player-stats span {
+      background: rgba(0,0,0,0.3);
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+
+    /* Center - Game board */
+    .game-board-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    canvas {
+      border: 3px solid #667eea;
+      border-radius: 15px;
+      background: rgba(0,0,0,0.5);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    /* Top card display (center of board) */
+    .top-card-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .top-card {
+      width: 150px;
+      height: 200px;
+      background: white;
+      border: 4px solid #333;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4em;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Card play animation */
+    .card-animation {
+      position: absolute;
+      width: 100px;
+      height: 140px;
+      background: white;
+      border: 3px solid #333;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .card-animation.playing {
+      animation: card-fly 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes card-fly {
+      0% {
+        opacity: 1;
+        transform: scale(0.5) rotate(0deg);
+      }
+      50% {
+        transform: scale(1.2) rotate(180deg);
+      }
+      100% {
+        opacity: 0.8;
+        transform: scale(1) rotate(360deg);
+      }
+    }
+
+    /* Emoji explosion effect */
+    .emoji-rain {
+      position: fixed;
+      font-size: 2em;
+      pointer-events: none;
+      animation: fall 3s linear forwards;
+      z-index: 1000;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Right sidebar - Activity feed */
+    .activity-sidebar {
+      width: 300px;
+      background: rgba(0,0,0,0.3);
+      padding: 20px;
+      border-left: 2px solid #667eea;
+      overflow-y: auto;
+    }
+
+    .activity-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .activity-item {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      border-left: 3px solid #667eea;
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .activity-item .timestamp {
+      font-size: 0.8em;
+      color: #888;
+      margin-bottom: 3px;
+    }
+
+    .activity-item .action {
+      color: #fff;
+    }
+
+    .activity-item .action .player {
+      color: #ffc107;
+      font-weight: bold;
+    }
+
+    .activity-item .action .emoji {
+      font-size: 1.5em;
+    }
+
+    /* Game status bar */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.5);
+      padding: 15px 30px;
+      border-top: 2px solid #667eea;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #28a745;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Winner modal */
+    .winner-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .winner-modal.active {
+      display: flex;
+    }
+
+    .winner-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 60px;
+      border-radius: 20px;
+      text-align: center;
+      animation: celebrate 0.5s;
+    }
+
+    @keyframes celebrate {
+      0% { transform: scale(0.5) rotate(-10deg); }
+      50% { transform: scale(1.1) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .winner-content h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    .winner-content .trophy {
+      font-size: 5em;
+      margin-bottom: 20px;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .players-sidebar,
+      .activity-sidebar {
+        display: none;
+      }
+
+      .game-board-container {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>🎴 Live Game: <span id="game-mode">Speed Mode</span></h1>
+    <div class="viewer-count">
+      👁️ <span class="count" id="viewer-count">1</span> watching
+    </div>
+  </div>
+
+  <!-- Main game container -->
+  <div class="game-container">
+    <!-- Left: Players -->
+    <div class="players-sidebar">
+      <h3 style="margin-bottom: 20px; text-align: center;">Players</h3>
+      <div id="players-list">
+        <!-- Players dynamically added -->
+      </div>
+    </div>
+
+    <!-- Center: Game board -->
+    <div class="game-board-container">
+      <canvas id="game-canvas" width="800" height="600"></canvas>
+
+      <!-- Top card overlay -->
+      <div class="top-card-display">
+        <div class="top-card" id="top-card">
+          🎴
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Activity feed -->
+    <div class="activity-sidebar">
+      <h3 style="margin-bottom: 20px;">Live Activity</h3>
+      <div class="activity-feed" id="activity-feed">
+        <!-- Activity items dynamically added -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-dot"></div>
+      <span>Live</span>
+    </div>
+    <div class="status-item">
+      <span>Game ID: <strong id="game-id-display">-</strong></span>
+    </div>
+    <div class="status-item">
+      <span>Turn: <strong id="turn-count">0</strong></span>
+    </div>
+  </div>
+
+  <!-- Winner modal -->
+  <div class="winner-modal" id="winner-modal">
+    <div class="winner-content">
+      <div class="trophy">🏆</div>
+      <h1 id="winner-name">Player Wins!</h1>
+      <p style="font-size: 1.5em; margin-top: 20px;">Game Over</p>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let ws = null;
+    let gameId = new URLSearchParams(window.location.search).get('gameId');
+    let canvas = document.getElementById('game-canvas');
+    let ctx = canvas.getContext('2d');
+    let currentGame = null;
+    let turnCount = 0;
+
+    // Initialize
+    function init() {
+      if (!gameId) {
+        alert('No game ID provided. Add ?gameId=YOUR_GAME_ID to the URL');
+        return;
+      }
+
+      connectWebSocket();
+      setupCanvas();
+    }
+
+    // WebSocket connection
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      ws = new WebSocket(`${protocol}//${host}`);
+
+      ws.onopen = () => {
+        console.log('Connected to game server');
+
+        // Join as spectator
+        ws.send(JSON.stringify({
+          type: 'spectator_join',
+          gameId: gameId
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        handleMessage(message);
+      };
+
+      ws.onclose = () => {
+        console.log('Disconnected');
+        setTimeout(connectWebSocket, 3000);
+      };
+    }
+
+    // Handle WebSocket messages
+    function handleMessage(message) {
+      console.log('Message:', message.type);
+
+      switch (message.type) {
+        case 'spectator_joined':
+          currentGame = message.game;
+          updateGameDisplay();
+          addActivity('You joined the game as spectator');
+          break;
+
+        case 'card_played':
+          handleCardPlayed(message);
+          break;
+
+        case 'game_ended':
+          handleGameEnded(message);
+          break;
+
+        case 'player_joined':
+          addActivity(`${message.player.username} joined the game`);
+          break;
+
+        case 'bot_thinking':
+          addActivity(`🤖 ${message.username} is thinking...`);
+          break;
+      }
+    }
+
+    // Handle card played
+    function handleCardPlayed(message) {
+      turnCount++;
+      document.getElementById('turn-count').textContent = turnCount;
+
+      const player = currentGame?.players?.find(p => p.playerId === message.playerId);
+      const playerName = player?.username || 'Player';
+
+      // Animate card
+      animateCardPlay(message.cardPlayed);
+
+      // Update top card
+      updateTopCard(message.cardPlayed);
+
+      // Add to activity feed
+      const emoji = message.cardPlayed.emoji || message.cardPlayed.number || '?';
+      addActivity(`<span class="player">${playerName}</span> played <span class="emoji">${emoji}</span>`);
+
+      // Update game state
+      currentGame = message.game;
+      updateGameDisplay();
+    }
+
+    // Handle game ended
+    function handleGameEnded(message) {
+      const winnerName = message.winner?.username || 'Someone';
+
+      // Show winner modal
+      document.getElementById('winner-name').textContent = `${winnerName} Wins!`;
+      document.getElementById('winner-modal').classList.add('active');
+
+      // Emoji rain celebration
+      startEmojiRain(['🎉', '🏆', '💀', '🔥', '✨']);
+
+      addActivity(`🏆 ${winnerName} won the game!`);
+    }
+
+    // Animate card play (2D sprites)
+    function animateCardPlay(card) {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card-animation playing';
+      cardEl.textContent = card.emoji || card.number || '?';
+
+      // Random starting position
+      cardEl.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+      cardEl.style.top = '-150px';
+
+      document.body.appendChild(cardEl);
+
+      // Remove after animation
+      setTimeout(() => cardEl.remove(), 800);
+    }
+
+    // Update top card
+    function updateTopCard(card) {
+      const topCard = document.getElementById('top-card');
+      topCard.textContent = card.emoji || card.number || '?';
+
+      // Apply color
+      topCard.style.borderColor = card.color || '#333';
+      topCard.style.color = card.color || '#333';
+    }
+
+    // Update game display
+    function updateGameDisplay() {
+      if (!currentGame) return;
+
+      // Update game mode
+      document.getElementById('game-mode').textContent =
+        currentGame.gameMode?.charAt(0).toUpperCase() + currentGame.gameMode?.slice(1) + ' Mode';
+
+      // Update game ID
+      document.getElementById('game-id-display').textContent =
+        currentGame.gameId?.slice(0, 8);
+
+      // Update players
+      const playersList = document.getElementById('players-list');
+      playersList.innerHTML = '';
+
+      currentGame.players?.forEach((player, index) => {
+        const isActive = index === currentGame.currentPlayerIndex;
+        const playerCard = document.createElement('div');
+        playerCard.className = 'player-card' + (isActive ? ' active' : '');
+        playerCard.innerHTML = `
+          <div class="player-avatar">${player.username?.charAt(0) || '?'}</div>
+          <div class="player-name">${player.username || 'Player'}</div>
+          <div class="player-stats">
+            <span>🃏 ${player.hand?.length || 0}</span>
+            <span>⭐ ${player.score || 0}</span>
+          </div>
+        `;
+        playersList.appendChild(playerCard);
+      });
+    }
+
+    // Add activity to feed
+    function addActivity(html) {
+      const feed = document.getElementById('activity-feed');
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString();
+
+      item.innerHTML = `
+        <div class="timestamp">${timestamp}</div>
+        <div class="action">${html}</div>
+      `;
+
+      feed.insertBefore(item, feed.firstChild);
+
+      // Keep only last 50 items
+      while (feed.children.length > 50) {
+        feed.removeChild(feed.lastChild);
+      }
+    }
+
+    // Emoji rain effect
+    function startEmojiRain(emojis) {
+      for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+          const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+          const el = document.createElement('div');
+          el.className = 'emoji-rain';
+          el.textContent = emoji;
+          el.style.left = Math.random() * 100 + '%';
+          el.style.animationDelay = Math.random() * 2 + 's';
+          document.body.appendChild(el);
+
+          setTimeout(() => el.remove(), 3000);
+        }, i * 50);
+      }
+    }
+
+    // Setup canvas (2D sprites)
+    function setupCanvas() {
+      // Draw background
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw "Waiting for game..." text
+      ctx.fillStyle = 'white';
+      ctx.font = '30px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Connecting to game...', canvas.width / 2, canvas.height / 2);
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>

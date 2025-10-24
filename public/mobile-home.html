@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFC72C">
+    <title>🍔 CalOS Drive-Thru</title>
+
+    <style>
+        :root {
+            --mcdonalds-red: #DA291C;
+            --mcdonalds-yellow: #FFC72C;
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--mcdonalds-red) 0%, #B71C1C 100%);
+            color: white;
+            padding-top: var(--safe-area-inset-top);
+            padding-bottom: var(--safe-area-inset-bottom);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: var(--mcdonalds-yellow);
+            color: var(--mcdonalds-red);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tagline {
+            font-size: 0.9em;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .billions-served {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .billions-served h2 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: var(--mcdonalds-yellow);
+        }
+
+        .counter {
+            font-size: 3em;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 199, 44, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--mcdonalds-yellow);
+        }
+
+        .menu-section {
+            padding: 20px;
+        }
+
+        .menu-item {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .menu-item:active {
+            transform: scale(0.98);
+        }
+
+        .menu-item h3 {
+            color: var(--mcdonalds-red);
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+
+        .menu-item p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .menu-item .icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .face-id-btn {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 1.2em;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .network-stats {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .network-stats .line {
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .meme-container {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin: 20px;
+        }
+
+        .meme-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .footer {
+            background: var(--mcdonalds-yellow);
+            color: var(--mcdonalds-red);
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 30px;
+            padding-bottom: calc(20px + var(--safe-area-inset-bottom));
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🍔 CalOS Drive-Thru</h1>
+        <div class="tagline">Serving Code FAST since 2025™</div>
+    </div>
+
+    <!-- Billions Served Counter -->
+    <div class="billions-served">
+        <h2>Over</h2>
+        <div class="counter pulse" id="billionsCounter">420.69M</div>
+        <h2>bugs served</h2>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">MVPs Deployed</div>
+                <div class="value" id="mvpCount">1,337</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">APIs Called</div>
+                <div class="value" id="apiCount">69.4K</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Coffees ☕</div>
+                <div class="value" id="coffeeCount">∞</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Sleep 😴</div>
+                <div class="value" id="sleepCount">0h</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Stats -->
+    <div class="network-stats">
+        <div class="line">
+            <span>📡 Your IP:</span>
+            <span id="localIP">Loading...</span>
+        </div>
+        <div class="line">
+            <span>🧅 Onion Layers:</span>
+            <span id="onionLayers">7 (max paranoia)</span>
+        </div>
+        <div class="line">
+            <span>🌐 ARPANET Hops:</span>
+            <span id="arpanetHops">4 (vintage)</span>
+        </div>
+        <div class="line">
+            <span>⚡ Latency:</span>
+            <span id="latency">&lt;1ms (localhost ftw)</span>
+        </div>
+    </div>
+
+    <!-- QR Code Login -->
+    <div class="billions-served" id="qrSection" style="margin-top: 20px;">
+        <h2 style="font-size: 1em; margin-bottom: 10px;">📱 Scan to Login</h2>
+        <p style="font-size: 0.8em; opacity: 0.8; margin-bottom: 15px;">
+            Open your iPhone camera and scan this QR code
+        </p>
+        <div id="qrCodeContainer" style="text-align: center; margin: 15px 0;">
+            <div style="display: inline-block; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <img id="qrCodeImage" src="" alt="QR Code" style="display: none; width: 200px; height: 200px;">
+                <div id="qrLoading" style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; color: #666;">
+                    <span style="font-size: 2em;">⏳</span>
+                </div>
+            </div>
+        </div>
+        <p id="qrStatus" style="font-size: 0.75em; opacity: 0.7; margin-top: 10px;">
+            Generating QR code...
+        </p>
+    </div>
+
+    <!-- Face ID Login -->
+    <div class="menu-section">
+        <button class="face-id-btn" onclick="loginWithFaceID()">
+            <span style="font-size: 1.5em;">👤</span>
+            <span>Login with Face ID</span>
+        </button>
+    </div>
+
+    <!-- Dev Ragebait Generator -->
+    <div class="billions-served" id="ragebaitSection" style="margin-top: 20px;">
+        <h2 style="font-size: 1.2em; margin-bottom: 10px;">🔥 Dev Ragebait Generator</h2>
+        <p style="font-size: 0.85em; opacity: 0.9; margin-bottom: 15px;">
+            Create viral dev memes for Twitter • Both GIF & MP4
+        </p>
+
+        <!-- Template Selection -->
+        <div id="templateSelector" style="margin-bottom: 15px;">
+            <select id="templateSelect" style="width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 1em; background: rgba(255, 255, 255, 0.95); color: #333;">
+                <option value="">Loading templates...</option>
+            </select>
+        </div>
+
+        <!-- Generate Button -->
+        <button class="face-id-btn" onclick="generateRagebait()" id="generateBtn" style="margin-bottom: 15px;">
+            <span style="font-size: 1.2em;">🎨</span>
+            <span>Generate Ragebait</span>
+        </button>
+
+        <!-- Loading/Preview -->
+        <div id="ragebaitPreview" style="display: none; margin-top: 20px;">
+            <div id="ragebaitLoading" style="text-align: center; padding: 30px; display: none;">
+                <span style="font-size: 3em;">⏳</span>
+                <p style="margin-top: 10px; opacity: 0.8;">Generating ragebait...</p>
+            </div>
+
+            <div id="ragebaitResult" style="display: none;">
+                <!-- Preview -->
+                <div style="background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px;">
+                    <video id="mp4Preview" controls loop style="width: 100%; border-radius: 5px; display: none;"></video>
+                    <img id="gifPreview" style="width: 100%; border-radius: 5px; display: none;">
+                </div>
+
+                <!-- Format Toggle -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button onclick="showFormat('gif')" id="gifFormatBtn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.9); color: #333; font-weight: bold; cursor: pointer;">
+                        GIF (<span id="gifSize">0</span> MB)
+                    </button>
+                    <button onclick="showFormat('mp4')" id="mp4FormatBtn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: rgba(255, 199, 44, 0.9); color: #333; font-weight: bold; cursor: pointer;">
+                        MP4 (<span id="mp4Size">0</span> MB)
+                    </button>
+                </div>
+
+                <!-- Share Text -->
+                <div style="background: rgba(255, 255, 255, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <p id="shareText" style="font-size: 0.85em; line-height: 1.5; word-wrap: break-word;"></p>
+                </div>
+
+                <!-- Download Buttons -->
+                <div style="display: flex; gap: 10px;">
+                    <a id="downloadGIF" download style="flex: 1; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.2); color: white; text-align: center; text-decoration: none; font-weight: bold;">
+                        ⬇️ Download GIF
+                    </a>
+                    <a id="downloadMP4" download style="flex: 1; padding: 12px; border-radius: 8px; background: rgba(255, 199, 44, 0.9); color: #333; text-align: center; text-decoration: none; font-weight: bold;">
+                        ⬇️ Download MP4
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Items -->
+    <div class="menu-section">
+        <div class="menu-item" onclick="navigate('/chat.html')">
+            <div class="icon">💬</div>
+            <h3>AI Chat (Value Meal)</h3>
+            <p>Talk to GPT-4, Claude, or 22 Ollama models. Extra tokens on the side.</p>
+        </div>
+
+        <div class="menu-item" onclick="navigate('/auth-dashboard.html')">
+            <div class="icon">🔑</div>
+            <h3>API Keys (Happy Meal)</h3>
+            <p>Generate keys, check credits, delegate to friends. Comes with a toy SDK.</p>
+        </div>
+
+        <div class="menu-item" onclick="navigate('/status.html')">
+            <div class="icon">📊</div>
+            <h3>System Status (Big Mac)</h3>
+            <p>Watch the servers sweat. Live metrics, logs, and chaos engineering.</p>
+        </div>
+
+        <div class="menu-item" onclick="navigate('/lofi-stream.html')">
+            <div class="icon">🎧</div>
+            <h3>Lofi Stream (McFlurry)</h3>
+            <p>Chill beats to code/debug to. Request songs, earn badges, vibe.</p>
+        </div>
+
+        <div class="menu-item" onclick="navigate('/swiper-cooking-elo.html')">
+            <div class="icon">🍳</div>
+            <h3>Recipe ELO (Fries)</h3>
+            <p>Swipe right on recipes. Chess-style matchups. 7-tier badge system.</p>
+        </div>
+
+        <div class="menu-item" onclick="navigate('http://localhost:3333')">
+            <div class="icon">📄</div>
+            <h3>Document Parser (Nuggets)</h3>
+            <p>Parse tables, outlines, convert formats. AI grading sandbox included.</p>
+        </div>
+    </div>
+
+    <!-- Meme of the Day -->
+    <div class="meme-container">
+        <h3 style="margin-bottom: 15px; color: var(--mcdonalds-yellow);">
+            😂 Meme of the Day
+        </h3>
+        <div id="memeDisplay" style="color: #ccc; font-style: italic;">
+            "It works on my iPhone" 🤷‍♂️
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        "Would you like fries with that deployment?" 🍟
+    </div>
+
+    <script>
+        // Load network info
+        async function loadNetworkInfo() {
+            try {
+                const response = await fetch('/api/network/info');
+                const data = await response.json();
+
+                if (data.localIP) {
+                    document.getElementById('localIP').textContent = data.localIP;
+                }
+            } catch (err) {
+                // Fallback: try to detect IP from location
+                document.getElementById('localIP').textContent = window.location.hostname;
+            }
+        }
+
+        // Load stats from API
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/mobile/stats');
+                const data = await response.json();
+
+                if (data.totalRequests) {
+                    document.getElementById('billionsCounter').textContent =
+                        (data.totalRequests / 1000000).toFixed(2) + 'M';
+                }
+                if (data.mvpCount) {
+                    document.getElementById('mvpCount').textContent =
+                        data.mvpCount.toLocaleString();
+                }
+                if (data.apiCallCount) {
+                    document.getElementById('apiCount').textContent =
+                        (data.apiCallCount / 1000).toFixed(1) + 'K';
+                }
+            } catch (err) {
+                console.log('Stats API not ready yet, using demo values');
+            }
+        }
+
+        // Base64URL encoding for WebAuthn
+        function base64urlEncode(buffer) {
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function base64urlDecode(base64url) {
+            const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+            const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+            const str = atob(base64 + padding);
+            return Uint8Array.from(str, c => c.charCodeAt(0));
+        }
+
+        // Navigation
+        function navigate(url) {
+            window.location.href = url;
+        }
+
+        // Face ID Login (WebAuthn)
+        async function loginWithFaceID() {
+            const button = document.querySelector('.face-id-btn');
+            const originalHTML = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span>⏳</span><span>Authenticating...</span>';
+
+            try {
+                // Check if WebAuthn is available
+                if (!window.PublicKeyCredential) {
+                    throw new Error('Passkeys are not supported on this device');
+                }
+
+                // Get authentication options from server
+                const optionsResponse = await fetch('/api/auth/passkey/authenticate/options', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!optionsResponse.ok) {
+                    throw new Error('Failed to get authentication options');
+                }
+
+                const options = await optionsResponse.json();
+
+                // Convert base64url to ArrayBuffer
+                const publicKey = {
+                    ...options.options,
+                    challenge: base64urlDecode(options.options.challenge),
+                    allowCredentials: options.options.allowCredentials?.map(cred => ({
+                        ...cred,
+                        id: base64urlDecode(cred.id)
+                    }))
+                };
+
+                // Prompt user for authentication (Face ID / Touch ID)
+                const credential = await navigator.credentials.get({ publicKey });
+
+                // Prepare credential for server
+                const credentialJSON = {
+                    id: credential.id,
+                    rawId: base64urlEncode(credential.rawId),
+                    response: {
+                        authenticatorData: base64urlEncode(credential.response.authenticatorData),
+                        clientDataJSON: base64urlEncode(credential.response.clientDataJSON),
+                        signature: base64urlEncode(credential.response.signature),
+                        userHandle: credential.response.userHandle ? base64urlEncode(credential.response.userHandle) : null
+                    },
+                    type: credential.type
+                };
+
+                // Verify with server
+                const verifyResponse = await fetch('/api/auth/passkey/authenticate/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(credentialJSON)
+                });
+
+                if (!verifyResponse.ok) {
+                    const error = await verifyResponse.json();
+                    throw new Error(error.error || 'Authentication failed');
+                }
+
+                const result = await verifyResponse.json();
+
+                // Store session token
+                if (result.token) {
+                    localStorage.setItem('authToken', result.token);
+                }
+
+                // Success! Redirect to chat
+                button.innerHTML = '<span>✅</span><span>Success! Redirecting...</span>';
+                setTimeout(() => navigate('/chat.html'), 1000);
+
+            } catch (err) {
+                console.error('Face ID error:', err);
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+
+                // User-friendly error message
+                if (err.message.includes('not supported')) {
+                    alert('Face ID/Touch ID not available on this device.\n\nRedirecting to dashboard...');
+                } else if (err.message.includes('canceled')) {
+                    // User canceled - do nothing
+                    return;
+                } else {
+                    alert('Face ID not configured yet.\n\nPlease sign in first to set up Face ID.');
+                }
+
+                navigate('/auth-dashboard.html');
+            }
+        }
+
+        // Load QR code for login
+        async function loadQRCode() {
+            try {
+                const response = await fetch('/api/mobile/qr-login');
+                if (!response.ok) throw new Error('Failed to load QR code');
+
+                const data = await response.json();
+
+                // Show QR code image
+                const qrImage = document.getElementById('qrCodeImage');
+                const qrLoading = document.getElementById('qrLoading');
+                const qrStatus = document.getElementById('qrStatus');
+
+                qrImage.src = data.qr;
+                qrImage.style.display = 'block';
+                qrLoading.style.display = 'none';
+                qrStatus.textContent = `Scan to login • Expires in ${Math.floor(data.expiresIn / 60)} minutes`;
+
+                // Auto-refresh QR every 4 minutes (before 5 minute expiry)
+                setTimeout(loadQRCode, 4 * 60 * 1000);
+
+            } catch (err) {
+                console.error('Error loading QR code:', err);
+                const qrStatus = document.getElementById('qrStatus');
+                qrStatus.textContent = 'Failed to load QR code';
+                qrStatus.style.color = '#ff6b6b';
+
+                // Retry after 10 seconds
+                setTimeout(loadQRCode, 10000);
+            }
+        }
+
+        // Ragebait Generator Functions
+        let currentRagebaitData = null;
+
+        async function loadRagebaitTemplates() {
+            try {
+                const response = await fetch('/api/mobile/ragebait/templates');
+                const data = await response.json();
+
+                const select = document.getElementById('templateSelect');
+                select.innerHTML = '<option value="">Select a template...</option>';
+
+                data.templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = `${template.name} - ${template.description}`;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error loading templates:', err);
+                const select = document.getElementById('templateSelect');
+                select.innerHTML = '<option value="">Error loading templates</option>';
+            }
+        }
+
+        async function generateRagebait() {
+            const templateId = document.getElementById('templateSelect').value;
+
+            if (!templateId) {
+                alert('Please select a template first!');
+                return;
+            }
+
+            // Show loading
+            const preview = document.getElementById('ragebaitPreview');
+            const loading = document.getElementById('ragebaitLoading');
+            const result = document.getElementById('ragebaitResult');
+
+            preview.style.display = 'block';
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/mobile/ragebait/generate/${templateId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to generate ragebait');
+                }
+
+                currentRagebaitData = data;
+
+                // Update UI with results
+                document.getElementById('gifSize').textContent = data.gif.sizeMB.toFixed(2);
+                document.getElementById('mp4Size').textContent = data.mp4.sizeMB.toFixed(2);
+                document.getElementById('shareText').textContent = data.shareText;
+
+                // Set download links
+                document.getElementById('downloadGIF').href = data.gif.dataUrl;
+                document.getElementById('downloadGIF').download = `${templateId}.gif`;
+                document.getElementById('downloadMP4').href = data.mp4.dataUrl;
+                document.getElementById('downloadMP4').download = `${templateId}.mp4`;
+
+                // Show MP4 by default
+                showFormat('mp4');
+
+                // Hide loading, show result
+                loading.style.display = 'none';
+                result.style.display = 'block';
+
+            } catch (err) {
+                console.error('Error generating ragebait:', err);
+                alert('Failed to generate ragebait: ' + err.message);
+                preview.style.display = 'none';
+            }
+        }
+
+        function showFormat(format) {
+            if (!currentRagebaitData) return;
+
+            const gifPreview = document.getElementById('gifPreview');
+            const mp4Preview = document.getElementById('mp4Preview');
+            const gifBtn = document.getElementById('gifFormatBtn');
+            const mp4Btn = document.getElementById('mp4FormatBtn');
+
+            if (format === 'gif') {
+                gifPreview.src = currentRagebaitData.gif.dataUrl;
+                gifPreview.style.display = 'block';
+                mp4Preview.style.display = 'none';
+
+                gifBtn.style.background = 'rgba(255, 199, 44, 0.9)';
+                mp4Btn.style.background = 'rgba(255, 255, 255, 0.9)';
+            } else {
+                mp4Preview.src = currentRagebaitData.mp4.dataUrl;
+                mp4Preview.style.display = 'block';
+                gifPreview.style.display = 'none';
+
+                mp4Btn.style.background = 'rgba(255, 199, 44, 0.9)';
+                gifBtn.style.background = 'rgba(255, 255, 255, 0.9)';
+            }
+        }
+
+        // Load data on page load
+        loadNetworkInfo();
+        loadStats();
+        loadQRCode();
+        loadRagebaitTemplates();
+
+        // Update counter every 5 seconds (simulate growth)
+        setInterval(() => {
+            const counter = document.getElementById('billionsCounter');
+            const current = parseFloat(counter.textContent);
+            const newValue = current + Math.random() * 0.01;
+            counter.textContent = newValue.toFixed(2) + 'M';
+        }, 5000);
+
+        // Random memes
+        const memes = [
+            '"It works on my iPhone" 🤷‍♂️',
+            '"Just one more git push" - Famous last words',
+            '"Why use many server when one server do trick?" 🖥️',
+            '"npm install --save leftpad" 📦',
+            '"setTimeout(() => { fixBug(); }, 0)" - Classic',
+            '"// TODO: Make this work" - 6 months ago',
+            '"Works in production, fails in dev" 🔥',
+            '"200 OK - Actually returns 500" 😅'
+        ];
+
+        function rotateMeme() {
+            const memeEl = document.getElementById('memeDisplay');
+            const randomMeme = memes[Math.floor(Math.random() * memes.length)];
+            memeEl.textContent = randomMeme;
+        }
+
+        // Rotate memes every 10 seconds
+        setInterval(rotateMeme, 10000);
+        rotateMeme();
+    </script>
+</body>
+</html>

@@ -473,7 +473,7 @@ BEGIN
       searches_used_this_period = 0,
       messages_sent_this_period = 0,
       current_period_start = current_period_end,
-      current_period_end = current_period_end + INTERVAL '1 month'
+      current_period_end = current_period_end + INTERVAL '28 days'
     WHERE current_period_end <= NOW() AND status = 'active'
     RETURNING 1
   )

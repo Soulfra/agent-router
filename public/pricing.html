@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS Pricing - OAuth Documentation Platform</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 48px;
+      background: linear-gradient(135deg, #0080ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      color: #888;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .tier-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 40px;
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .tier-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 128, 255, 0.2);
+    }
+
+    .tier-card.popular {
+      border: 2px solid #00ff88;
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #00ff88, #0080ff);
+      color: #000;
+      padding: 8px 24px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .tier-name {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .tier-price {
+      font-size: 48px;
+      font-weight: bold;
+      color: #00ff88;
+      margin-bottom: 5px;
+    }
+
+    .tier-price small {
+      font-size: 18px;
+      color: #888;
+      font-weight: normal;
+    }
+
+    .tier-description {
+      color: #aaa;
+      margin-bottom: 30px;
+      min-height: 60px;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 30px;
+    }
+
+    .features-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .features-list li:last-child {
+      border-bottom: none;
+    }
+
+    .feature-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .feature-icon.check {
+      color: #00ff88;
+    }
+
+    .feature-icon.cross {
+      color: #888;
+    }
+
+    .cta-button {
+      width: 100%;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #0080ff, #00ff88);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+    }
+
+    .cta-button.secondary {
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .cta-button.secondary:hover {
+      border-color: #0080ff;
+      box-shadow: 0 10px 30px rgba(0, 128, 255, 0.3);
+    }
+
+    .features-comparison {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 40px;
+      margin-top: 60px;
+    }
+
+    .features-comparison h2 {
+      font-size: 32px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .comparison-table th {
+      font-weight: bold;
+      color: #00ff88;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .loading {
+      text-align: center;
+      color: #888;
+      padding: 40px;
+    }
+
+    .error {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid #ff4444;
+      border-radius: 8px;
+      padding: 20px;
+      color: #ff4444;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 36px;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-table {
+        font-size: 14px;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        padding: 12px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>CalOS Pricing</h1>
+      <p class="subtitle">
+        Automated OAuth documentation, screenshots, and tutorials that update themselves
+      </p>
+    </header>
+
+    <div id="errorContainer"></div>
+
+    <div class="pricing-grid">
+      <!-- Free Tier -->
+      <div class="tier-card">
+        <div class="tier-name">Free</div>
+        <div class="tier-price">$0<small>/month</small></div>
+        <div class="tier-description">
+          Perfect for trying out the platform with basic OAuth documentation
+        </div>
+        <ul class="features-list">
+          <li>
+            <span class="feature-icon check">✓</span>
+            GitHub OAuth tutorial
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Basic screenshots
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            API documentation access
+          </li>
+          <li>
+            <span class="feature-icon cross">✗</span>
+            Video/GIF generation
+          </li>
+          <li>
+            <span class="feature-icon cross">✗</span>
+            Premium provider tutorials
+          </li>
+          <li>
+            <span class="feature-icon cross">✗</span>
+            Screenshot annotations
+          </li>
+        </ul>
+        <button class="cta-button secondary" onclick="signUp('free')">
+          Get Started Free
+        </button>
+      </div>
+
+      <!-- Pro Tier -->
+      <div class="tier-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="tier-name">Pro</div>
+        <div class="tier-price">$10<small>/month</small></div>
+        <div class="tier-description">
+          Full access to all OAuth tutorials with video generation and annotations
+        </div>
+        <ul class="features-list">
+          <li>
+            <span class="feature-icon check">✓</span>
+            All OAuth tutorials (GitHub, Google, Microsoft, iCloud)
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Video & GIF generation
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Screenshot annotations (arrows, boxes, text)
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Premium API access
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            1,000 API calls/day
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Download tutorial videos/GIFs
+          </li>
+        </ul>
+        <button class="cta-button" onclick="subscribe('pro')">
+          Subscribe to Pro
+        </button>
+      </div>
+
+      <!-- Enterprise Tier -->
+      <div class="tier-card">
+        <div class="tier-name">Enterprise</div>
+        <div class="tier-price">$50<small>/month</small></div>
+        <div class="tier-description">
+          For teams that need unlimited access and custom integrations
+        </div>
+        <ul class="features-list">
+          <li>
+            <span class="feature-icon check">✓</span>
+            Everything in Pro
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Unlimited API calls
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Custom tutorial creation
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Priority support
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            White-label options
+          </li>
+          <li>
+            <span class="feature-icon check">✓</span>
+            Dedicated account manager
+          </li>
+        </ul>
+        <button class="cta-button" onclick="subscribe('enterprise')">
+          Subscribe to Enterprise
+        </button>
+      </div>
+    </div>
+
+    <!-- Feature Comparison Table -->
+    <div class="features-comparison">
+      <h2>Feature Comparison</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th>Pro</th>
+            <th>Enterprise</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GitHub OAuth Tutorial</td>
+            <td>✓</td>
+            <td>✓</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>Google/Microsoft/iCloud Tutorials</td>
+            <td>✗</td>
+            <td>✓</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>Video/GIF Generation</td>
+            <td>✗</td>
+            <td>✓</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>Screenshot Annotations</td>
+            <td>✗</td>
+            <td>✓</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>API Rate Limit</td>
+            <td>10/day</td>
+            <td>1,000/day</td>
+            <td>Unlimited</td>
+          </tr>
+          <tr>
+            <td>Support</td>
+            <td>Community</td>
+            <td>Email</td>
+            <td>Priority + Dedicated</td>
+          </tr>
+          <tr>
+            <td>Custom Tutorials</td>
+            <td>✗</td>
+            <td>✗</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>White-label Options</td>
+            <td>✗</td>
+            <td>✗</td>
+            <td>✓</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Sign up for free tier
+     */
+    async function signUp(tier) {
+      // For free tier, just redirect to registration
+      window.location.href = '/register.html';
+    }
+
+    /**
+     * Subscribe to a paid tier
+     */
+    async function subscribe(tier) {
+      try {
+        showLoading();
+
+        // Get user email from session or prompt
+        let email = getUserEmail();
+        if (!email) {
+          email = prompt('Please enter your email address:');
+          if (!email) {
+            hideLoading();
+            return;
+          }
+        }
+
+        // Create Stripe checkout session
+        const response = await fetch('/api/subscriptions/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tierId: tier,
+            email: email
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to create checkout session');
+        }
+
+        const data = await response.json();
+
+        // Redirect to Stripe checkout
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+
+      } catch (error) {
+        console.error('Subscription error:', error);
+        showError(error.message);
+        hideLoading();
+      }
+    }
+
+    /**
+     * Get user email from session/localStorage
+     */
+    function getUserEmail() {
+      // Try localStorage first
+      const email = localStorage.getItem('userEmail');
+      if (email) return email;
+
+      // Could also check session via API call
+      return null;
+    }
+
+    /**
+     * Show loading state
+     */
+    function showLoading() {
+      const buttons = document.querySelectorAll('.cta-button');
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+      });
+    }
+
+    /**
+     * Hide loading state
+     */
+    function hideLoading() {
+      const buttons = document.querySelectorAll('.cta-button');
+      buttons.forEach(btn => {
+        btn.disabled = false;
+        // Restore original text
+        if (btn.textContent === 'Processing...') {
+          btn.textContent = btn.getAttribute('data-original-text') || 'Subscribe';
+        }
+      });
+    }
+
+    /**
+     * Show error message
+     */
+    function showError(message) {
+      const errorContainer = document.getElementById('errorContainer');
+      errorContainer.innerHTML = `
+        <div class="error">
+          <strong>Error:</strong> ${message}
+        </div>
+      `;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Store original button text
+      document.querySelectorAll('.cta-button').forEach(btn => {
+        btn.setAttribute('data-original-text', btn.textContent);
+      });
+
+      // Check for success/cancel query params from Stripe redirect
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('success') === 'true') {
+        showError = (msg) => {
+          const errorContainer = document.getElementById('errorContainer');
+          errorContainer.innerHTML = `
+            <div style="background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px; padding: 20px; color: #00ff88; margin-bottom: 20px;">
+              <strong>Success!</strong> Your subscription is being processed. Check your email for confirmation.
+            </div>
+          `;
+        };
+        showError();
+      } else if (urlParams.get('canceled') === 'true') {
+        showError('Payment was canceled. Please try again or contact support if you need help.');
+      }
+    });
+  </script>
+</body>
+</html>

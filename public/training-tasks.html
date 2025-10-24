@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Tasks - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .auth-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      margin: 0 auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .auth-container.hidden {
+      display: none;
+    }
+
+    .stats-bar {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-around;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .task-card {
+      background: white;
+      color: #333;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s;
+    }
+
+    .task-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .task-type {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .task-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .task-description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .task-reward {
+      font-size: 16px;
+      font-weight: bold;
+      color: #00b894;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+      background: #00b894;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+      margin-top: 10px;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .main-content {
+      display: none;
+    }
+
+    .main-content.visible {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+    }
+
+    .error {
+      background: #e74c3c;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .leaderboard {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .leaderboard h2 {
+      margin-bottom: 20px;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .rank {
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    .rank.gold { color: #fbbf24; }
+    .rank.silver { color: #d1d5db; }
+    .rank.bronze { color: #f59e0b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎮 Training Tasks</h1>
+      <p>Complete tasks, earn XP, level up!</p>
+    </div>
+
+    <!-- Authentication Container -->
+    <div class="auth-container" id="auth-container">
+      <h2 style="margin-bottom: 20px;">Login to Continue</h2>
+      <div id="auth-error" class="error" style="display: none;"></div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+      <p style="text-align: center; margin-top: 15px; opacity: 0.8;">
+        Don't have an account? <a href="#" onclick="showRegister()" style="color: white; font-weight: bold;">Register</a>
+      </p>
+    </div>
+
+    <!-- Main Content (hidden until authenticated) -->
+    <div class="main-content" id="main-content">
+      <!-- User Stats -->
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat">
+          <div class="stat-value" id="stat-xp">0</div>
+          <div class="stat-label">Total XP</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-completed">0</div>
+          <div class="stat-label">Tasks Completed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-streak">0</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">
+            <button class="btn btn-danger btn-small" onclick="handleLogout()">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Tasks -->
+      <h2 style="margin-bottom: 20px;">📋 Available Tasks</h2>
+      <div class="tasks-grid" id="tasks-grid">
+        <div class="loading">Loading tasks...</div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="leaderboard">
+        <h2>🏆 Leaderboard</h2>
+        <div id="leaderboard-list">
+          <div class="loading">Loading leaderboard...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/lib/calos-auth.js"></script>
+  <script src="/lib/analytics.js"></script>
+  <script>
+    // ========================================================================
+    // Authentication Handlers
+    // ========================================================================
+
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        await CalAuth.login(email, password);
+
+        // Hide auth, show main content
+        document.getElementById('auth-container').classList.add('hidden');
+        document.getElementById('main-content').classList.add('visible');
+
+        // Load data
+        await Promise.all([
+          loadUserStats(),
+          loadAvailableTasks(),
+          loadLeaderboard()
+        ]);
+
+        Analytics.track('training_login', { email });
+      } catch (error) {
+        document.getElementById('auth-error').textContent = error.message;
+        document.getElementById('auth-error').style.display = 'block';
+      }
+    }
+
+    async function handleLogout() {
+      await CalAuth.logout();
+      location.reload();
+    }
+
+    function showRegister() {
+      alert('Registration UI not implemented yet. Use /api/auth/register endpoint.');
+    }
+
+    // ========================================================================
+    // Data Loading
+    // ========================================================================
+
+    async function loadUserStats() {
+      try {
+        const stats = await CalAuth.getTrainingStats();
+
+        document.getElementById('stat-xp').textContent = stats.totalXp || 0;
+        document.getElementById('stat-completed').textContent = stats.tasksCompleted || 0;
+        document.getElementById('stat-streak').textContent = stats.currentStreak || 0;
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    async function loadAvailableTasks() {
+      try {
+        const response = await CalAuth.getTrainingTasks({ limit: 10 });
+        const tasks = response.tasks || [];
+
+        const grid = document.getElementById('tasks-grid');
+        grid.innerHTML = '';
+
+        if (tasks.length === 0) {
+          grid.innerHTML = '<div class="loading">No tasks available right now. Check back later!</div>';
+          return;
+        }
+
+        tasks.forEach(task => {
+          const card = document.createElement('div');
+          card.className = 'task-card';
+          card.innerHTML = `
+            <span class="task-type">${task.taskType}</span>
+            <div class="task-title">${task.taskData.title || 'Untitled Task'}</div>
+            <div class="task-description">${task.taskData.description || 'No description'}</div>
+            <div class="task-reward">🎁 ${task.baseXpReward} XP</div>
+            <button class="btn btn-primary" onclick="claimTask(${task.id})">Claim Task</button>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+        document.getElementById('tasks-grid').innerHTML =
+          '<div class="error">Failed to load tasks: ' + error.message + '</div>';
+      }
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const response = await CalAuth.getLeaderboard('all_time');
+        const leaderboard = response.leaderboard || [];
+
+        const list = document.getElementById('leaderboard-list');
+        list.innerHTML = '';
+
+        if (leaderboard.length === 0) {
+          list.innerHTML = '<div class="loading">No rankings yet. Be the first!</div>';
+          return;
+        }
+
+        leaderboard.slice(0, 10).forEach((entry, index) => {
+          const item = document.createElement('div');
+          item.className = 'leaderboard-item';
+
+          let rankClass = '';
+          if (index === 0) rankClass = 'gold';
+          else if (index === 1) rankClass = 'silver';
+          else if (index === 2) rankClass = 'bronze';
+
+          item.innerHTML = `
+            <div style="display: flex; align-items: center;">
+              <span class="rank ${rankClass}">#${index + 1}</span>
+              <span>User ${entry.userId}</span>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 18px; font-weight: bold;">${entry.totalXp} XP</div>
+              <div style="font-size: 12px; opacity: 0.8;">${entry.tasksCompleted} tasks</div>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+      } catch (error) {
+        console.error('Failed to load leaderboard:', error);
+        document.getElementById('leaderboard-list').innerHTML =
+          '<div class="error">Failed to load leaderboard</div>';
+      }
+    }
+
+    // ========================================================================
+    // Task Actions
+    // ========================================================================
+
+    async function claimTask(taskId) {
+      try {
+        const result = await CalAuth.claimTask(taskId);
+        alert(`Task claimed! Now complete it and submit your work.`);
+
+        // Reload tasks to show updated list
+        await loadAvailableTasks();
+
+        Analytics.track('task_claimed', { taskId });
+      } catch (error) {
+        alert('Failed to claim task: ' + error.message);
+      }
+    }
+
+    // ========================================================================
+    // Initialize
+    // ========================================================================
+
+    async function init() {
+      // Check if already authenticated
+      if (CalAuth.isAuthenticated()) {
+        const user = CalAuth.getUser();
+        console.log('Already authenticated:', user);
+
+        // Hide auth, show main content
+        document.getElementById('auth-container').classList.add('hidden');
+        document.getElementById('main-content').classList.add('visible');
+
+        // Load data
+        await Promise.all([
+          loadUserStats(),
+          loadAvailableTasks(),
+          loadLeaderboard()
+        ]);
+      }
+    }
+
+    // Wait for CalAuth to initialize, then run init
+    setTimeout(init, 100);
+
+    Analytics.track('training_page_loaded');
+  </script>
+</body>
+</html>

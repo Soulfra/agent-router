@@ -1,0 +1,383 @@
+#!/usr/bin/env node
+
+/**
+ * CAL-AI - Multi-Provider AI Query Tool
+ *
+ * Command-line interface for querying AI providers (OpenAI, Anthropic, DeepSeek)
+ * with Triangle Consensus support.
+ *
+ * Usage:
+ *   cal-ai query "What is machine learning?"
+ *   cal-ai triangle "Should I use React or Vue?"
+ *   cal-ai status
+ *   cal-ai help
+ *
+ * Global install:
+ *   npm install -g calos-agent-router
+ *   cal-ai <command>
+ */
+
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// Color helpers
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  magenta: '\x1b[35m'
+};
+
+function log(msg, color = 'reset') {
+  console.log(`${colors[color]}${msg}${colors.reset}`);
+}
+
+function error(msg) {
+  console.error(`${colors.red}Error: ${msg}${colors.reset}`);
+}
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const command = args[0];
+const subArgs = args.slice(1);
+
+// Main command router
+async function main() {
+  switch (command) {
+    case 'query':
+    case 'q':
+      await cmdQuery(subArgs);
+      break;
+
+    case 'triangle':
+    case 't':
+      await cmdTriangle(subArgs);
+      break;
+
+    case 'status':
+    case 's':
+      await cmdStatus();
+      break;
+
+    case 'help':
+    case 'h':
+    case '--help':
+    case '-h':
+    case undefined:
+      showHelp();
+      break;
+
+    case 'version':
+    case '--version':
+    case '-v':
+      showVersion();
+      break;
+
+    default:
+      error(`Unknown command: ${command}`);
+      showHelp();
+      process.exit(1);
+  }
+}
+
+/**
+ * Query command - Query single provider
+ */
+async function cmdQuery(args) {
+  let provider = 'openai'; // default
+  let prompt = args.join(' ');
+
+  // Check for --provider flag
+  const providerIndex = args.findIndex(arg => arg === '--provider' || arg === '-p');
+  if (providerIndex !== -1) {
+    provider = args[providerIndex + 1];
+    args.splice(providerIndex, 2);
+    prompt = args.join(' ');
+  }
+
+  if (!prompt || prompt.trim().length === 0) {
+    error('Prompt required');
+    console.log('Usage: cal-ai query [--provider openai|anthropic|deepseek] "Your question"');
+    process.exit(1);
+  }
+
+  log('🤖 Querying AI...', 'cyan');
+  log(`Provider: ${provider}`, 'dim');
+  log(`Prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"`, 'dim');
+  console.log();
+
+  try {
+    const MultiProviderRouter = require(path.join(__dirname, '../lib/multi-provider-router'));
+    const router = new MultiProviderRouter();
+
+    const result = await router.route({
+      provider,
+      model: getDefaultModel(provider),
+      prompt,
+      metadata: {
+        source: 'cal-ai-cli',
+        user_id: 'cal-local'
+      }
+    });
+
+    if (result.success) {
+      log('─'.repeat(60), 'dim');
+      console.log(result.response);
+      log('─'.repeat(60), 'dim');
+      console.log();
+      log(`✓ ${result.usage.inputTokens} input + ${result.usage.outputTokens} output tokens`, 'green');
+      log(`✓ Cost: $${result.usage.totalCostUSD.toFixed(4)}`, 'green');
+    } else {
+      error(result.error || 'Query failed');
+      process.exit(1);
+    }
+  } catch (err) {
+    error(err.message);
+    if (err.message.includes('API key')) {
+      console.log('\nRun `cal-ai status` to check API key configuration');
+    }
+    process.exit(1);
+  }
+}
+
+/**
+ * Triangle command - Query all 3 providers with consensus
+ */
+async function cmdTriangle(args) {
+  const prompt = args.join(' ');
+
+  if (!prompt || prompt.trim().length === 0) {
+    error('Prompt required');
+    console.log('Usage: cal-ai triangle "Your question"');
+    process.exit(1);
+  }
+
+  log('🔺 Triangle Consensus Query...', 'magenta');
+  log(`Querying: OpenAI, Anthropic, DeepSeek`, 'dim');
+  log(`Prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"`, 'dim');
+  console.log();
+
+  try {
+    const MultiProviderRouter = require(path.join(__dirname, '../lib/multi-provider-router'));
+    const TriangleConsensusEngine = require(path.join(__dirname, '../lib/triangle-consensus-engine'));
+
+    const router = new MultiProviderRouter();
+    const triangle = new TriangleConsensusEngine({ multiProviderRouter: router });
+
+    const result = await triangle.query({
+      prompt,
+      synthesize: true,
+      generateStory: true,
+      context: {
+        userId: 'cal-local',
+        source: 'cal-ai-cli'
+      }
+    });
+
+    if (result.success) {
+      // Show individual responses
+      log('Individual Responses:', 'bright');
+      log('─'.repeat(60), 'dim');
+
+      for (const [provider, response] of Object.entries(result.responses)) {
+        if (response.success) {
+          log(`\n${provider.toUpperCase()}:`, 'cyan');
+          console.log(response.response.substring(0, 200) + '...');
+        }
+      }
+
+      console.log();
+      log('─'.repeat(60), 'dim');
+
+      // Show consensus
+      log('\nConsensus:', 'bright');
+      log(`Confidence: ${(result.consensus.confidence * 100).toFixed(0)}% (${result.consensus.level})`, 'yellow');
+      log('─'.repeat(60), 'dim');
+      console.log(result.consensus.synthesized);
+      log('─'.repeat(60), 'dim');
+
+      // Show story
+      if (result.story) {
+        console.log();
+        log('Story:', 'bright');
+        log('─'.repeat(60), 'dim');
+        console.log(result.story);
+        log('─'.repeat(60), 'dim');
+      }
+
+      // Show billing
+      console.log();
+      log(`✓ Total Cost: $${result.billing.totalCostUSD.toFixed(4)}`, 'green');
+      log(`✓ Execution Time: ${result.executionTimeMs}ms`, 'green');
+    } else {
+      error(result.error || 'Triangle query failed');
+      process.exit(1);
+    }
+  } catch (err) {
+    error(err.message);
+    if (err.message.includes('API key')) {
+      console.log('\nRun `cal-ai status` to check API key configuration');
+    }
+    process.exit(1);
+  }
+}
+
+/**
+ * Status command - Check system status
+ */
+async function cmdStatus() {
+  log('📊 CAL-AI System Status', 'bright');
+  log('─'.repeat(60), 'dim');
+
+  // Check API keys
+  log('\nAPI Keys:', 'cyan');
+  const keys = {
+    'OpenAI': process.env.OPENAI_API_KEY,
+    'Anthropic': process.env.ANTHROPIC_API_KEY,
+    'DeepSeek': process.env.DEEPSEEK_API_KEY
+  };
+
+  let allKeysSet = true;
+  for (const [provider, key] of Object.entries(keys)) {
+    const status = key && key.length > 0 ? '✓' : '✗';
+    const statusColor = key && key.length > 0 ? 'green' : 'red';
+    const keyDisplay = key && key.length > 0
+      ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}`
+      : 'Not set';
+
+    log(`  ${status} ${provider}: ${keyDisplay}`, statusColor);
+
+    if (!key || key.length === 0) {
+      allKeysSet = false;
+    }
+  }
+
+  // Check server
+  log('\nServer:', 'cyan');
+  try {
+    const axios = require('axios');
+    const response = await axios.get('http://localhost:5001/health', { timeout: 2000 }).catch(() => null);
+    if (response && response.status === 200) {
+      log('  ✓ Running at http://localhost:5001', 'green');
+    } else {
+      log('  ✗ Not running', 'red');
+      log('    Start with: npm start', 'dim');
+    }
+  } catch (err) {
+    log('  ✗ Not running', 'red');
+    log('    Start with: npm start', 'dim');
+  }
+
+  // Check Triangle API
+  log('\nTriangle API:', 'cyan');
+  try {
+    const axios = require('axios');
+    const response = await axios.get('http://localhost:5001/health', { timeout: 2000 }).catch(() => null);
+    if (response && response.status === 200) {
+      const health = response.data;
+      if (health.services?.triangleEngine) {
+        log('  ✓ Triangle Consensus Engine ready', 'green');
+      } else {
+        log('  ⚠ Triangle Engine not initialized', 'yellow');
+      }
+    } else {
+      log('  ✗ Server not running', 'red');
+    }
+  } catch (err) {
+    log('  ✗ Server not running', 'red');
+  }
+
+  log('\n' + '─'.repeat(60), 'dim');
+
+  if (!allKeysSet) {
+    log('\n⚠ Some API keys are missing', 'yellow');
+    log('Add them to .env file:', 'dim');
+    log('  OPENAI_API_KEY=sk-...', 'dim');
+    log('  ANTHROPIC_API_KEY=sk-ant-...', 'dim');
+    log('  DEEPSEEK_API_KEY=sk-...', 'dim');
+  } else {
+    log('\n✓ All systems ready!', 'green');
+  }
+}
+
+/**
+ * Show help
+ */
+function showHelp() {
+  console.log(`
+${colors.bright}CAL-AI - Multi-Provider AI Query Tool${colors.reset}
+
+${colors.cyan}Usage:${colors.reset}
+  cal-ai <command> [options]
+
+${colors.cyan}Commands:${colors.reset}
+  ${colors.bright}query${colors.reset}, q [--provider <name>] <prompt>
+    Query a single AI provider
+    Example: cal-ai query "What is machine learning?"
+    Example: cal-ai q -p anthropic "Explain recursion"
+
+  ${colors.bright}triangle${colors.reset}, t <prompt>
+    Query all 3 providers and generate consensus
+    Example: cal-ai triangle "Should I use React or Vue?"
+
+  ${colors.bright}status${colors.reset}, s
+    Check system status and API key configuration
+    Example: cal-ai status
+
+  ${colors.bright}help${colors.reset}, h
+    Show this help message
+
+  ${colors.bright}version${colors.reset}, v
+    Show version information
+
+${colors.cyan}Options:${colors.reset}
+  --provider, -p <name>    Choose provider: openai, anthropic, deepseek
+  --help, -h              Show help
+  --version, -v           Show version
+
+${colors.cyan}Examples:${colors.reset}
+  cal-ai query "2 + 2 = ?"
+  cal-ai q -p deepseek "Explain quantum computing"
+  cal-ai triangle "Best way to learn JavaScript?"
+  cal-ai status
+
+${colors.cyan}API Endpoints:${colors.reset}
+  Server:   http://localhost:5001
+  Triangle: POST /api/chat/triangle
+  Query:    Uses MultiProviderRouter internally
+
+${colors.dim}For more info: https://github.com/calos/agent-router${colors.reset}
+`);
+}
+
+/**
+ * Show version
+ */
+function showVersion() {
+  const packageJson = require(path.join(__dirname, '../package.json'));
+  log(`CAL-AI v${packageJson.version}`, 'cyan');
+  log('CALOS Agent Router - Multi-provider AI system', 'dim');
+}
+
+/**
+ * Get default model for provider
+ */
+function getDefaultModel(provider) {
+  const models = {
+    openai: 'gpt-4',
+    anthropic: 'claude-3-sonnet-20240229',
+    deepseek: 'deepseek-chat'
+  };
+  return models[provider] || models.openai;
+}
+
+// Run main
+main().catch(err => {
+  error(err.message);
+  process.exit(1);
+});

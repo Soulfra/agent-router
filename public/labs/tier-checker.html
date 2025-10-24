@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier Checker - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1200px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    .tier-card { background: linear-gradient(135deg, #667eea, #764ba2); padding: 30px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+    .tier-card.free { background: linear-gradient(135deg, #888, #666); }
+    .tier-card.pro { background: linear-gradient(135deg, #4caf50, #45a049); }
+    .tier-card.enterprise { background: linear-gradient(135deg, #ffd700, #ff8c00); }
+    .tier-name { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
+    .tier-price { font-size: 48px; font-weight: bold; margin: 20px 0; }
+    .tier-price span { font-size: 24px; color: rgba(255,255,255,0.8); }
+    .limits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+    .limit-item { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; }
+    .limit-label { font-size: 12px; color: rgba(255,255,255,0.8); margin-bottom: 5px; }
+    .limit-value { font-size: 24px; font-weight: bold; }
+    .usage-bar { width: 100%; height: 30px; background: rgba(0,0,0,0.2); border-radius: 15px; overflow: hidden; margin-top: 10px; }
+    .usage-fill { height: 100%; background: #4caf50; transition: width 0.5s; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+    .usage-fill.warning { background: #f39c12; }
+    .usage-fill.danger { background: #e74c3c; }
+    .feature-list { margin: 20px 0; }
+    .feature-item { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+    .feature-item:last-child { border-bottom: none; }
+    .tier-compare { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .compare-card { background: #0a0a15; padding: 20px; border-radius: 10px; border: 2px solid #2a2a3e; }
+    .compare-card.active { border-color: #667eea; box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+    input { padding: 10px; background: #0a0a15; border: 1px solid #2a2a3e; border-radius: 5px; color: #e0e0e0; font-family: inherit; width: 100%; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Tier & Limits Checker</h1>
+  <p class="subtitle">Check user tier, usage limits, and upgrade options</p>
+
+  <div class="section">
+    <h2>Check User Tier</h2>
+    <input type="text" id="user-id" placeholder="Enter User ID" value="user-demo-123">
+    <button onclick="checkTier()">Check Tier</button>
+  </div>
+
+  <div class="section" id="tier-display" style="display: none;">
+    <div class="tier-card" id="tier-card">
+      <div class="tier-name" id="tier-name">PRO</div>
+      <div class="tier-price">$29<span>/mo</span></div>
+
+      <div class="limits-grid">
+        <div class="limit-item">
+          <div class="limit-label">API Calls</div>
+          <div class="limit-value" id="api-limit">10,000/mo</div>
+          <div class="usage-bar">
+            <div class="usage-fill" id="api-usage" style="width: 45%">4,500</div>
+          </div>
+        </div>
+
+        <div class="limit-item">
+          <div class="limit-label">Storage</div>
+          <div class="limit-value" id="storage-limit">50 GB</div>
+          <div class="usage-bar">
+            <div class="usage-fill" id="storage-usage" style="width: 62%">31 GB</div>
+          </div>
+        </div>
+
+        <div class="limit-item">
+          <div class="limit-label">Team Members</div>
+          <div class="limit-value" id="team-limit">10</div>
+          <div class="usage-bar">
+            <div class="usage-fill" id="team-usage" style="width: 30%">3</div>
+          </div>
+        </div>
+
+        <div class="limit-item">
+          <div class="limit-label">Projects</div>
+          <div class="limit-value" id="projects-limit">Unlimited</div>
+        </div>
+      </div>
+
+      <div class="feature-list">
+        <div class="feature-item">✓ Priority Support</div>
+        <div class="feature-item">✓ Advanced Analytics</div>
+        <div class="feature-item">✓ Custom Integrations</div>
+        <div class="feature-item">✓ 99.9% Uptime SLA</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Tier Comparison</h2>
+    <div class="tier-compare">
+      <div class="compare-card">
+        <h3 style="color: #888; margin-bottom: 15px;">FREE</h3>
+        <div style="font-size: 32px; font-weight: bold; margin-bottom: 10px;">$0</div>
+        <ul style="list-style: none; padding: 0; margin: 20px 0;">
+          <li style="padding: 8px 0;">✓ 1,000 API calls/mo</li>
+          <li style="padding: 8px 0;">✓ 1 GB storage</li>
+          <li style="padding: 8px 0;">✓ 1 project</li>
+          <li style="padding: 8px 0; color: #666;">✗ Team members</li>
+          <li style="padding: 8px 0; color: #666;">✗ Priority support</li>
+        </ul>
+        <button onclick="selectTier('free')" style="width: 100%;">Current Plan</button>
+      </div>
+
+      <div class="compare-card active">
+        <h3 style="color: #4caf50; margin-bottom: 15px;">PRO</h3>
+        <div style="font-size: 32px; font-weight: bold; margin-bottom: 10px;">$29/mo</div>
+        <ul style="list-style: none; padding: 0; margin: 20px 0;">
+          <li style="padding: 8px 0;">✓ 10,000 API calls/mo</li>
+          <li style="padding: 8px 0;">✓ 50 GB storage</li>
+          <li style="padding: 8px 0;">✓ Unlimited projects</li>
+          <li style="padding: 8px 0;">✓ 10 team members</li>
+          <li style="padding: 8px 0;">✓ Priority support</li>
+        </ul>
+        <button onclick="selectTier('pro')" style="width: 100%; background: linear-gradient(135deg, #4caf50, #45a049);">Upgrade to Pro</button>
+      </div>
+
+      <div class="compare-card">
+        <h3 style="color: #ffd700; margin-bottom: 15px;">ENTERPRISE</h3>
+        <div style="font-size: 32px; font-weight: bold; margin-bottom: 10px;">Custom</div>
+        <ul style="list-style: none; padding: 0; margin: 20px 0;">
+          <li style="padding: 8px 0;">✓ Unlimited API calls</li>
+          <li style="padding: 8px 0;">✓ Unlimited storage</li>
+          <li style="padding: 8px 0;">✓ Unlimited projects</li>
+          <li style="padding: 8px 0;">✓ Unlimited team</li>
+          <li style="padding: 8px 0;">✓ Dedicated support</li>
+        </ul>
+        <button onclick="selectTier('enterprise')" style="width: 100%; background: linear-gradient(135deg, #ffd700, #ff8c00);">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TIERS = {
+      free: {
+        name: 'FREE',
+        price: '$0',
+        apiLimit: 1000,
+        storage: 1,
+        projects: 1,
+        team: 1,
+        class: 'free',
+        features: ['Community Support', 'Basic Analytics', '1 Integration']
+      },
+      pro: {
+        name: 'PRO',
+        price: '$29/mo',
+        apiLimit: 10000,
+        storage: 50,
+        projects: 'Unlimited',
+        team: 10,
+        class: 'pro',
+        features: ['Priority Support', 'Advanced Analytics', 'Custom Integrations', '99.9% Uptime SLA']
+      },
+      enterprise: {
+        name: 'ENTERPRISE',
+        price: 'Custom',
+        apiLimit: 'Unlimited',
+        storage: 'Unlimited',
+        projects: 'Unlimited',
+        team: 'Unlimited',
+        class: 'enterprise',
+        features: ['Dedicated Support', 'White-label', 'SLA', 'Custom Contracts', 'Training']
+      }
+    };
+
+    function checkTier() {
+      const userId = document.getElementById('user-id').value;
+
+      if (!userId) {
+        alert('Please enter a user ID');
+        return;
+      }
+
+      // Simulate API call
+      const tierType = ['free', 'pro', 'enterprise'][Math.floor(Math.random() * 3)];
+      const tier = TIERS[tierType];
+
+      // Random usage
+      const apiUsage = tier.apiLimit === 'Unlimited' ? 0 : Math.floor(Math.random() * tier.apiLimit);
+      const storageUsage = tier.storage === 'Unlimited' ? 0 : Math.floor(Math.random() * tier.storage);
+      const teamUsage = tier.team === 'Unlimited' ? 0 : Math.floor(Math.random() * tier.team);
+
+      displayTier(tier, { api: apiUsage, storage: storageUsage, team: teamUsage });
+    }
+
+    function displayTier(tier, usage) {
+      const card = document.getElementById('tier-card');
+      card.className = `tier-card ${tier.class}`;
+
+      document.getElementById('tier-name').textContent = tier.name;
+      document.getElementById('tier-display').style.display = 'block';
+
+      // Update limits
+      document.getElementById('api-limit').textContent = tier.apiLimit === 'Unlimited' ? 'Unlimited' : `${tier.apiLimit.toLocaleString()}/mo`;
+      document.getElementById('storage-limit').textContent = tier.storage === 'Unlimited' ? 'Unlimited' : `${tier.storage} GB`;
+      document.getElementById('team-limit').textContent = tier.team === 'Unlimited' ? 'Unlimited' : tier.team;
+      document.getElementById('projects-limit').textContent = tier.projects;
+
+      // Update usage bars
+      if (tier.apiLimit !== 'Unlimited') {
+        const apiPercent = (usage.api / tier.apiLimit) * 100;
+        const apiFill = document.getElementById('api-usage');
+        apiFill.style.width = apiPercent + '%';
+        apiFill.textContent = usage.api.toLocaleString();
+        apiFill.className = 'usage-fill' + (apiPercent > 90 ? ' danger' : apiPercent > 70 ? ' warning' : '');
+      }
+
+      if (tier.storage !== 'Unlimited') {
+        const storagePercent = (usage.storage / tier.storage) * 100;
+        const storageFill = document.getElementById('storage-usage');
+        storageFill.style.width = storagePercent + '%';
+        storageFill.textContent = usage.storage + ' GB';
+        storageFill.className = 'usage-fill' + (storagePercent > 90 ? ' danger' : storagePercent > 70 ? ' warning' : '');
+      }
+
+      if (tier.team !== 'Unlimited') {
+        const teamPercent = (usage.team / tier.team) * 100;
+        const teamFill = document.getElementById('team-usage');
+        teamFill.style.width = teamPercent + '%';
+        teamFill.textContent = usage.team;
+      }
+
+      // Update features
+      const featureList = document.querySelector('.feature-list');
+      featureList.innerHTML = tier.features.map(f => `<div class="feature-item">✓ ${f}</div>`).join('');
+    }
+
+    function selectTier(tier) {
+      alert(`Selected ${TIERS[tier].name} tier! In production, this would initiate the upgrade/downgrade process.`);
+    }
+  </script>
+</body>
+</html>

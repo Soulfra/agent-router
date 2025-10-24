@@ -1,0 +1,485 @@
+#!/usr/bin/env node
+
+/**
+ * Community Data Acquisition CLI
+ *
+ * "Like Ryan Cohen acquiring GameStop's 55M PowerUp members + Game Informer data"
+ *
+ * Manage unified community profiles, detect power users, track momentum.
+ *
+ * Commands:
+ *   community profile <userId>        - Show unified community profile
+ *   community leaderboard             - Top contributors (power users)
+ *   community cohorts                 - Show community segments
+ *   community momentum <cohort>       - Track cohort growth
+ *   community builders                - Top builders (implementations)
+ *   community dogfood                 - Public dogfooding dashboard
+ *   community stats                   - Community statistics
+ *   community consolidate <source>    - Import external community
+ *   community help                    - Show this help
+ */
+
+require('dotenv').config();
+const path = require('path');
+const { Pool } = require('pg');
+
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m'
+};
+
+const ROOT_DIR = path.join(__dirname, '..');
+
+// Load library
+const CommunityDataAcquisition = require('../lib/community-data-acquisition');
+
+// ============================================================================
+// Database
+// ============================================================================
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
+const communityAcq = new CommunityDataAcquisition({ pool });
+
+// ============================================================================
+// Help
+// ============================================================================
+
+function showHelp() {
+  console.log(`
+${colors.bright}${colors.cyan}Community Data Acquisition CLI${colors.reset}
+
+${colors.gray}"Like Ryan Cohen acquiring GameStop's 55M PowerUp members + Game Informer data"${colors.reset}
+
+${colors.bright}USAGE:${colors.reset}
+  community <command> [options]
+
+${colors.bright}COMMANDS:${colors.reset}
+
+  ${colors.bright}Profiles:${colors.reset}
+  ${colors.green}profile <userId>${colors.reset}         Show unified community profile
+  ${colors.gray}                           (learning + marketplace + growth + forum)${colors.reset}
+
+  ${colors.bright}Power Users:${colors.reset}
+  ${colors.green}leaderboard${colors.reset}              Top contributors (like r/WallStreetBets superfans)
+  ${colors.green}builders${colors.reset}                 Top builders (users who IMPLEMENT ideas)
+
+  ${colors.bright}Cohorts:${colors.reset}
+  ${colors.green}cohorts${colors.reset}                  Show community segments
+  ${colors.gray}                           (learners, builders, leaders, lurkers)${colors.reset}
+  ${colors.green}momentum <cohort>${colors.reset}        Track cohort growth (inflection detection)
+
+  ${colors.bright}Dogfooding:${colors.reset}
+  ${colors.green}dogfood${colors.reset}                  Public build-in-public dashboard
+
+  ${colors.bright}Statistics:${colors.reset}
+  ${colors.green}stats${colors.reset}                    Community-wide statistics
+
+  ${colors.bright}Consolidation:${colors.reset}
+  ${colors.green}consolidate <source>${colors.reset}     Import external community
+  ${colors.green}sources${colors.reset}                  List imported community sources
+
+  ${colors.bright}General:${colors.reset}
+  ${colors.green}help${colors.reset}                     Show this help
+
+${colors.bright}EXAMPLES:${colors.reset}
+  ${colors.gray}# Show user's unified profile${colors.reset}
+  community profile cal
+
+  ${colors.gray}# See power users leaderboard${colors.reset}
+  community leaderboard
+
+  ${colors.gray}# Track cohort momentum${colors.reset}
+  community momentum builders
+
+  ${colors.gray}# Public dogfooding dashboard${colors.reset}
+  community dogfood
+`);
+}
+
+// ============================================================================
+// Commands
+// ============================================================================
+
+async function showProfile(userId) {
+  try {
+    console.log(`\n${colors.cyan}📊 Loading community profile...${colors.reset}\n`);
+
+    const profile = await communityAcq.getCommunityProfile(userId);
+
+    console.log(`${colors.bright}${colors.cyan}User: ${userId}${colors.reset}\n`);
+
+    console.log(`${colors.bright}Power Score:${colors.reset} ${profile.powerScore}/1000`);
+    console.log(`${colors.bright}Community Tier:${colors.reset} ${getTierEmoji(profile.communityTier)} ${profile.communityTier}\n`);
+
+    console.log(`${colors.bright}Learning Platform:${colors.reset}`);
+    console.log(`  XP:                ${profile.learning.totalXP}`);
+    console.log(`  Level:             ${profile.learning.level}`);
+    console.log(`  Paths Completed:   ${profile.learning.pathsCompleted}`);
+    console.log(`  Lessons Completed: ${profile.learning.lessonsCompleted}`);
+    console.log(`  Current Streak:    ${profile.learning.currentStreak} days\n`);
+
+    console.log(`${colors.bright}Reputation & Marketplace:${colors.reset}`);
+    console.log(`  Karma:             ${profile.reputation.karma}`);
+    console.log(`  Trust Score:       ${(profile.reputation.trustScore * 100).toFixed(1)}%`);
+    console.log(`  Badge:             ${profile.reputation.badge}\n`);
+
+    console.log(`${colors.bright}Growth Tracker (What They BUILD):${colors.reset}`);
+    console.log(`  Ideas Implemented: ${profile.growth.ideasImplemented} ${colors.gray}← HIGHEST VALUE${colors.reset}`);
+    console.log(`  Ideas Iterated:    ${profile.growth.ideasIterated}`);
+    console.log(`  Ideas Forked:      ${profile.growth.ideasForked}`);
+    console.log(`  Ideas Submitted:   ${profile.growth.ideasSubmitted}`);
+    console.log(`  Total Impact:      ${profile.growth.totalImpact}\n`);
+
+    console.log(`${colors.bright}Forum Activity:${colors.reset}`);
+    console.log(`  Posts Created:     ${profile.forum.postsCreated}`);
+    console.log(`  Comments Created:  ${profile.forum.commentsCreated}`);
+    console.log(`  Total Upvotes:     ${profile.forum.totalUpvotes}\n`);
+
+    console.log(`${colors.bright}Social Graph:${colors.reset}`);
+    console.log(`  Followers:         ${profile.social.followers}`);
+    console.log(`  Following:         ${profile.social.following}`);
+    console.log(`  Influence Score:   ${profile.social.influence}\n`);
+
+    console.log(`${colors.bright}Last Activity:${colors.reset} ${new Date(profile.lastActivity).toLocaleString()}\n`);
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showLeaderboard() {
+  try {
+    console.log(`\n${colors.cyan}${colors.bright}🏆 Power User Leaderboard${colors.reset}\n`);
+    console.log(`${colors.gray}Like r/WallStreetBets superfans${colors.reset}\n`);
+
+    const powerUsers = await communityAcq.getPowerUsers({ limit: 20, minPowerScore: 0 });
+
+    if (powerUsers.length === 0) {
+      console.log(`${colors.yellow}No users yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    powerUsers.forEach((user, i) => {
+      const rank = i + 1;
+      const emoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+
+      console.log(`${emoji} ${colors.bright}${user.userId}${colors.reset}`);
+      console.log(`   Power Score:  ${user.powerScore}/1000`);
+      console.log(`   Tier:         ${getTierEmoji(user.communityTier)} ${user.communityTier}`);
+      console.log(`   Implements:   ${user.growth.ideasImplemented}`);
+      console.log(`   Karma:        ${user.reputation.karma}`);
+      console.log(`   Followers:    ${user.social.followers}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showCohorts() {
+  try {
+    console.log(`\n${colors.cyan}${colors.bright}👥 Community Cohorts${colors.reset}\n`);
+    console.log(`${colors.gray}Like GameStop segmenting PowerUp members${colors.reset}\n`);
+
+    const { cohorts, summary } = await communityAcq.detectCohorts();
+
+    console.log(`${colors.bright}Summary:${colors.reset}`);
+    console.log(`  Builders:  ${summary.builders} ${colors.gray}(high implementations)${colors.reset}`);
+    console.log(`  Leaders:   ${summary.leaders} ${colors.gray}(high social engagement)${colors.reset}`);
+    console.log(`  Learners:  ${summary.learners} ${colors.gray}(high learning, low building)${colors.reset}`);
+    console.log(`  Balanced:  ${summary.balanced} ${colors.gray}(active across multiple systems)${colors.reset}`);
+    console.log(`  Lurkers:   ${summary.lurkers} ${colors.gray}(low activity)${colors.reset}`);
+    console.log(`  Total:     ${summary.total}\n`);
+
+    // Show top users from each cohort
+    if (cohorts.builders.length > 0) {
+      console.log(`${colors.bright}Top Builders:${colors.reset}`);
+      cohorts.builders.slice(0, 3).forEach(user => {
+        console.log(`  ${user.userId} - ${user.growth.ideasImplemented} implementations`);
+      });
+      console.log('');
+    }
+
+    if (cohorts.leaders.length > 0) {
+      console.log(`${colors.bright}Top Leaders:${colors.reset}`);
+      cohorts.leaders.slice(0, 3).forEach(user => {
+        console.log(`  ${user.userId} - ${user.social.followers} followers`);
+      });
+      console.log('');
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function trackMomentum(cohortName) {
+  try {
+    console.log(`\n${colors.cyan}📈 Tracking momentum for ${cohortName}...${colors.reset}\n`);
+
+    const momentum = await communityAcq.trackCohortMomentum(cohortName);
+
+    console.log(`${colors.bright}Cohort:${colors.reset} ${cohortName}\n`);
+
+    console.log(`${colors.bright}Momentum Metrics:${colors.reset}`);
+    console.log(`  Velocity:     ${momentum.velocity.toFixed(2)} ${colors.gray}(growth rate)${colors.reset}`);
+    console.log(`  Acceleration: ${momentum.acceleration.toFixed(2)} ${colors.gray}(rate of change)${colors.reset}`);
+    console.log(`  Momentum:     ${momentum.momentum.toFixed(2)} ${colors.gray}(velocity × scale)${colors.reset}`);
+    console.log(`  Stage:        ${getStageEmoji(momentum.stage)} ${momentum.stage}\n`);
+
+    console.log(`${colors.bright}Analysis Period:${colors.reset} ${momentum.period}`);
+    console.log(`${colors.bright}Data Points:${colors.reset} ${momentum.dataPoints}\n`);
+
+    if (momentum.stage === 'ACCELERATING') {
+      console.log(`${colors.green}🚀 Cohort is taking off! Growth accelerating.${colors.reset}\n`);
+    } else if (momentum.stage === 'DECLINING') {
+      console.log(`${colors.yellow}📉 Cohort losing momentum.${colors.reset}\n`);
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showBuilders() {
+  try {
+    console.log(`\n${colors.cyan}${colors.bright}🔨 Top Builders${colors.reset}\n`);
+    console.log(`${colors.gray}Users who IMPLEMENT ideas (highest value)${colors.reset}\n`);
+
+    const result = await pool.query(`
+      SELECT * FROM v_builder_activity
+      WHERE total_impact > 0
+      ORDER BY total_impact DESC
+      LIMIT 20
+    `);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No builders yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    result.rows.forEach((user, i) => {
+      console.log(`${colors.bright}${i + 1}. ${user.user_id}${colors.reset}`);
+      console.log(`   Tier:           ${getTierEmoji(user.community_tier)} ${user.community_tier}`);
+      console.log(`   Implementations: ${user.implementations || 0}`);
+      console.log(`   Iterations:      ${user.iterations || 0}`);
+      console.log(`   Forks:           ${user.forks || 0}`);
+      console.log(`   Total Impact:    ${user.total_impact}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showDogfooding() {
+  try {
+    console.log(`\n${colors.cyan}${colors.bright}🐕 Dogfooding Dashboard${colors.reset}\n`);
+    console.log(`${colors.gray}What the CALOS team actually builds (like r/WallStreetBets transparency)${colors.reset}\n`);
+
+    const result = await pool.query(`
+      SELECT
+        cm.user_id,
+        cm.power_score,
+        cm.community_tier,
+        cm.growth_score,
+        ia.implementations,
+        ia.forks,
+        ia.iterations,
+        ia.total_impact
+      FROM community_members cm
+      LEFT JOIN v_builder_activity ia ON cm.user_id = ia.user_id
+      WHERE cm.growth_score > 0
+      ORDER BY cm.growth_score DESC
+      LIMIT 20
+    `);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No dogfooding data yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    result.rows.forEach((user, i) => {
+      console.log(`${colors.bright}${i + 1}. ${user.user_id}${colors.reset}`);
+      console.log(`   Power Score:     ${user.power_score}/1000`);
+      console.log(`   Growth Score:    ${user.growth_score}/300`);
+      console.log(`   Implementations: ${user.implementations || 0}`);
+      console.log(`   Total Impact:    ${user.total_impact || 0}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showStats() {
+  try {
+    const stats = await communityAcq.getCommunityStats();
+
+    console.log(`\n${colors.cyan}${colors.bright}📊 Community Statistics${colors.reset}\n`);
+
+    console.log(`${colors.bright}Overall:${colors.reset}`);
+    console.log(`  Total Members:       ${stats.total_members}`);
+    console.log(`  Learners:            ${stats.learners}`);
+    console.log(`  Builders:            ${stats.builders}`);
+    console.log(`  Forum Participants:  ${stats.forum_participants}`);
+    console.log(`  Total Connections:   ${stats.total_connections}`);
+    console.log(`  Total Karma:         ${stats.total_karma}\n`);
+
+    console.log(`${colors.bright}Activity:${colors.reset}`);
+    console.log(`  Active Last Week:    ${stats.active_last_week}`);
+    console.log(`  Active Last Month:   ${stats.active_last_month}\n`);
+
+    if (stats.tierDistribution) {
+      console.log(`${colors.bright}Tier Distribution:${colors.reset}`);
+      Object.entries(stats.tierDistribution).forEach(([tier, count]) => {
+        console.log(`  ${getTierEmoji(tier)} ${tier.padEnd(15)} ${count}`);
+      });
+      console.log('');
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+async function showSources() {
+  try {
+    const result = await pool.query(`
+      SELECT
+        source_name,
+        source_type,
+        members_imported,
+        activities_imported,
+        last_import_at,
+        created_at
+      FROM external_community_sources
+      ORDER BY created_at DESC
+    `);
+
+    console.log(`\n${colors.cyan}${colors.bright}📁 External Community Sources${colors.reset}\n`);
+
+    if (result.rows.length === 0) {
+      console.log(`${colors.yellow}No external sources imported yet${colors.reset}`);
+      process.exit(0);
+    }
+
+    result.rows.forEach(source => {
+      console.log(`${colors.bright}${source.source_name}${colors.reset}`);
+      console.log(`  Type:               ${source.source_type}`);
+      console.log(`  Members Imported:   ${source.members_imported}`);
+      console.log(`  Activities Imported: ${source.activities_imported}`);
+      console.log(`  Last Import:        ${source.last_import_at ? new Date(source.last_import_at).toLocaleString() : 'Never'}`);
+      console.log(`  Created:            ${new Date(source.created_at).toLocaleString()}\n`);
+    });
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function getTierEmoji(tier) {
+  const emojis = {
+    legend: '👑',
+    veteran: '⭐',
+    contributor: '💎',
+    newcomer: '🌱'
+  };
+  return emojis[tier] || '❓';
+}
+
+function getStageEmoji(stage) {
+  const emojis = {
+    ACCELERATING: '🚀',
+    GROWING: '📈',
+    STABLE: '📊',
+    DECLINING: '📉',
+    DORMANT: '💤'
+  };
+  return emojis[stage] || '❓';
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === 'help') {
+    showHelp();
+    process.exit(0);
+  }
+
+  try {
+    switch (command) {
+      case 'profile':
+        if (args.length < 2) {
+          console.error(`${colors.red}Usage: community profile <userId>${colors.reset}`);
+          process.exit(1);
+        }
+        await showProfile(args[1]);
+        break;
+
+      case 'leaderboard':
+        await showLeaderboard();
+        break;
+
+      case 'cohorts':
+        await showCohorts();
+        break;
+
+      case 'momentum':
+        if (args.length < 2) {
+          console.error(`${colors.red}Usage: community momentum <cohortName>${colors.reset}`);
+          process.exit(1);
+        }
+        await trackMomentum(args[1]);
+        break;
+
+      case 'builders':
+        await showBuilders();
+        break;
+
+      case 'dogfood':
+        await showDogfooding();
+        break;
+
+      case 'stats':
+        await showStats();
+        break;
+
+      case 'sources':
+        await showSources();
+        break;
+
+      default:
+        console.error(`${colors.red}Unknown command: ${command}${colors.reset}`);
+        console.log(`Run ${colors.cyan}community help${colors.reset} for available commands`);
+        process.exit(1);
+    }
+
+    await pool.end();
+  } catch (error) {
+    console.error(`${colors.red}Fatal error:${colors.reset} ${error.message}`);
+    await pool.end();
+    process.exit(1);
+  }
+}
+
+main();

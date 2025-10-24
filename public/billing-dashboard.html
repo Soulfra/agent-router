@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing Dashboard - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 25px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(46,204,113,0.3);
+      border: 1px solid rgba(46,204,113,0.5);
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .tier-badge.trial {
+      background: rgba(241,196,15,0.3);
+      border-color: rgba(241,196,15,0.5);
+    }
+
+    .tier-badge.enterprise {
+      background: rgba(155,89,182,0.3);
+      border-color: rgba(155,89,182,0.5);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 30px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 15px 0;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      transition: width 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .progress-fill.warning {
+      background: linear-gradient(90deg, #f39c12, #e67e22);
+    }
+
+    .progress-fill.danger {
+      background: linear-gradient(90deg, #e74c3c, #c0392b);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      opacity: 0.8;
+    }
+
+    .stat-value {
+      font-weight: 600;
+    }
+
+    .cost-breakdown {
+      margin: 20px 0;
+    }
+
+    .provider-cost {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    .provider-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .cost {
+      font-size: 1.2rem;
+      color: #2ecc71;
+    }
+
+    .cost.free {
+      color: #3498db;
+    }
+
+    .upgrade-cta {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 20px 0;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .upgrade-cta:hover {
+      transform: translateY(-2px);
+    }
+
+    .upgrade-cta h3 {
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+    }
+
+    button.primary {
+      background: #2ecc71;
+      border-color: #27ae60;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 200px;
+      margin: 20px 0;
+    }
+
+    .pie-chart {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .history-table th {
+      background: rgba(0,0,0,0.3);
+      font-weight: 600;
+    }
+
+    .byok-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      background: rgba(52,152,219,0.3);
+      border: 1px solid rgba(52,152,219,0.5);
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .byok-indicator.active {
+      background: rgba(46,204,113,0.3);
+      border-color: rgba(46,204,113,0.5);
+    }
+
+    .nav-links {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: underline;
+      margin: 0 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💳 Billing Dashboard</h1>
+      <p class="subtitle">Track your usage, costs, and API keys</p>
+    </div>
+
+    <!-- Tier Info -->
+    <div class="card">
+      <h2>📊 Current Tier</h2>
+      <div id="tierInfo">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <span class="tier-badge" id="tierBadge">Loading...</span>
+          </div>
+          <div style="text-align: right;">
+            <div id="tierPrice" style="font-size: 1.5rem; font-weight: bold;">$0/mo</div>
+          </div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" id="usageProgress">0%</div>
+        </div>
+
+        <div class="stat-row">
+          <span class="stat-label">Tokens Used</span>
+          <span class="stat-value" id="tokensUsed">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Token Limit</span>
+          <span class="stat-value" id="tokensLimit">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Domains Allowed</span>
+          <span class="stat-value" id="domainsAllowed">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Support Level</span>
+          <span class="stat-value" id="supportLevel">-</span>
+        </div>
+      </div>
+
+      <div id="upgradeCTA" style="display: none;">
+        <div class="upgrade-cta" onclick="window.location.href='upgrade.html'">
+          <h3>⚡ Upgrade to Pro</h3>
+          <p>Get 1M tokens/month, 5 domains, priority support, and BYOK</p>
+          <p style="margin-top: 10px; font-size: 1.5rem; font-weight: bold;">$199/month</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Usage Breakdown -->
+      <div class="card">
+        <h2>📈 This Month's Usage</h2>
+        <div class="cost-breakdown">
+          <div class="provider-cost">
+            <div class="provider-name">
+              <span>🤖 OpenAI</span>
+              <span class="byok-indicator" id="openai-byok">System</span>
+            </div>
+            <div>
+              <div id="openai-tokens" style="opacity: 0.8; font-size: 0.9rem;">0 tokens</div>
+              <div class="cost" id="openai-cost">$0.00</div>
+            </div>
+          </div>
+
+          <div class="provider-cost">
+            <div class="provider-name">
+              <span>🧠 Anthropic</span>
+              <span class="byok-indicator" id="anthropic-byok">System</span>
+            </div>
+            <div>
+              <div id="anthropic-tokens" style="opacity: 0.8; font-size: 0.9rem;">0 tokens</div>
+              <div class="cost" id="anthropic-cost">$0.00</div>
+            </div>
+          </div>
+
+          <div class="provider-cost">
+            <div class="provider-name">
+              <span>🚀 DeepSeek</span>
+              <span class="byok-indicator" id="deepseek-byok">System</span>
+            </div>
+            <div>
+              <div id="deepseek-tokens" style="opacity: 0.8; font-size: 0.9rem;">0 tokens</div>
+              <div class="cost" id="deepseek-cost">$0.00</div>
+            </div>
+          </div>
+
+          <div class="provider-cost" style="background: rgba(46,204,113,0.2);">
+            <div class="provider-name">
+              <span>🏠 Ollama (Local)</span>
+              <span class="byok-indicator active">FREE</span>
+            </div>
+            <div>
+              <div id="ollama-tokens" style="opacity: 0.8; font-size: 0.9rem;">0 tokens</div>
+              <div class="cost free">FREE</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-row" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.2);">
+          <span class="stat-label" style="font-size: 1.1rem; font-weight: 600;">Total Cost</span>
+          <span class="stat-value" style="font-size: 1.3rem; color: #2ecc71;" id="totalCost">$0.00</span>
+        </div>
+      </div>
+
+      <!-- API Keys Status -->
+      <div class="card">
+        <h2>🔐 API Keys</h2>
+        <div id="keysStatus">
+          <div class="stat-row">
+            <span class="stat-label">OpenAI</span>
+            <span class="stat-value" id="openai-key-status">System Key</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Anthropic</span>
+            <span class="stat-value" id="anthropic-key-status">System Key</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">DeepSeek</span>
+            <span class="stat-value" id="deepseek-key-status">System Key</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button class="primary" onclick="window.location.href='byok-settings.html'">
+            🔑 Manage API Keys
+          </button>
+          <button onclick="refreshData()">🔄 Refresh</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(52,152,219,0.2); border-radius: 8px; font-size: 0.9rem;">
+          <strong>💡 Pro Tip:</strong> Use BYOK to pay providers directly and avoid CalOS markups!
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing History -->
+    <div class="card">
+      <h2>📅 Billing History</h2>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>API Calls</th>
+            <th>Tokens</th>
+            <th>Cost</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable">
+          <tr>
+            <td colspan="5" style="text-align: center; opacity: 0.6;">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="nav-links">
+      <a href="index.html">← Back to Home</a>
+      <a href="byok-settings.html">🔐 BYOK Settings</a>
+      <a href="admin-panel.html">👑 Admin Panel</a>
+    </div>
+  </div>
+
+  <script src="/lib/github-pages-bridge.js"></script>
+
+  <script>
+    const bridge = new GitHubPagesBridge();
+
+    // Load all data on page load
+    window.addEventListener('load', () => {
+      loadTierInfo();
+      loadUsageInfo();
+      loadKeysInfo();
+      loadHistory();
+    });
+
+    // Load tier information
+    async function loadTierInfo() {
+      try {
+        const response = await bridge.callAPI('/api/billing/tier', {}, { method: 'GET' });
+
+        if (response.success) {
+          const { tier, tierData, usage } = response;
+
+          // Update tier badge
+          const badge = document.getElementById('tierBadge');
+          badge.textContent = tierData.name;
+          badge.className = `tier-badge ${tier}`;
+
+          // Update price
+          document.getElementById('tierPrice').textContent =
+            tierData.price ? `$${(tierData.price / 100).toFixed(2)}/mo` : 'Custom';
+
+          // Update progress bar
+          const progress = document.getElementById('usageProgress');
+          const percentage = usage.percentage;
+          progress.style.width = `${Math.min(percentage, 100)}%`;
+          progress.textContent = `${percentage}%`;
+
+          if (percentage > 80) {
+            progress.classList.add('danger');
+          } else if (percentage > 60) {
+            progress.classList.add('warning');
+          }
+
+          // Update stats
+          document.getElementById('tokensUsed').textContent = usage.tokens.toLocaleString();
+          document.getElementById('tokensLimit').textContent =
+            usage.limit === Infinity ? '∞' : usage.limit.toLocaleString();
+          document.getElementById('domainsAllowed').textContent =
+            tierData.domainsAllowed === Infinity ? '∞' : tierData.domainsAllowed;
+          document.getElementById('supportLevel').textContent = tierData.support;
+
+          // Show upgrade CTA if trial
+          if (tier === 'trial' && percentage > 50) {
+            document.getElementById('upgradeCTA').style.display = 'block';
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load tier info:', error);
+      }
+    }
+
+    // Load usage information
+    async function loadUsageInfo() {
+      try {
+        const response = await bridge.callAPI('/api/billing/usage', {}, { method: 'GET' });
+
+        if (response.success) {
+          const { usage, keySource } = response;
+
+          // Update provider breakdowns
+          ['openai', 'anthropic', 'deepseek'].forEach(provider => {
+            const data = usage[provider] || { calls: 0, tokens: 0, costCents: 0 };
+
+            // Update tokens
+            const tokensEl = document.getElementById(`${provider}-tokens`);
+            if (tokensEl) {
+              tokensEl.textContent = `${data.tokens.toLocaleString()} tokens`;
+            }
+
+            // Update cost
+            const costEl = document.getElementById(`${provider}-cost`);
+            if (costEl) {
+              const cost = data.costCents / 100;
+              costEl.textContent = keySource[provider] === 'byok' ? 'BYOK' : `$${cost.toFixed(2)}`;
+              costEl.className = keySource[provider] === 'byok' ? 'cost free' : 'cost';
+            }
+
+            // Update BYOK indicator
+            const byokEl = document.getElementById(`${provider}-byok`);
+            if (byokEl) {
+              byokEl.textContent = keySource[provider] === 'byok' ? 'BYOK' : 'System';
+              byokEl.className = keySource[provider] === 'byok' ? 'byok-indicator active' : 'byok-indicator';
+            }
+          });
+
+          // Update total cost
+          const totalCost = usage.total?.costCents || 0;
+          document.getElementById('totalCost').textContent = `$${(totalCost / 100).toFixed(2)}`;
+        }
+      } catch (error) {
+        console.error('Failed to load usage info:', error);
+      }
+    }
+
+    // Load API keys status
+    async function loadKeysInfo() {
+      try {
+        const response = await bridge.callAPI('/api/billing/keys', {}, { method: 'GET' });
+
+        if (response.success) {
+          const { keys } = response;
+
+          ['openai', 'anthropic', 'deepseek'].forEach(provider => {
+            const status = keys[provider];
+            const statusEl = document.getElementById(`${provider}-key-status`);
+            if (statusEl) {
+              if (status.source === 'byok') {
+                const date = new Date(status.addedAt).toLocaleDateString();
+                statusEl.textContent = `🔐 BYOK (added ${date})`;
+                statusEl.style.color = '#2ecc71';
+              } else {
+                statusEl.textContent = '🔑 System Key';
+                statusEl.style.color = '#fff';
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load keys info:', error);
+      }
+    }
+
+    // Load billing history
+    async function loadHistory() {
+      try {
+        const response = await bridge.callAPI('/api/billing/history', {}, { method: 'GET' });
+
+        if (response.success) {
+          const { history } = response;
+          const tbody = document.getElementById('historyTable');
+
+          if (history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; opacity: 0.6;">No billing history yet</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = history.map(month => `
+            <tr>
+              <td>${month.month}</td>
+              <td>${month.usage.calls.toLocaleString()}</td>
+              <td>${month.usage.tokens.toLocaleString()}</td>
+              <td>$${(month.usage.costCents / 100).toFixed(2)}</td>
+              <td>${month.charged ? '💳 Charged' : '✅ Free'}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    }
+
+    // Refresh all data
+    function refreshData() {
+      loadTierInfo();
+      loadUsageInfo();
+      loadKeysInfo();
+      loadHistory();
+    }
+  </script>
+</body>
+</html>

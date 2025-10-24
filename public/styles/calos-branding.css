@@ -1,0 +1,375 @@
+/**
+ * CALOS Branding Styles
+ *
+ * Brand colors, logo, header, footer styles.
+ *
+ * Brand Colors:
+ * - Primary: #667eea (blue-purple)
+ * - Secondary: #764ba2 (deep purple)
+ * - Gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+ *
+ * Branding Levels:
+ * - Full: Logo in header + full footer
+ * - Minimal: Small footer text only
+ */
+
+/* ============================================================================
+   BRAND COLORS (CSS Variables)
+   ============================================================================ */
+
+:root {
+  --calos-primary: #667eea;
+  --calos-secondary: #764ba2;
+  --calos-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --calos-text-light: #ffffff;
+  --calos-text-dark: #333333;
+  --calos-border: #e0e0e0;
+  --calos-bg-light: #fafafa;
+}
+
+/* ============================================================================
+   HEADER BRANDING (Full)
+   ============================================================================ */
+
+.calos-branding-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--calos-gradient);
+  border-bottom: 3px solid var(--calos-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.calos-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--calos-text-light);
+  transition: transform 0.2s ease;
+}
+
+.calos-logo-link:hover {
+  transform: scale(1.05);
+}
+
+.calos-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.calos-logo-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .calos-branding-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .calos-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .calos-logo-text {
+    font-size: 1.25rem;
+  }
+}
+
+/* ============================================================================
+   FOOTER BRANDING (Full)
+   ============================================================================ */
+
+.calos-branding-footer[data-branding-level="full"] {
+  background: var(--calos-bg-light);
+  border-top: 3px solid var(--calos-primary);
+  padding: 2rem;
+  margin-top: 4rem;
+}
+
+.calos-footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+.calos-footer-logo {
+  display: flex;
+  align-items: center;
+}
+
+.calos-logo-small {
+  width: 60px;
+  height: 60px;
+}
+
+.calos-footer-text {
+  text-align: left;
+}
+
+.calos-footer-text p {
+  margin: 0.25rem 0;
+  color: var(--calos-text-dark);
+}
+
+.calos-footer-text strong {
+  font-size: 1.1rem;
+  color: var(--calos-primary);
+}
+
+.calos-footer-tagline {
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+.calos-footer-links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.calos-footer-links a {
+  color: var(--calos-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.calos-footer-links a:hover {
+  color: var(--calos-secondary);
+  text-decoration: underline;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .calos-footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .calos-footer-logo {
+    justify-content: center;
+  }
+
+  .calos-footer-text {
+    text-align: center;
+  }
+
+  .calos-footer-links {
+    justify-content: center;
+    gap: 1rem;
+  }
+}
+
+/* ============================================================================
+   FOOTER BRANDING (Minimal)
+   ============================================================================ */
+
+.calos-branding-footer.calos-branding-minimal {
+  background: var(--calos-bg-light);
+  border-top: 1px solid var(--calos-border);
+  padding: 1rem 2rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.calos-footer-minimal-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.calos-link {
+  color: var(--calos-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.calos-link:hover {
+  color: var(--calos-secondary);
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes calos-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calos-branding-header,
+.calos-branding-footer {
+  animation: calos-fade-in 0.3s ease-out;
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .calos-branding-header,
+  .calos-branding-footer {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   DARK MODE SUPPORT
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --calos-bg-light: #1a1a1a;
+    --calos-text-dark: #e0e0e0;
+    --calos-border: #333;
+  }
+
+  .calos-branding-footer[data-branding-level="full"] {
+    background: #1a1a1a;
+    border-top-color: var(--calos-primary);
+  }
+
+  .calos-footer-text p {
+    color: #e0e0e0;
+  }
+
+  .calos-footer-tagline {
+    color: #999;
+  }
+
+  .calos-branding-footer.calos-branding-minimal {
+    background: #1a1a1a;
+    border-top-color: #333;
+  }
+
+  .calos-footer-minimal-text {
+    color: #999;
+  }
+}
+
+/* ============================================================================
+   HIGH CONTRAST MODE
+   ============================================================================ */
+
+@media (prefers-contrast: more) {
+  .calos-branding-header {
+    border-bottom-width: 4px;
+  }
+
+  .calos-branding-footer[data-branding-level="full"] {
+    border-top-width: 4px;
+  }
+
+  .calos-link,
+  .calos-footer-links a {
+    text-decoration: underline;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .calos-branding-header,
+  .calos-branding-footer {
+    animation: none;
+  }
+
+  .calos-logo-link {
+    transition: none;
+  }
+
+  .calos-footer-links a,
+  .calos-link {
+    transition: none;
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Hide branding on specific pages (if needed) */
+.calos-hide-branding .calos-branding-header,
+.calos-hide-branding .calos-branding-footer {
+  display: none;
+}
+
+/* Compact branding for embeds */
+.calos-branding-compact .calos-branding-header {
+  padding: 0.5rem 1rem;
+}
+
+.calos-branding-compact .calos-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.calos-branding-compact .calos-logo-text {
+  font-size: 1rem;
+}
+
+/* ============================================================================
+   GRADIENT BACKGROUNDS (For Custom Uses)
+   ============================================================================ */
+
+.calos-gradient-bg {
+  background: var(--calos-gradient);
+}
+
+.calos-gradient-text {
+  background: var(--calos-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+/* Focus styles for keyboard navigation */
+.calos-logo-link:focus,
+.calos-footer-links a:focus,
+.calos-link:focus {
+  outline: 2px solid var(--calos-primary);
+  outline-offset: 2px;
+}
+
+/* Skip link for screen readers */
+.calos-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--calos-primary);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.calos-skip-link:focus {
+  top: 0;
+}

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOULFRA Command Center</title>
+
+  <!-- Unified Dark Theme -->
+  <link rel="stylesheet" href="/themes/soulfra-dark.css">
+
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .command-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Status Bar - Emoji indicators */
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      transition: all var(--transition-fast);
+    }
+
+    .status-emoji {
+      font-size: 18px;
+      display: inline-block;
+    }
+
+    .status-emoji.pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.7; }
+    }
+
+    .status-emoji.shake {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Input Container */
+    .input-container {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: border-color var(--transition-normal);
+    }
+
+    .input-container:focus-within {
+      border-color: var(--accent-blue);
+    }
+
+    .command-input {
+      width: 100%;
+      min-height: 100px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 15px;
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: var(--font-mono);
+      resize: vertical;
+      transition: all var(--transition-fast);
+    }
+
+    .command-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      background: var(--bg-primary);
+    }
+
+    .command-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .input-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      align-items: center;
+    }
+
+    .btn-execute {
+      flex: 1;
+      padding: 15px;
+      background: var(--accent-blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .btn-execute:hover {
+      background: #0052a3;
+      transform: translateY(-1px);
+    }
+
+    .btn-execute:disabled {
+      background: var(--text-tertiary);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-voice {
+      padding: 15px 20px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 20px;
+      transition: all var(--transition-normal);
+    }
+
+    .btn-voice:hover {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn-voice.recording {
+      background: var(--accent-red);
+      color: #fff;
+      animation: pulse 1s infinite;
+    }
+
+    .btn-clear {
+      padding: 15px 20px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all var(--transition-normal);
+    }
+
+    .btn-clear:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    /* Examples */
+    .examples {
+      margin-bottom: 15px;
+    }
+
+    .examples-title {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .example-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .example-chip {
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .example-chip:hover {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    /* Output Area */
+    .output-container {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      overflow-y: auto;
+      min-height: 300px;
+    }
+
+    .output-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .output-empty-icon {
+      font-size: 64px;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    .output-message {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: var(--bg-tertiary);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .output-message.user {
+      background: var(--bg-primary);
+      border-left-color: var(--accent-green);
+    }
+
+    .output-message.system {
+      background: var(--bg-tertiary);
+      border-left-color: var(--accent-blue);
+    }
+
+    .output-message.error {
+      background: rgba(255, 68, 68, 0.1);
+      border-left-color: var(--accent-red);
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .output-type {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .output-content {
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .output-artifact {
+      margin-top: 15px;
+      padding: 15px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .output-artifact img,
+    .output-artifact video {
+      max-width: 100%;
+      border-radius: var(--radius-sm);
+    }
+
+    .output-actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .output-action-btn {
+      padding: 8px 15px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .output-action-btn:hover {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    /* Loading Indicator */
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .loading-dots::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+  </style>
+</head>
+<body>
+  <div class="command-center">
+    <!-- Header -->
+    <div class="header">
+      <div class="title">🎯 Command Center</div>
+      <div class="subtitle">
+        One interface. Plain text. All tools.
+        <select id="brandSelector" style="margin-left: 20px; padding: 5px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px;">
+          <option value="calriven">@calriven (Direct, No BS)</option>
+          <option value="soulfra">@soulfra (Security-focused)</option>
+          <option value="deathtodata">@deathtodata (Rebellious)</option>
+          <option value="roughsparks">@roughsparks (Creative)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Status Bar with Emojis -->
+    <div class="status-bar">
+      <div class="status-item" id="status-ragebait">
+        <span class="status-emoji">🟢</span>
+        <span>Ragebait</span>
+      </div>
+      <div class="status-item" id="status-podcast">
+        <span class="status-emoji">🟢</span>
+        <span>Podcast</span>
+      </div>
+      <div class="status-item" id="status-fileexplorer">
+        <span class="status-emoji">🟢</span>
+        <span>File Explorer</span>
+      </div>
+      <div class="status-item" id="status-vanity">
+        <span class="status-emoji">🟢</span>
+        <span>Vanity Handles</span>
+      </div>
+      <div class="status-item" id="status-ollama">
+        <span class="status-emoji">🟢</span>
+        <span>Ollama</span>
+      </div>
+      <div class="status-item" id="status-voice">
+        <span class="status-emoji">🟡</span>
+        <span>Voice</span>
+      </div>
+      <div style="margin-left: auto;">
+        <a href="/preview-dashboard.html" style="color: var(--accent-blue); text-decoration: none; display: flex; align-items: center; gap: 5px;">
+          <span>📸</span>
+          <span>Preview Assets</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Input Container -->
+    <div class="input-container">
+      <div class="examples">
+        <div class="examples-title">Try these commands:</div>
+        <div class="example-chips">
+          <span class="example-chip" onclick="fillExample('make ragebait about kubernetes')">make ragebait about kubernetes</span>
+          <span class="example-chip" onclick="fillExample('check status of all repos')">check status of all repos</span>
+          <span class="example-chip" onclick="fillExample('create podcast from today')">create podcast from today</span>
+          <span class="example-chip" onclick="fillExample('claim @matthewmauer')">claim @matthewmauer</span>
+          <span class="example-chip" onclick="fillExample('show available premium handles')">show premium handles</span>
+        </div>
+      </div>
+
+      <textarea
+        id="commandInput"
+        class="command-input"
+        placeholder="What do you want to do?
+
+Examples:
+• make ragebait about [topic]
+• create podcast from today's session
+• check all repos for uncommitted changes
+• claim @username
+• create animation for button hover
+• scan desktop for git repos
+• generate logo for calriven.com
+• publish podcast to roughsparks.com
+• check ollama status
+• help"
+        autofocus
+      ></textarea>
+
+      <div class="input-controls">
+        <button class="btn-execute" id="executeBtn" onclick="executeCommand()">
+          Execute
+        </button>
+        <button class="btn-voice" id="voiceBtn" onclick="toggleVoice()" title="Voice Command">
+          🎤
+        </button>
+        <button class="btn-clear" onclick="clearCommand()">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Output Area -->
+    <div class="output-container" id="output">
+      <div class="output-empty">
+        <div class="output-empty-icon">⚡</div>
+        <div>Type a command above and hit Execute</div>
+        <div style="font-size: 12px; margin-top: 10px; opacity: 0.7;">
+          All your tools in one place. Plain text interface.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let isRecording = false;
+    let commandHistory = [];
+
+    // Fill example command
+    function fillExample(text) {
+      document.getElementById('commandInput').value = text;
+      document.getElementById('commandInput').focus();
+    }
+
+    // Execute command
+    async function executeCommand() {
+      const command = document.getElementById('commandInput').value.trim();
+      const brand = document.getElementById('brandSelector').value;
+
+      if (!command) {
+        alert('Please enter a command');
+        return;
+      }
+
+      // Add to history
+      commandHistory.push(command);
+
+      // Show user message
+      addOutput('user', command);
+
+      // Show loading
+      showLoading();
+
+      // Disable button
+      const btn = document.getElementById('executeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      try {
+        // Send to backend
+        const response = await fetch('/api/command', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ command, context: { brand } })
+        });
+
+        const result = await response.json();
+
+        // Remove loading
+        removeLoading();
+
+        // Show result
+        if (result.success) {
+          addOutput('system', result.message, result.data);
+          updateStatus(result.tool, 'success');
+        } else {
+          addOutput('error', result.error);
+          updateStatus(result.tool, 'error');
+        }
+
+      } catch (error) {
+        removeLoading();
+        addOutput('error', `Error: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Execute';
+      }
+    }
+
+    // Add output message
+    function addOutput(type, message, data = null) {
+      const output = document.getElementById('output');
+
+      // Remove empty state
+      const empty = output.querySelector('.output-empty');
+      if (empty) {
+        empty.remove();
+      }
+
+      // Create message element
+      const messageEl = document.createElement('div');
+      messageEl.className = `output-message ${type}`;
+
+      const header = document.createElement('div');
+      header.className = 'output-header';
+      header.innerHTML = `
+        <span class="output-type">${type}</span>
+        <span>${new Date().toLocaleTimeString()}</span>
+      `;
+
+      const content = document.createElement('div');
+      content.className = 'output-content';
+      content.textContent = message;
+
+      messageEl.appendChild(header);
+      messageEl.appendChild(content);
+
+      // Add artifact if exists
+      if (data) {
+        const artifact = createArtifact(data);
+        if (artifact) {
+          messageEl.appendChild(artifact);
+        }
+      }
+
+      output.appendChild(messageEl);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    // Create artifact display
+    function createArtifact(data) {
+      const artifact = document.createElement('div');
+      artifact.className = 'output-artifact';
+
+      // Handle different artifact types
+      if (data.type === 'image' || data.type === 'gif') {
+        const img = document.createElement('img');
+        img.src = data.url;
+        img.alt = data.title || 'Generated image';
+        artifact.appendChild(img);
+      } else if (data.type === 'video') {
+        const video = document.createElement('video');
+        video.src = data.url;
+        video.controls = true;
+        artifact.appendChild(video);
+      } else if (data.type === 'audio') {
+        const audio = document.createElement('audio');
+        audio.src = data.url;
+        audio.controls = true;
+        artifact.appendChild(audio);
+      } else if (data.type === 'code') {
+        const pre = document.createElement('pre');
+        pre.textContent = data.code;
+        pre.style.background = 'var(--bg-primary)';
+        pre.style.padding = '15px';
+        pre.style.borderRadius = 'var(--radius-sm)';
+        artifact.appendChild(pre);
+      } else if (data.type === 'table') {
+        const table = createTable(data.rows, data.headers);
+        artifact.appendChild(table);
+      }
+
+      // Add actions
+      if (data.actions) {
+        const actions = document.createElement('div');
+        actions.className = 'output-actions';
+
+        data.actions.forEach(action => {
+          const btn = document.createElement('button');
+          btn.className = 'output-action-btn';
+          btn.textContent = action.label;
+          btn.onclick = () => handleAction(action);
+          actions.appendChild(btn);
+        });
+
+        artifact.appendChild(actions);
+      }
+
+      return artifact;
+    }
+
+    // Create table
+    function createTable(rows, headers) {
+      const table = document.createElement('table');
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+
+      if (headers) {
+        const thead = document.createElement('thead');
+        const tr = document.createElement('tr');
+        headers.forEach(h => {
+          const th = document.createElement('th');
+          th.textContent = h;
+          th.style.padding = '8px';
+          th.style.borderBottom = '1px solid var(--border)';
+          th.style.textAlign = 'left';
+          tr.appendChild(th);
+        });
+        thead.appendChild(tr);
+        table.appendChild(thead);
+      }
+
+      const tbody = document.createElement('tbody');
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          td.style.padding = '8px';
+          td.style.borderBottom = '1px solid var(--border)';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+
+      return table;
+    }
+
+    // Show loading
+    function showLoading() {
+      const output = document.getElementById('output');
+      const loading = document.createElement('div');
+      loading.id = 'loading-indicator';
+      loading.className = 'output-message system';
+      loading.innerHTML = `
+        <div class="output-header">
+          <span class="output-type">System</span>
+        </div>
+        <div class="output-content">
+          <div class="loading">
+            <span class="status-emoji pulse">🤔</span>
+            <span class="loading-dots">Processing</span>
+          </div>
+        </div>
+      `;
+      output.appendChild(loading);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    // Remove loading
+    function removeLoading() {
+      const loading = document.getElementById('loading-indicator');
+      if (loading) {
+        loading.remove();
+      }
+    }
+
+    // Update status indicator
+    function updateStatus(tool, status) {
+      if (!tool) return;
+
+      const statusItem = document.getElementById(`status-${tool.toLowerCase()}`);
+      if (!statusItem) return;
+
+      const emoji = statusItem.querySelector('.status-emoji');
+
+      // Remove all classes
+      emoji.classList.remove('pulse', 'shake');
+
+      switch (status) {
+        case 'working':
+          emoji.textContent = '🟡';
+          emoji.classList.add('pulse');
+          break;
+        case 'success':
+          emoji.textContent = '🟢';
+          break;
+        case 'error':
+          emoji.textContent = '🔴';
+          emoji.classList.add('shake');
+          break;
+        case 'disabled':
+          emoji.textContent = '⚫';
+          break;
+      }
+    }
+
+    // Handle action click
+    function handleAction(action) {
+      console.log('Action:', action);
+      // TODO: Implement action handlers
+      if (action.command) {
+        document.getElementById('commandInput').value = action.command;
+      }
+    }
+
+    // Clear command
+    function clearCommand() {
+      document.getElementById('commandInput').value = '';
+      document.getElementById('commandInput').focus();
+    }
+
+    // Toggle voice recording
+    function toggleVoice() {
+      const btn = document.getElementById('voiceBtn');
+
+      if (!isRecording) {
+        // Start recording
+        isRecording = true;
+        btn.classList.add('recording');
+        btn.textContent = '⏹️';
+        addOutput('system', 'Voice recording started. Speak your command...');
+        // TODO: Implement actual voice recording using existing voice-transcriber
+      } else {
+        // Stop recording
+        isRecording = false;
+        btn.classList.remove('recording');
+        btn.textContent = '🎤';
+        addOutput('system', 'Voice recording stopped. Processing...');
+        // TODO: Send to voice transcriber
+      }
+    }
+
+    // Keyboard shortcuts
+    document.getElementById('commandInput').addEventListener('keydown', (e) => {
+      // Cmd/Ctrl + Enter to execute
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        executeCommand();
+      }
+    });
+
+    // Check system status on load
+    window.addEventListener('load', async () => {
+      try {
+        const response = await fetch('/api/command/status');
+        const status = await response.json();
+
+        // Update all status indicators
+        Object.keys(status).forEach(tool => {
+          updateStatus(tool, status[tool].status);
+        });
+      } catch (error) {
+        console.error('Failed to check system status:', error);
+      }
+    });
+  </script>
+</body>
+</html>

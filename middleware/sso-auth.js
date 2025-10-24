@@ -3,28 +3,44 @@
  *
  * Cross-domain single sign-on for CalOS network
  * Users log in once and access all 12 domains without captchas
+ *
+ * Features user context transformer integration:
+ * - Loads user preferences on authentication
+ * - Attaches accessibility settings to req.user
+ * - Enables AI context enrichment
  */
 
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const UserContextTransformer = require('../lib/user-context-transformer');
 
 // JWT Secret (should be in environment variable in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'calos-sso-secret-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'calos-refresh-secret-change-in-production';
 
-// Token expiration times
-const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
+// Token expiration times (configurable via environment variables)
+const ACCESS_TOKEN_HOURS = parseInt(process.env.SESSION_TOKEN_HOURS) || 4;
+const ACCESS_TOKEN_EXPIRY = `${ACCESS_TOKEN_HOURS}h`; // Default 4 hours (was 15 minutes)
 const REFRESH_TOKEN_EXPIRY = '30d'; // 30 days
 const TRUSTED_SESSION_EXPIRY = '90d'; // 90 days for trusted devices
 
 // Database connection (injected via initMiddleware)
 let db = null;
 
+// User context transformer (lazy initialized)
+let contextTransformer = null;
+
 /**
  * Initialize middleware with database connection
  */
 function initMiddleware(database) {
   db = database;
+
+  // Initialize context transformer
+  if (db && !contextTransformer) {
+    contextTransformer = new UserContextTransformer({ db });
+    console.log('[SSO Auth] User context transformer initialized');
+  }
 }
 
 /**
@@ -195,6 +211,18 @@ async function requireAuth(req, res, next) {
       email: session.email,
       isTrusted: session.is_trusted
     };
+
+    // Load user context if transformer available
+    // This attaches accessibility preferences, theme, language, etc.
+    if (contextTransformer) {
+      try {
+        const userContext = await contextTransformer.loadUserContext(session.user_id);
+        req.user.context = userContext;
+      } catch (error) {
+        console.error('[SSO Auth] Error loading user context:', error);
+        // Continue without context - don't block authentication
+      }
+    }
 
     // Update session last_active_at
     await db.query(`

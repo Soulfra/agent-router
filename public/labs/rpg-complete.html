@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete RPG System - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1400px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    .player-card { background: linear-gradient(135deg, #667eea, #764ba2); padding: 20px; border-radius: 10px; }
+    .level-badge { background: #ffd700; color: #0f0f23; padding: 5px 15px; border-radius: 15px; font-weight: bold; display: inline-block; margin: 10px 0; }
+    .xp-bar { width: 100%; height: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; margin-top: 10px; }
+    .xp-fill { height: 100%; background: #4caf50; transition: width 0.5s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+    .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+    .quest-list { max-height: 400px; overflow-y: auto; }
+    .quest-item { background: #0a0a15; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+    .quest-title { font-weight: bold; color: #667eea; margin-bottom: 5px; }
+    .quest-reward { color: #ffd700; font-size: 12px; }
+    .quest-progress { background: #1a1a2e; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .quest-progress-fill { height: 100%; background: #4caf50; transition: width 0.5s; }
+    .activity-feed { background: #0a0a15; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; }
+    .activity-item { padding: 10px 0; border-bottom: 1px solid #2a2a3e; font-size: 13px; }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon { display: inline-block; width: 20px; text-align: center; margin-right: 8px; }
+    .stats-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+    .stat-mini { text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; }
+    .stat-mini-value { font-size: 24px; font-weight: bold; color: #4caf50; }
+    .stat-mini-label { font-size: 10px; color: #888; }
+    .card-mini { background: #0a0a15; padding: 10px; border-radius: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid; }
+    .card-mini.legendary { border-left-color: #ffd700; }
+    .card-mini.epic { border-left-color: #9c27b0; }
+    .card-mini.rare { border-left-color: #2196f3; }
+  </style>
+</head>
+<body>
+  <h1>Complete RPG Game Loop</h1>
+  <p class="subtitle">Full game system: Cards + XP + Quests + Achievements</p>
+
+  <div class="dashboard">
+    <!-- Left: Player Info -->
+    <div>
+      <div class="section" style="padding: 0;">
+        <div class="player-card">
+          <h2 style="color: white; margin-bottom: 10px;">Player Profile</h2>
+          <div style="font-size: 24px; font-weight: bold;" id="player-name">Hero_2024</div>
+          <div class="level-badge">Level <span id="player-level">5</span></div>
+
+          <div class="xp-bar">
+            <div class="xp-fill" id="xp-fill" style="width: 40%">
+              <span id="xp-text">40/100 XP</span>
+            </div>
+          </div>
+
+          <div class="stats-mini">
+            <div class="stat-mini">
+              <div class="stat-mini-value" id="total-xp">540</div>
+              <div class="stat-mini-label">Total XP</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-value" id="cards-owned">12</div>
+              <div class="stat-mini-label">Cards</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-value" id="quests-done">8</div>
+              <div class="stat-mini-label">Quests</div>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <button onclick="openPack()" style="font-size: 12px;">Open Pack</button>
+            <button onclick="earnXP()" style="font-size: 12px;">Earn XP</button>
+            <button onclick="completeQuest()" style="font-size: 12px;">Do Quest</button>
+            <button onclick="viewCards()" style="font-size: 12px;">View Cards</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Recent Cards</h2>
+        <div id="recent-cards">
+          <div class="card-mini legendary">
+            <span>ChatGPT</span>
+            <span style="font-size: 11px; color: #ffd700;">Legendary</span>
+          </div>
+          <div class="card-mini epic">
+            <span>Tech Lead</span>
+            <span style="font-size: 11px; color: #9c27b0;">Epic</span>
+          </div>
+          <div class="card-mini rare">
+            <span>DevOps Wizard</span>
+            <span style="font-size: 11px; color: #2196f3;">Rare</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Quests & Activity -->
+    <div>
+      <div class="section">
+        <h2>Active Quests</h2>
+        <div class="quest-list">
+          <div class="quest-item">
+            <div class="quest-title">Daily Challenge: Code 3 Solutions</div>
+            <div class="quest-reward">Reward: +50 XP, 1 Card Pack</div>
+            <div class="quest-progress">
+              <div class="quest-progress-fill" style="width: 66%;"></div>
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 5px;">Progress: 2/3</div>
+          </div>
+
+          <div class="quest-item">
+            <div class="quest-title">Weekly: Open 10 Packs</div>
+            <div class="quest-reward">Reward: +200 XP, Legendary Pack</div>
+            <div class="quest-progress">
+              <div class="quest-progress-fill" style="width: 50%;"></div>
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 5px;">Progress: 5/10</div>
+          </div>
+
+          <div class="quest-item">
+            <div class="quest-title">Reach Level 10</div>
+            <div class="quest-reward">Reward: +500 XP, Epic Card</div>
+            <div class="quest-progress">
+              <div class="quest-progress-fill" style="width: 50%;"></div>
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 5px;">Progress: 5/10</div>
+          </div>
+
+          <div class="quest-item">
+            <div class="quest-title">Collect 50 Unique Cards</div>
+            <div class="quest-reward">Reward: Master Collector Badge</div>
+            <div class="quest-progress">
+              <div class="quest-progress-fill" style="width: 24%;"></div>
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 5px;">Progress: 12/50</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Activity Feed</h2>
+        <div class="activity-feed" id="activity-feed">
+          <div class="activity-item">
+            <span class="activity-icon">🎉</span>
+            <span>Completed quest: Daily Challenge</span>
+            <span style="float: right; color: #888; font-size: 11px;">2 min ago</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-icon">📦</span>
+            <span>Opened Premium Pack - Got Epic card!</span>
+            <span style="float: right; color: #888; font-size: 11px;">15 min ago</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-icon">⬆️</span>
+            <span>Gained 50 XP from quest completion</span>
+            <span style="float: right; color: #888; font-size: 11px;">1 hour ago</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-icon">🏆</span>
+            <span>Achievement unlocked: Speed Runner</span>
+            <span style="float: right; color: #888; font-size: 11px;">2 hours ago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let player = {
+      name: 'Hero_2024',
+      level: 5,
+      xp: 40,
+      totalXP: 540,
+      cards: 12,
+      quests: 8
+    };
+
+    function addActivity(icon, text) {
+      const feed = document.getElementById('activity-feed');
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = `
+        <span class="activity-icon">${icon}</span>
+        <span>${text}</span>
+        <span style="float: right; color: #888; font-size: 11px;">Just now</span>
+      `;
+      feed.insertBefore(item, feed.firstChild);
+    }
+
+    function updatePlayerUI() {
+      document.getElementById('player-level').textContent = player.level;
+      document.getElementById('total-xp').textContent = player.totalXP;
+      document.getElementById('cards-owned').textContent = player.cards;
+      document.getElementById('quests-done').textContent = player.quests;
+
+      const xpPercentage = (player.xp / 100) * 100;
+      document.getElementById('xp-fill').style.width = xpPercentage + '%';
+      document.getElementById('xp-text').textContent = `${player.xp}/100 XP`;
+
+      // Check for level up
+      if (player.xp >= 100) {
+        player.xp -= 100;
+        player.level++;
+        addActivity('🎊', `LEVEL UP! You are now level ${player.level}!`);
+        alert(`🎊 LEVEL UP! You reached level ${player.level}!`);
+        updatePlayerUI();
+      }
+
+      savePlayer();
+    }
+
+    function openPack() {
+      const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
+      const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+
+      player.cards += 5;
+      player.xp += 10;
+      player.totalXP += 10;
+
+      addActivity('📦', `Opened pack - Got ${rarity} card!`);
+      updatePlayerUI();
+    }
+
+    function earnXP() {
+      const amount = Math.floor(Math.random() * 30) + 20;
+      player.xp += amount;
+      player.totalXP += amount;
+
+      addActivity('⬆️', `Earned ${amount} XP!`);
+      updatePlayerUI();
+    }
+
+    function completeQuest() {
+      player.quests++;
+      player.xp += 50;
+      player.totalXP += 50;
+      player.cards += 1;
+
+      addActivity('🎉', 'Quest completed! Earned 50 XP and 1 card');
+      updatePlayerUI();
+    }
+
+    function viewCards() {
+      window.location.href = 'card-collection.html';
+    }
+
+    function savePlayer() {
+      localStorage.setItem('rpg-player', JSON.stringify(player));
+    }
+
+    function loadPlayer() {
+      const saved = localStorage.getItem('rpg-player');
+      if (saved) {
+        player = JSON.parse(saved);
+        updatePlayerUI();
+      }
+    }
+
+    window.addEventListener('load', loadPlayer);
+  </script>
+</body>
+</html>

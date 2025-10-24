@@ -492,11 +492,25 @@
       loadQueue();
       loadBadgeStatus();
 
-      // Update session duration every second
-      setInterval(updateSessionDuration, 1000);
+      // Update session duration every second (with idle detection)
+      const durationInterval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          updateSessionDuration();
+        }
+      }, 1000);
 
-      // Send heartbeat every 30 seconds
-      setInterval(sendHeartbeat, 30000);
+      // Send heartbeat every 30 seconds (with idle detection)
+      const heartbeatInterval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          sendHeartbeat();
+        }
+      }, 30000);
+
+      // Cleanup on page unload (prevent memory leaks)
+      window.addEventListener('beforeunload', () => {
+        clearInterval(durationInterval);
+        clearInterval(heartbeatInterval);
+      });
     })();
 
     /**

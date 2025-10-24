@@ -145,6 +145,7 @@
         <div class="widgets-container">
           <h2>🌍 Widgets</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin-top: 20px;">
+            <div id="news-curator-widget"></div>
             <div id="world-clock-widget"></div>
             <div id="system-status-widget"></div>
           </div>
@@ -179,11 +180,15 @@
 
   <!-- Scripts -->
   <script src="/unified-feed.js"></script>
+  <script src="widgets/news-curator.js"></script>
   <script src="widgets/world-clock.js"></script>
   <script src="widgets/system-status.js"></script>
   <script>
     // Initialize widgets
     document.addEventListener('DOMContentLoaded', () => {
+      // News Curator Widget
+      window.newsCurator = new NewsCuratorWidget('news-curator-widget');
+
       // World Clock Widget
       const worldClock = new WorldClock('world-clock-widget');
 

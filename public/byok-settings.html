@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BYOK Settings - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      opacity: 0.9;
+      margin-bottom: 30px;
+    }
+
+    .provider-section {
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+
+    .provider-section h3 {
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #2ecc71;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button.danger {
+      background: #e74c3c;
+    }
+
+    button.secondary {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: 600;
+      display: none;
+    }
+
+    .status.success {
+      background: rgba(46,204,113,0.3);
+      border: 1px solid rgba(46,204,113,0.5);
+      display: block;
+    }
+
+    .status.error {
+      background: rgba(231,76,60,0.3);
+      border: 1px solid rgba(231,76,60,0.5);
+      display: block;
+    }
+
+    .info-box {
+      background: rgba(52,152,219,0.2);
+      border: 1px solid rgba(52,152,219,0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 0.9rem;
+    }
+
+    .info-box h4 {
+      margin-bottom: 10px;
+      color: #3498db;
+    }
+
+    .usage-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .stat-card {
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2ecc71;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>🔐 BYOK Settings</h1>
+      <p class="subtitle">Bring Your Own API Key - Use your own OpenAI/Anthropic keys</p>
+
+      <div id="statusMessage" class="status"></div>
+
+      <div class="info-box">
+        <h4>✨ Why BYOK?</h4>
+        <ul>
+          <li>• Pay provider directly (OpenAI/Anthropic billing)</li>
+          <li>• No CalOS markup on API calls</li>
+          <li>• Encrypted storage in browser (AES-256-GCM)</li>
+          <li>• Never leaves your device unencrypted</li>
+          <li>• Tier limits still enforced (Trial: 1K tokens, Pro: 1M tokens)</li>
+        </ul>
+      </div>
+
+      <!-- OpenAI Section -->
+      <div class="provider-section">
+        <h3>OpenAI API Key</h3>
+        <input
+          id="openaiKey"
+          type="password"
+          placeholder="sk-..."
+          autocomplete="off"
+        >
+        <div>
+          <button onclick="saveKey('openai')">💾 Save OpenAI Key</button>
+          <button class="secondary" onclick="testKey('openai')">🧪 Test Key</button>
+          <button class="danger" onclick="removeKey('openai')">🗑️ Remove</button>
+        </div>
+      </div>
+
+      <!-- Anthropic Section -->
+      <div class="provider-section">
+        <h3>Anthropic API Key</h3>
+        <input
+          id="anthropicKey"
+          type="password"
+          placeholder="sk-ant-..."
+          autocomplete="off"
+        >
+        <div>
+          <button onclick="saveKey('anthropic')">💾 Save Anthropic Key</button>
+          <button class="secondary" onclick="testKey('anthropic')">🧪 Test Key</button>
+          <button class="danger" onclick="removeKey('anthropic')">🗑️ Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📊 Usage Stats</h2>
+      <div class="usage-stats" id="usageStats">
+        <div class="stat-card">
+          <div class="stat-value" id="totalCalls">0</div>
+          <div class="stat-label">Total API Calls</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalTokens">0</div>
+          <div class="stat-label">Total Tokens</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="byokCalls">0</div>
+          <div class="stat-label">BYOK Calls</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="systemCalls">0</div>
+          <div class="stat-label">System Calls</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="index.html" style="color: #fff; text-decoration: underline;">← Back to Home</a>
+    </div>
+  </div>
+
+  <script src="/lib/github-pages-bridge.js"></script>
+
+  <script>
+    const bridge = new GitHubPagesBridge();
+
+    // Load existing keys on page load
+    window.addEventListener('load', () => {
+      loadExistingKeys();
+      updateUsageStats();
+    });
+
+    // Load existing keys
+    function loadExistingKeys() {
+      const byok = localStorage.getItem('calos_byok');
+      if (!byok) return;
+
+      try {
+        const keys = JSON.parse(byok);
+        if (keys.openai) {
+          document.getElementById('openaiKey').value = '••••••••';
+          document.getElementById('openaiKey').dataset.hasKey = 'true';
+        }
+        if (keys.anthropic) {
+          document.getElementById('anthropicKey').value = '••••••••';
+          document.getElementById('anthropicKey').dataset.hasKey = 'true';
+        }
+      } catch (error) {
+        console.error('Failed to load keys:', error);
+      }
+    }
+
+    // Save API key
+    async function saveKey(provider) {
+      const input = document.getElementById(`${provider}Key`);
+      const key = input.value;
+
+      if (!key || key === '••••••••') {
+        showStatus('Please enter a valid API key', 'error');
+        return;
+      }
+
+      try {
+        // Encrypt key using Web Crypto API
+        const encrypted = await encryptKey(key);
+
+        // Save to localStorage (browser)
+        let byok = localStorage.getItem('calos_byok');
+        byok = byok ? JSON.parse(byok) : {};
+        byok[provider] = {
+          encrypted,
+          addedAt: Date.now()
+        };
+        localStorage.setItem('calos_byok', JSON.stringify(byok));
+
+        // Also save to server (double-encrypted in PostgreSQL)
+        try {
+          const response = await bridge.callAPI('/api/byok/browser/save', {
+            provider,
+            encrypted,
+            addedAt: Date.now()
+          });
+
+          if (response.error) {
+            console.warn('[BYOK] Server save failed, using localStorage only:', response.error);
+          } else {
+            console.log('[BYOK] Saved to both localStorage and server');
+          }
+        } catch (serverError) {
+          console.warn('[BYOK] Server unavailable, using localStorage only:', serverError.message);
+        }
+
+        // Mask input
+        input.value = '••••••••';
+        input.dataset.hasKey = 'true';
+
+        showStatus(`✓ ${provider} key saved and encrypted`, 'success');
+
+      } catch (error) {
+        console.error('Failed to save key:', error);
+        showStatus('Failed to save key: ' + error.message, 'error');
+      }
+    }
+
+    // Remove API key
+    function removeKey(provider) {
+      if (!confirm(`Remove ${provider} API key?`)) return;
+
+      try {
+        let byok = localStorage.getItem('calos_byok');
+        if (!byok) return;
+
+        byok = JSON.parse(byok);
+        delete byok[provider];
+
+        localStorage.setItem('calos_byok', JSON.stringify(byok));
+
+        document.getElementById(`${provider}Key`).value = '';
+        delete document.getElementById(`${provider}Key`).dataset.hasKey;
+
+        showStatus(`✓ ${provider} key removed`, 'success');
+
+      } catch (error) {
+        console.error('Failed to remove key:', error);
+        showStatus('Failed to remove key: ' + error.message, 'error');
+      }
+    }
+
+    // Test API key
+    async function testKey(provider) {
+      showStatus('Testing key...', 'success');
+
+      try {
+        // Simple test call
+        const result = await bridge.callAPI('/api/agent', {
+          prompt: 'Say "Hello" in one word',
+          model: provider === 'openai' ? 'gpt-4' : 'claude-3-opus-20240229',
+          max_tokens: 10
+        });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        showStatus(`✓ ${provider} key works! Response: ${result.response}`, 'success');
+
+      } catch (error) {
+        console.error('Test failed:', error);
+        showStatus(`✗ ${provider} key test failed: ${error.message}`, 'error');
+      }
+    }
+
+    // Encrypt key using Web Crypto API
+    async function encryptKey(key) {
+      // Generate encryption key from password (user's device fingerprint)
+      const fingerprint = window.CalOSIdentity?.fingerprint || 'calos-default-key';
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        enc.encode(fingerprint),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+      );
+
+      const cryptoKey = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: enc.encode('calos-byok-salt'),
+          iterations: 100000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+
+      // Encrypt
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        enc.encode(key)
+      );
+
+      return {
+        ciphertext: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+        iv: btoa(String.fromCharCode(...iv))
+      };
+    }
+
+    // Update usage stats
+    function updateUsageStats() {
+      const stats = bridge.getUsageStats();
+
+      document.getElementById('totalCalls').textContent = stats.calls || 0;
+      document.getElementById('totalTokens').textContent = (stats.tokens || 0).toLocaleString();
+      document.getElementById('byokCalls').textContent = stats.byokCalls || 0;
+      document.getElementById('systemCalls').textContent = stats.systemCalls || 0;
+    }
+
+    // Show status message
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+
+      if (type === 'success') {
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>

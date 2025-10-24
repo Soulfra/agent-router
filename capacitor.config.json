@@ -1,0 +1,24 @@
+{
+  "appId": "com.calos.app",
+  "appName": "CalOS",
+  "webDir": "public",
+  "server": {
+    "url": "http://localhost:5001",
+    "cleartext": true,
+    "androidScheme": "http",
+    "iosScheme": "http"
+  },
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "limitsNavigationsToAppBoundDomains": false,
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0a0a0a",
+      "showSpinner": false
+    }
+  }
+}

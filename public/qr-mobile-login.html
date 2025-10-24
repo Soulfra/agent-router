@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+  <title>CALOS - Mobile QR Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 100%;
+      padding: 48px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #718096;
+      margin-bottom: 32px;
+    }
+
+    #qr-container {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+    }
+
+    #qrcode {
+      display: inline-block;
+    }
+
+    .loading {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .instructions {
+      background: #edf2f7;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .instructions h3 {
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 12px;
+    }
+
+    .instructions ol {
+      padding-left: 20px;
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .info {
+      background: #e6fffa;
+      border: 1px solid #81e6d9;
+      border-radius: 8px;
+      padding: 12px;
+      color: #234e52;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    .error {
+      background: #fed7d7;
+      border: 1px solid #fc8181;
+      border-radius: 8px;
+      padding: 12px;
+      color: #742a2a;
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .footer {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 13px;
+      color: #718096;
+    }
+
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">📱</div>
+    <h1>Mobile QR Login</h1>
+    <p class="subtitle">Scan to pair your device</p>
+
+    <div id="qr-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Generating QR code...</p>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <h3>How to scan:</h3>
+      <ol>
+        <li>Open your phone's camera app</li>
+        <li>Point it at the QR code above</li>
+        <li>Tap the notification to open the link</li>
+        <li>Log in on your phone to pair devices</li>
+      </ol>
+    </div>
+
+    <div class="info" id="network-info">
+      Detecting network...
+    </div>
+
+    <div class="error" id="error-message">
+      Failed to generate QR code. Please refresh the page.
+    </div>
+
+    <div class="footer">
+      <p>
+        <a href="/hub.html">← Back to Dashboard</a> |
+        <a href="/oauth-upload.html">OAuth Upload</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    async function generateQR() {
+      try {
+        // Get network info from server
+        const networkResponse = await fetch('/api/network-info');
+        const networkData = await networkResponse.json();
+
+        const localIP = networkData.localIP;
+        const port = networkData.port || 5001;
+
+        // Generate QR code pointing to mobile hub
+        const mobileURL = `http://${localIP}:${port}/hub.html?mobile=true`;
+
+        // Clear loading message
+        const container = document.getElementById('qr-container');
+        container.innerHTML = '<div id="qrcode"></div>';
+
+        // Generate QR code
+        new QRCode(document.getElementById('qrcode'), {
+          text: mobileURL,
+          width: 256,
+          height: 256,
+          colorDark: '#1a202c',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Update network info
+        document.getElementById('network-info').innerHTML = `
+          <strong>Mobile URL:</strong> ${mobileURL}<br>
+          <small>Make sure your phone is on the same WiFi network</small>
+        `;
+
+      } catch (error) {
+        console.error('QR generation error:', error);
+        document.getElementById('qr-container').innerHTML = '<p class="loading">Failed to load</p>';
+        document.getElementById('error-message').style.display = 'block';
+      }
+    }
+
+    // Generate QR code when page loads
+    window.addEventListener('DOMContentLoaded', generateQR);
+
+    // Refresh QR code every 5 minutes (session token might expire)
+    setInterval(generateQR, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usage Monitoring | CALOS™</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/styles/usage-meter.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .header p {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+
+    .page-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-btn.active {
+      background: white;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .content-section {
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      margin-bottom: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .section-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .last-updated {
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-icon {
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .refresh-icon:hover {
+      transform: rotate(180deg);
+    }
+
+    /* Billing Preview */
+    .billing-preview {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .billing-preview h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+
+    .billing-amount {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .billing-period {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .billing-breakdown {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.3);
+      font-size: 13px;
+    }
+
+    .billing-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    /* Usage Trends Chart */
+    .trends-chart {
+      margin-top: 24px;
+    }
+
+    .chart-container {
+      height: 300px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-placeholder {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 14px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: 100%;
+    }
+
+    /* Alerts */
+    .alerts-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .alert-card {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid transparent;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .alert-card.warning {
+      border-left-color: #ff9f1c;
+      background: linear-gradient(135deg, #fff9e6, #ffffff);
+    }
+
+    .alert-card.danger {
+      border-left-color: #ff6b35;
+      background: linear-gradient(135deg, #fff0eb, #ffffff);
+    }
+
+    .alert-card.critical {
+      border-left-color: #ff4444;
+      background: linear-gradient(135deg, #ffe6e6, #ffffff);
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .alert-icon {
+      font-size: 20px;
+    }
+
+    .alert-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .alert-message {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .alert-action {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .alert-action:hover {
+      transform: scale(1.05);
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .stat-change {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .stat-change.positive {
+      color: #44cc44;
+    }
+
+    .stat-change.negative {
+      color: #ff4444;
+    }
+
+    /* Period Selector */
+    .period-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .period-btn {
+      padding: 8px 16px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .period-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .period-btn.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    /* Export Button */
+    .export-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #667eea;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .export-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    /* Loading State */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      font-size: 16px;
+      color: #666;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(102, 126, 234, 0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+
+      .content-section {
+        padding: 20px;
+      }
+
+      .billing-amount {
+        font-size: 36px;
+      }
+
+      .quick-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .alerts-section {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <!-- Chart.js for trends visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Usage Monitoring</h1>
+      <p>Track your usage, monitor limits, and optimize costs</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="page-nav">
+      <button class="nav-btn active" onclick="location.href='/usage-monitoring.html'">Usage Dashboard</button>
+      <button class="nav-btn" onclick="location.href='/pricing.html'">Pricing</button>
+      <button class="nav-btn" onclick="location.href='/pricing-calculator.html'">Calculator</button>
+      <button class="nav-btn" onclick="location.href='/dashboard.html'">Main Dashboard</button>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alerts-section" id="alerts-container"></div>
+
+    <!-- Billing Preview -->
+    <div class="content-section">
+      <div class="billing-preview" id="billing-preview">
+        <h3>Current Month Projection</h3>
+        <div class="billing-amount" id="billing-amount">Loading...</div>
+        <div class="billing-period" id="billing-period"></div>
+        <div class="billing-breakdown" id="billing-breakdown"></div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="content-section">
+      <div class="section-header">
+        <h2>Quick Stats</h2>
+        <div class="last-updated">
+          <span id="last-updated-time">Just now</span>
+          <span class="refresh-icon" onclick="refreshData()">🔄</span>
+        </div>
+      </div>
+      <div class="quick-stats" id="quick-stats"></div>
+    </div>
+
+    <!-- Usage Trends -->
+    <div class="content-section">
+      <div class="section-header">
+        <h2>Usage Trends</h2>
+        <button class="export-btn" onclick="exportUsageData()">📊 Export Data</button>
+      </div>
+
+      <!-- Period Selector -->
+      <div class="period-selector">
+        <button class="period-btn" data-period="7">Last 7 Days</button>
+        <button class="period-btn active" data-period="30">Last 30 Days</button>
+        <button class="period-btn" data-period="90">Last 90 Days</button>
+      </div>
+
+      <div class="trends-chart">
+        <div class="chart-container">
+          <canvas id="trends-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Usage (Full Detail) -->
+    <div class="content-section">
+      <div class="section-header">
+        <h2>Current Period Usage</h2>
+        <div class="period-info" id="period-info"></div>
+      </div>
+      <div id="usage-meter-full"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/components/usage-meter.js"></script>
+  <script>
+    // Get user ID from session/auth
+    // TODO: Replace with actual auth system
+    const userId = localStorage.getItem('userId') || 1;
+    const installId = localStorage.getItem('installId') || 'demo-install-123';
+
+    let usageMeter;
+    let trendsChart;
+    let currentPeriod = 30;
+
+    /**
+     * Initialize the page
+     */
+    async function init() {
+      // Initialize usage meter (full mode)
+      usageMeter = new UsageMeter({
+        containerId: 'usage-meter-full',
+        userId: userId,
+        displayMode: 'full',
+        refreshInterval: 30000, // 30 seconds
+        showUpgradePrompts: true
+      });
+
+      await usageMeter.init();
+
+      // Load additional data
+      await loadBillingPreview();
+      await loadQuickStats();
+      await loadTrendsChart();
+      await loadAlerts();
+
+      // Setup period selector
+      setupPeriodSelector();
+
+      // Auto-refresh
+      setInterval(() => {
+        refreshData();
+      }, 60000); // 1 minute
+    }
+
+    /**
+     * Load billing preview
+     */
+    async function loadBillingPreview() {
+      try {
+        const response = await fetch(`/api/pricing/usage/${userId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        // Calculate projected cost
+        const usage = data.usage;
+        const limits = data.limits;
+
+        // Calculate POS fees
+        const posInPersonFees = (usage.posInPerson || 0) * 0.026 + (usage.posInPerson || 0) * 0.10;
+        const posOnlineFees = (usage.posOnline || 0) * 0.029 + (usage.posOnline || 0) * 0.10;
+        const cryptoFees = (usage.crypto || 0) * 0.015;
+
+        // Total
+        const totalCost = posInPersonFees + posOnlineFees + cryptoFees;
+
+        // Display
+        document.getElementById('billing-amount').textContent = `$${totalCost.toFixed(2)}`;
+
+        const now = new Date();
+        const periodEnd = new Date(data.periodEnd);
+        const daysLeft = Math.ceil((periodEnd - now) / (1000 * 60 * 60 * 24));
+
+        document.getElementById('billing-period').textContent =
+          `Projected for current billing period (${daysLeft} days remaining)`;
+
+        // Breakdown
+        const breakdown = `
+          <div class="billing-item">
+            <span>POS In-Person (${usage.posInPerson || 0} transactions)</span>
+            <span>$${posInPersonFees.toFixed(2)}</span>
+          </div>
+          <div class="billing-item">
+            <span>POS Online (${usage.posOnline || 0} transactions)</span>
+            <span>$${posOnlineFees.toFixed(2)}</span>
+          </div>
+          <div class="billing-item">
+            <span>Crypto Charges (${usage.crypto || 0} charges)</span>
+            <span>$${cryptoFees.toFixed(2)}</span>
+          </div>
+        `;
+
+        document.getElementById('billing-breakdown').innerHTML = breakdown;
+      } catch (error) {
+        console.error('[Usage Monitoring] Failed to load billing preview:', error);
+        document.getElementById('billing-amount').textContent = '$0.00';
+        document.getElementById('billing-period').textContent = 'Error loading billing data';
+      }
+    }
+
+    /**
+     * Load quick stats
+     */
+    async function loadQuickStats() {
+      try {
+        const response = await fetch(`/api/pricing/usage/${userId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        const usage = data.usage;
+        const limits = data.limits;
+
+        const stats = [
+          {
+            label: 'API Requests',
+            value: (usage.apiRequests || 0).toLocaleString(),
+            change: '+12%',
+            positive: true
+          },
+          {
+            label: 'Transcripts',
+            value: (usage.transcripts || 0).toLocaleString(),
+            change: '+5%',
+            positive: true
+          },
+          {
+            label: 'POS Transactions',
+            value: ((usage.posInPerson || 0) + (usage.posOnline || 0)).toLocaleString(),
+            change: '+8%',
+            positive: true
+          },
+          {
+            label: 'Locations',
+            value: `${usage.locations || 0} / ${limits.locations === 'Infinity' ? '∞' : limits.locations}`,
+            change: limits.locations !== 'Infinity' && usage.locations >= limits.locations ? 'At limit' : 'Available',
+            positive: !(limits.locations !== 'Infinity' && usage.locations >= limits.locations)
+          }
+        ];
+
+        const html = stats.map(stat => `
+          <div class="stat-card">
+            <div class="stat-label">${stat.label}</div>
+            <div class="stat-value">${stat.value}</div>
+            <div class="stat-change ${stat.positive ? 'positive' : 'negative'}">
+              ${stat.change}
+            </div>
+          </div>
+        `).join('');
+
+        document.getElementById('quick-stats').innerHTML = html;
+      } catch (error) {
+        console.error('[Usage Monitoring] Failed to load quick stats:', error);
+      }
+    }
+
+    /**
+     * Load trends chart
+     */
+    async function loadTrendsChart() {
+      try {
+        // TODO: Create API endpoint for historical usage data
+        // For now, use mock data
+        const labels = [];
+        const apiData = [];
+        const transcriptData = [];
+        const posData = [];
+
+        for (let i = currentPeriod - 1; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+          // Mock data (replace with real data)
+          apiData.push(Math.floor(Math.random() * 500) + 100);
+          transcriptData.push(Math.floor(Math.random() * 10) + 1);
+          posData.push(Math.floor(Math.random() * 50) + 10);
+        }
+
+        const ctx = document.getElementById('trends-chart').getContext('2d');
+
+        if (trendsChart) {
+          trendsChart.destroy();
+        }
+
+        trendsChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'API Requests',
+                data: apiData,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4
+              },
+              {
+                label: 'Transcripts',
+                data: transcriptData,
+                borderColor: '#f093fb',
+                backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                tension: 0.4
+              },
+              {
+                label: 'POS Transactions',
+                data: posData,
+                borderColor: '#4facfe',
+                backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('[Usage Monitoring] Failed to load trends chart:', error);
+      }
+    }
+
+    /**
+     * Load alerts
+     */
+    async function loadAlerts() {
+      try {
+        const response = await fetch(`/api/pricing/usage/${userId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        const alerts = [];
+        const overLimit = data.overLimit;
+        const usage = data.usage;
+        const limits = data.limits;
+
+        // Check for over-limit alerts
+        Object.keys(overLimit).forEach(key => {
+          if (overLimit[key]) {
+            const current = usage[key];
+            const limit = limits[key];
+            alerts.push({
+              type: 'critical',
+              icon: '🔴',
+              title: `${formatUsageType(key)} Limit Exceeded`,
+              message: `You've used ${current.toLocaleString()} out of ${limit.toLocaleString()} allowed. Upgrade to continue.`,
+              action: 'Upgrade Now',
+              actionUrl: '/pricing.html'
+            });
+          } else {
+            // Check for approaching limit (80%+)
+            const current = usage[key] || 0;
+            const limit = limits[key];
+            if (limit !== 'Infinity' && limit > 0) {
+              const pct = (current / limit) * 100;
+              if (pct >= 95) {
+                alerts.push({
+                  type: 'danger',
+                  icon: '🟠',
+                  title: `${formatUsageType(key)} Almost Full`,
+                  message: `You've used ${Math.round(pct)}% of your ${formatUsageType(key)} limit (${current.toLocaleString()} / ${limit.toLocaleString()}).`,
+                  action: 'View Details',
+                  actionUrl: '#usage-meter-full'
+                });
+              } else if (pct >= 80) {
+                alerts.push({
+                  type: 'warning',
+                  icon: '🟡',
+                  title: `${formatUsageType(key)} Warning`,
+                  message: `You've used ${Math.round(pct)}% of your ${formatUsageType(key)} limit. Consider upgrading.`,
+                  action: 'Learn More',
+                  actionUrl: '/pricing.html'
+                });
+              }
+            }
+          }
+        });
+
+        // Display alerts
+        if (alerts.length > 0) {
+          const html = alerts.map(alert => `
+            <div class="alert-card ${alert.type}">
+              <div class="alert-header">
+                <span class="alert-icon">${alert.icon}</span>
+                <span class="alert-title">${alert.title}</span>
+              </div>
+              <div class="alert-message">${alert.message}</div>
+              <button class="alert-action" onclick="location.href='${alert.actionUrl}'">${alert.action}</button>
+            </div>
+          `).join('');
+
+          document.getElementById('alerts-container').innerHTML = html;
+        } else {
+          document.getElementById('alerts-container').innerHTML = '';
+        }
+      } catch (error) {
+        console.error('[Usage Monitoring] Failed to load alerts:', error);
+      }
+    }
+
+    /**
+     * Format usage type for display
+     */
+    function formatUsageType(type) {
+      const labels = {
+        transcripts: 'Transcripts',
+        posTransactions: 'POS Transactions',
+        posInPerson: 'POS In-Person',
+        posOnline: 'POS Online',
+        cryptoCharges: 'Crypto Charges',
+        crypto: 'Crypto Charges',
+        locations: 'Locations',
+        apiRequests: 'API Requests'
+      };
+      return labels[type] || type;
+    }
+
+    /**
+     * Setup period selector
+     */
+    function setupPeriodSelector() {
+      const buttons = document.querySelectorAll('.period-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Update active state
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          // Update period
+          currentPeriod = parseInt(btn.dataset.period);
+
+          // Reload chart
+          loadTrendsChart();
+        });
+      });
+    }
+
+    /**
+     * Refresh all data
+     */
+    async function refreshData() {
+      console.log('[Usage Monitoring] Refreshing data...');
+
+      await usageMeter.refresh();
+      await loadBillingPreview();
+      await loadQuickStats();
+      await loadTrendsChart();
+      await loadAlerts();
+
+      document.getElementById('last-updated-time').textContent = 'Just now';
+    }
+
+    /**
+     * Export usage data
+     */
+    function exportUsageData() {
+      // TODO: Implement CSV/JSON export
+      alert('Export functionality coming soon! This will export your usage data as CSV/JSON.');
+    }
+
+    /**
+     * Update period info
+     */
+    function updatePeriodInfo() {
+      // TODO: Get actual period from API
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      const periodInfo = `${periodStart.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      })} - ${periodEnd.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })}`;
+
+      document.getElementById('period-info').textContent = periodInfo;
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+      updatePeriodInfo();
+    });
+  </script>
+</body>
+</html>

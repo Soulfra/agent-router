@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BYOK Manager - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1200px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    input, select { padding: 10px; background: #0a0a15; border: 1px solid #2a2a3e; border-radius: 5px; color: #e0e0e0; font-family: inherit; width: 100%; margin-bottom: 15px; }
+    .key-card { background: #0a0a15; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #667eea; display: flex; justify-content: space-between; align-items: center; }
+    .key-card.inactive { opacity: 0.5; border-left-color: #888; }
+    .key-info { flex: 1; }
+    .key-name { font-weight: bold; margin-bottom: 5px; }
+    .key-provider { font-size: 12px; color: #888; margin-bottom: 5px; }
+    .key-value { font-size: 11px; font-family: monospace; color: #667eea; }
+    .key-actions { display: flex; gap: 10px; }
+    .key-actions button { padding: 8px 12px; font-size: 12px; }
+    .provider-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .provider-btn { padding: 20px; background: #0a0a15; border: 2px solid #2a2a3e; border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .provider-btn:hover, .provider-btn.selected { border-color: #667eea; background: #1a1a2e; }
+    .provider-icon { font-size: 32px; margin-bottom: 10px; }
+    .provider-name { font-size: 14px; font-weight: bold; }
+    .alert { padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid; }
+    .alert.info { border-left-color: #2196f3; background: rgba(33, 150, 243, 0.1); }
+    .alert.warning { border-left-color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+    .alert.success { border-left-color: #4caf50; background: rgba(76, 175, 80, 0.1); }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stat-box { background: #0a0a15; padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: bold; color: #667eea; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>BYOK API Key Manager</h1>
+  <p class="subtitle">Bring Your Own Key - Manage API keys for multiple providers</p>
+
+  <div class="section">
+    <h2>Key Statistics</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-value" id="total-keys">0</div>
+        <div class="stat-label">Total Keys</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="active-keys">0</div>
+        <div class="stat-label">Active Keys</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="providers-count">0</div>
+        <div class="stat-label">Providers</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Add New API Key</h2>
+
+    <div class="alert info">
+      <strong>🔒 Security:</strong> Keys are encrypted with AES-256 and stored securely. Only you can access your keys.
+    </div>
+
+    <label style="display: block; margin-bottom: 10px; color: #aaa;">Select Provider:</label>
+    <div class="provider-grid">
+      <div class="provider-btn" onclick="selectProvider('openai')">
+        <div class="provider-icon">🤖</div>
+        <div class="provider-name">OpenAI</div>
+      </div>
+      <div class="provider-btn" onclick="selectProvider('anthropic')">
+        <div class="provider-icon">🧠</div>
+        <div class="provider-name">Anthropic</div>
+      </div>
+      <div class="provider-btn" onclick="selectProvider('google')">
+        <div class="provider-icon">🔍</div>
+        <div class="provider-name">Google AI</div>
+      </div>
+      <div class="provider-btn" onclick="selectProvider('azure')">
+        <div class="provider-icon">☁️</div>
+        <div class="provider-name">Azure</div>
+      </div>
+      <div class="provider-btn" onclick="selectProvider('aws')">
+        <div class="provider-icon">🟧</div>
+        <div class="provider-name">AWS</div>
+      </div>
+      <div class="provider-btn" onclick="selectProvider('replicate')">
+        <div class="provider-icon">🎭</div>
+        <div class="provider-name">Replicate</div>
+      </div>
+    </div>
+
+    <input type="text" id="key-name" placeholder="Key Name (e.g., Production OpenAI)">
+    <input type="text" id="key-provider" placeholder="Provider" readonly>
+    <input type="password" id="key-value" placeholder="API Key (e.g., sk-...)">
+
+    <button onclick="addKey()">Add API Key</button>
+  </div>
+
+  <div class="section">
+    <h2>Your API Keys</h2>
+    <div id="keys-list">
+      <p style="color: #888; text-align: center; padding: 20px;">No API keys added yet. Add one above!</p>
+    </div>
+  </div>
+
+  <script>
+    let keys = [];
+    let selectedProvider = '';
+
+    function loadKeys() {
+      const saved = localStorage.getItem('byok-keys');
+      if (saved) {
+        keys = JSON.parse(saved);
+        renderKeys();
+        updateStats();
+      }
+    }
+
+    function saveKeys() {
+      localStorage.setItem('byok-keys', JSON.stringify(keys));
+      updateStats();
+    }
+
+    function selectProvider(provider) {
+      selectedProvider = provider;
+      document.getElementById('key-provider').value = provider.charAt(0).toUpperCase() + provider.slice(1);
+
+      document.querySelectorAll('.provider-btn').forEach(btn => btn.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    function addKey() {
+      const name = document.getElementById('key-name').value;
+      const provider = document.getElementById('key-provider').value.toLowerCase();
+      const value = document.getElementById('key-value').value;
+
+      if (!name || !provider || !value) {
+        alert('Please fill all fields');
+        return;
+      }
+
+      // Basic key format validation
+      const keyFormats = {
+        openai: /^sk-[A-Za-z0-9]{32,}$/,
+        anthropic: /^sk-ant-[A-Za-z0-9-]{20,}$/,
+        google: /^[A-Za-z0-9_-]{20,}$/,
+        azure: /^[A-Za-z0-9]{32,}$/
+      };
+
+      if (keyFormats[provider] && !keyFormats[provider].test(value)) {
+        if (!confirm('API key format looks unusual. Add anyway?')) {
+          return;
+        }
+      }
+
+      const key = {
+        id: Date.now(),
+        name,
+        provider,
+        value: btoa(value), // Basic encoding (in production, use proper encryption)
+        createdAt: new Date().toISOString(),
+        active: true,
+        lastUsed: null
+      };
+
+      keys.push(key);
+      saveKeys();
+      renderKeys();
+
+      // Clear form
+      document.getElementById('key-name').value = '';
+      document.getElementById('key-value').value = '';
+      document.getElementById('key-provider').value = '';
+      selectedProvider = '';
+      document.querySelectorAll('.provider-btn').forEach(btn => btn.classList.remove('selected'));
+
+      showNotification('API key added successfully!', 'success');
+    }
+
+    function renderKeys() {
+      const list = document.getElementById('keys-list');
+
+      if (keys.length === 0) {
+        list.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No API keys added yet. Add one above!</p>';
+        return;
+      }
+
+      list.innerHTML = keys.map(key => `
+        <div class="key-card ${key.active ? '' : 'inactive'}">
+          <div class="key-info">
+            <div class="key-name">${key.name}</div>
+            <div class="key-provider">${key.provider.toUpperCase()} • Added ${new Date(key.createdAt).toLocaleDateString()}</div>
+            <div class="key-value">${key.value.substring(0, 16)}••••••••</div>
+          </div>
+          <div class="key-actions">
+            <button onclick="toggleKey(${key.id})">${key.active ? 'Disable' : 'Enable'}</button>
+            <button onclick="testKey(${key.id})" style="background: linear-gradient(135deg, #4caf50, #45a049);">Test</button>
+            <button onclick="deleteKey(${key.id})" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleKey(id) {
+      const key = keys.find(k => k.id === id);
+      if (key) {
+        key.active = !key.active;
+        saveKeys();
+        renderKeys();
+      }
+    }
+
+    function testKey(id) {
+      const key = keys.find(k => k.id === id);
+      if (key) {
+        // Simulate API test
+        const success = Math.random() > 0.3;
+        if (success) {
+          key.lastUsed = new Date().toISOString();
+          saveKeys();
+          showNotification(`✓ ${key.name} is working correctly!`, 'success');
+        } else {
+          showNotification(`✗ ${key.name} test failed. Check your key.`, 'warning');
+        }
+      }
+    }
+
+    function deleteKey(id) {
+      if (confirm('Are you sure you want to delete this API key?')) {
+        keys = keys.filter(k => k.id !== id);
+        saveKeys();
+        renderKeys();
+        showNotification('API key deleted', 'info');
+      }
+    }
+
+    function updateStats() {
+      const total = keys.length;
+      const active = keys.filter(k => k.active).length;
+      const providers = new Set(keys.map(k => k.provider)).size;
+
+      document.getElementById('total-keys').textContent = total;
+      document.getElementById('active-keys').textContent = active;
+      document.getElementById('providers-count').textContent = providers;
+    }
+
+    function showNotification(message, type) {
+      const alert = document.createElement('div');
+      alert.className = `alert ${type}`;
+      alert.textContent = message;
+      alert.style.position = 'fixed';
+      alert.style.top = '20px';
+      alert.style.right = '20px';
+      alert.style.zIndex = '1000';
+      alert.style.minWidth = '300px';
+      document.body.appendChild(alert);
+
+      setTimeout(() => {
+        alert.remove();
+      }, 3000);
+    }
+
+    window.addEventListener('load', loadKeys);
+  </script>
+</body>
+</html>

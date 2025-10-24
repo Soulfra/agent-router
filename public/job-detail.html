@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Details</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f7fa;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .job-header {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .job-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .job-company {
+      font-size: 1.5rem;
+      color: #667eea;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .job-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .job-salary {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #4caf50;
+      margin: 15px 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      background: white;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: #666;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+    }
+
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .skill-tag {
+      background: #f0f4ff;
+      color: #667eea;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .required-tag {
+      background: #667eea;
+      color: white;
+    }
+
+    .responsibilities, .requirements {
+      list-style: none;
+      margin: 20px 0;
+    }
+
+    .responsibilities li, .requirements li {
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #f0f4ff;
+      border-radius: 8px;
+      padding-left: 40px;
+      position: relative;
+    }
+
+    .responsibilities li:before {
+      content: "✓";
+      position: absolute;
+      left: 15px;
+      color: #667eea;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .lesson-plan {
+      margin-top: 30px;
+    }
+
+    .lesson-skills-input {
+      margin: 20px 0;
+    }
+
+    .lesson-skills-input textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      min-height: 100px;
+    }
+
+    .lesson-skills-input textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      padding: 12px 32px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .lesson-summary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin: 30px 0;
+    }
+
+    .lesson-summary h3 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .summary-item {
+      text-align: center;
+    }
+
+    .summary-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .summary-label {
+      opacity: 0.9;
+      font-size: 0.9rem;
+    }
+
+    .learning-module {
+      background: #f0f4ff;
+      padding: 25px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border-left: 5px solid #667eea;
+    }
+
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .module-week {
+      background: #667eea;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .module-hours {
+      color: #666;
+      font-weight: 600;
+    }
+
+    .module-skill {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .module-path {
+      list-style: none;
+      margin: 15px 0;
+    }
+
+    .module-path li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+      color: #555;
+    }
+
+    .module-path li:before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #667eea;
+      font-weight: 700;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin: 30px 0;
+    }
+
+    .analysis-card {
+      background: #f0f4ff;
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    .analysis-card h4 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .difficulty-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .difficulty-entry { background: #4caf50; color: white; }
+    .difficulty-mid { background: #ff9800; color: white; }
+    .difficulty-senior { background: #f44336; color: white; }
+
+    .pr-content {
+      margin-top: 30px;
+    }
+
+    .pr-template {
+      background: #f0f4ff;
+      padding: 30px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border-left: 5px solid #667eea;
+    }
+
+    .pr-template h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .pr-template pre {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      color: #555;
+      font-family: inherit;
+    }
+
+    .share-links {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .share-link {
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .share-twitter { background: #1da1f2; }
+    .share-linkedin { background: #0077b5; }
+    .share-email { background: #ea4335; }
+
+    .share-link:hover {
+      opacity: 0.8;
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #667eea;
+      font-size: 1.3rem;
+    }
+
+    @media (max-width: 768px) {
+      .job-title { font-size: 2rem; }
+      .tabs { flex-direction: column; }
+      .tab { width: 100%; }
+      .job-meta { flex-direction: column; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/careers.html" class="back-btn">← Back to Careers</a>
+
+    <div id="job-container">
+      <div class="loading">Loading job details...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    const urlParams = new URLSearchParams(window.location.search);
+    const jobId = urlParams.get('id');
+    const defaultTab = urlParams.get('tab') || 'details';
+
+    let currentJob = null;
+
+    // Load job details
+    async function loadJob() {
+      if (!jobId) {
+        document.getElementById('job-container').innerHTML = '<div class="loading">Invalid job ID</div>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/api/jobs/${jobId}`);
+        if (!response.ok) throw new Error('Job not found');
+
+        currentJob = await response.json();
+        renderJob(currentJob);
+        switchTab(defaultTab);
+      } catch (error) {
+        console.error('Error loading job:', error);
+        document.getElementById('job-container').innerHTML = '<div class="loading">Job not found</div>';
+      }
+    }
+
+    // Render job
+    function renderJob(job) {
+      document.getElementById('job-container').innerHTML = `
+        <div class="job-header">
+          <div class="job-title">${job.title}</div>
+          <div class="job-company">${job.company}</div>
+
+          <div class="job-meta">
+            ${job.location ? `<div class="meta-item">📍 ${job.location}</div>` : ''}
+            <div class="meta-item">💼 ${job.job_type || 'Full-time'}</div>
+            <div class="meta-item">🕒 Posted ${new Date(job.created_at).toLocaleDateString()}</div>
+          </div>
+
+          ${job.salary_range ? `<div class="job-salary">💰 ${job.salary_range}</div>` : ''}
+        </div>
+
+        <div class="tabs">
+          <button class="tab" onclick="switchTab('details')">📝 Details</button>
+          <button class="tab" onclick="switchTab('analysis')">📊 Analysis</button>
+          <button class="tab" onclick="switchTab('lesson')">🎓 Learning Path</button>
+          <button class="tab" onclick="switchTab('pr')">📢 Share & PR</button>
+        </div>
+
+        <div id="tab-details" class="tab-content">
+          ${renderDetailsTab(job)}
+        </div>
+
+        <div id="tab-analysis" class="tab-content">
+          ${renderAnalysisTab()}
+        </div>
+
+        <div id="tab-lesson" class="tab-content">
+          ${renderLessonTab()}
+        </div>
+
+        <div id="tab-pr" class="tab-content">
+          ${renderPRTab()}
+        </div>
+      `;
+    }
+
+    // Render details tab
+    function renderDetailsTab(job) {
+      const responsibilities = job.raw_data?.responsibilities || [];
+      const conditions = job.raw_data?.conditions || [];
+
+      return `
+        <h2 class="section-title">About the Role</h2>
+        <p style="font-size: 1.1rem; line-height: 1.8; color: #555;">${job.description}</p>
+
+        ${responsibilities.length > 0 ? `
+          <h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Key Responsibilities</h3>
+          <ul class="responsibilities">
+            ${responsibilities.map(r => `<li>${r}</li>`).join('')}
+          </ul>
+        ` : ''}
+
+        <h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Required Skills</h3>
+        <div class="skill-grid">
+          ${(job.required_skills || []).map(skill => `<div class="skill-tag required-tag">${skill}</div>`).join('')}
+        </div>
+
+        ${job.preferred_skills && job.preferred_skills.length > 0 ? `
+          <h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Preferred Skills</h3>
+          <div class="skill-grid">
+            ${job.preferred_skills.map(skill => `<div class="skill-tag">${skill}</div>`).join('')}
+          </div>
+        ` : ''}
+
+        ${conditions.length > 0 ? `
+          <h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Working Conditions</h3>
+          <ul class="requirements">
+            ${conditions.map(c => `<li>${c}</li>`).join('')}
+          </ul>
+        ` : ''}
+      `;
+    }
+
+    // Render analysis tab
+    function renderAnalysisTab() {
+      return `
+        <h2 class="section-title">Job Analysis</h2>
+        <div id="analysis-content">
+          <div class="loading" style="color: #667eea;">Analyzing job requirements...</div>
+        </div>
+        <button class="btn btn-primary" onclick="loadAnalysis()">Analyze This Role</button>
+      `;
+    }
+
+    // Render lesson tab
+    function renderLessonTab() {
+      return `
+        <h2 class="section-title">Your Personalized Learning Path</h2>
+        <p style="font-size: 1.1rem; color: #555; margin-bottom: 20px;">
+          Tell us what skills you already have, and we'll create a customized learning roadmap for this role.
+        </p>
+
+        <div class="lesson-skills-input">
+          <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #667eea;">
+            What skills do you currently have?
+          </label>
+          <textarea id="current-skills" placeholder="Enter your skills, separated by commas (e.g., python, javascript, docker)"></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="generateLessonPlan()">Generate Learning Path</button>
+
+        <div id="lesson-content"></div>
+      `;
+    }
+
+    // Render PR tab
+    function renderPRTab() {
+      return `
+        <h2 class="section-title">Share This Opportunity</h2>
+        <p style="font-size: 1.1rem; color: #555; margin-bottom: 20px;">
+          Help us spread the word! Generate PR content and share this job on social media.
+        </p>
+
+        <button class="btn btn-primary" onclick="generatePR()">Generate PR Content</button>
+
+        <div id="pr-content"></div>
+      `;
+    }
+
+    // Switch tabs
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      event?.target?.classList.add('active');
+
+      // Update content
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`)?.classList.add('active');
+
+      // Find and activate the correct tab button
+      const tabs = document.querySelectorAll('.tab');
+      const tabIndex = { 'details': 0, 'analysis': 1, 'lesson': 2, 'pr': 3 }[tabName] || 0;
+      tabs[tabIndex]?.classList.add('active');
+    }
+
+    // Load analysis
+    async function loadAnalysis() {
+      const container = document.getElementById('analysis-content');
+      container.innerHTML = '<div class="loading" style="color: #667eea;">Analyzing...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/jobs/${jobId}/analyze`, { method: 'POST' });
+        const analysis = await response.json();
+
+        container.innerHTML = `
+          <div class="analysis-grid">
+            <div class="analysis-card">
+              <h4>Difficulty Level</h4>
+              <span class="difficulty-badge difficulty-${analysis.difficulty_estimate}">${analysis.difficulty_estimate.toUpperCase()}</span>
+            </div>
+
+            <div class="analysis-card">
+              <h4>Learning Time</h4>
+              <div style="margin-top: 10px;">
+                <div style="font-size: 2rem; font-weight: 700; color: #667eea;">${analysis.learning_time_estimate.total_hours}h</div>
+                <div style="color: #666;">${analysis.learning_time_estimate.weeks_full_time} weeks (full-time)</div>
+                <div style="color: #666;">${analysis.learning_time_estimate.months_part_time} months (part-time)</div>
+              </div>
+            </div>
+
+            <div class="analysis-card">
+              <h4>Experience Required</h4>
+              <div style="font-size: 1.5rem; font-weight: 700; color: #667eea; margin-top: 10px;">${analysis.ideal_candidate_profile.experience}</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Skill Breakdown</h3>
+          ${Object.entries(analysis.skill_categories).filter(([_, skills]) => skills.length > 0).map(([category, skills]) => `
+            <div style="margin: 20px 0;">
+              <h4 style="color: #555; margin-bottom: 10px;">${category.replace('_', ' ').toUpperCase()}</h4>
+              <div class="skill-grid">
+                ${skills.map(skill => `<div class="skill-tag">${skill}</div>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } catch (error) {
+        console.error('Error loading analysis:', error);
+        container.innerHTML = '<div class="loading" style="color: #f44336;">Error loading analysis</div>';
+      }
+    }
+
+    // Generate lesson plan
+    async function generateLessonPlan() {
+      const skillsText = document.getElementById('current-skills').value;
+      const currentSkills = skillsText.split(',').map(s => s.trim()).filter(s => s);
+
+      const container = document.getElementById('lesson-content');
+      container.innerHTML = '<div class="loading" style="color: #667eea;">Generating your personalized learning path...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/jobs/${jobId}/lesson-plan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ current_skills: currentSkills })
+        });
+        const plan = await response.json();
+
+        container.innerHTML = `
+          <div class="lesson-summary">
+            <h3>Your Learning Journey</h3>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <div class="summary-number">${plan.summary.skills_to_learn}</div>
+                <div class="summary-label">Skills to Learn</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-number">${plan.summary.total_weeks}</div>
+                <div class="summary-label">Weeks</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-number">${plan.summary.estimated_hours}h</div>
+                <div class="summary-label">Total Hours</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: #f0f4ff; padding: 20px; border-radius: 12px; margin: 20px 0;">
+            <strong style="color: #667eea;">💡 ${plan.final_advice}</strong>
+          </div>
+
+          <h3 style="margin: 40px 0 20px; color: #667eea;">Weekly Learning Modules</h3>
+
+          ${plan.learning_modules.map(module => `
+            <div class="learning-module">
+              <div class="module-header">
+                <span class="module-week">Week ${module.week}</span>
+                <span class="module-hours">${module.estimated_hours} hours</span>
+              </div>
+
+              <div class="module-skill">${module.skill}</div>
+
+              ${module.description ? `<p style="color: #666; margin-bottom: 15px;">${module.description}</p>` : ''}
+
+              ${module.learning_path ? `
+                <h5 style="color: #667eea; margin-top: 15px;">Learning Path:</h5>
+                <ul class="module-path">
+                  ${module.learning_path.map(step => `<li>${step}</li>`).join('')}
+                </ul>
+              ` : ''}
+
+              ${module.projects ? `
+                <h5 style="color: #667eea; margin-top: 15px;">Practice Projects:</h5>
+                <ul class="module-path">
+                  ${module.projects.map(project => `<li>${project}</li>`).join('')}
+                </ul>
+              ` : ''}
+            </div>
+          `).join('')}
+        `;
+      } catch (error) {
+        console.error('Error generating lesson plan:', error);
+        container.innerHTML = '<div class="loading" style="color: #f44336;">Error generating lesson plan</div>';
+      }
+    }
+
+    // Generate PR content
+    async function generatePR() {
+      const container = document.getElementById('pr-content');
+      container.innerHTML = '<div class="loading" style="color: #667eea;">Generating PR content...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/jobs/${jobId}/pr`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseUrl: window.location.origin })
+        });
+        const pr = await response.json();
+
+        container.innerHTML = `
+          <div class="share-links">
+            <a href="${pr.share_links.twitter}" target="_blank" class="share-link share-twitter">🐦 Share on Twitter</a>
+            <a href="${pr.share_links.linkedin}" target="_blank" class="share-link share-linkedin">💼 Share on LinkedIn</a>
+            <a href="${pr.share_links.email}" class="share-link share-email">📧 Email this Job</a>
+          </div>
+
+          ${Object.entries(pr.templates).map(([name, template]) => `
+            <div class="pr-template">
+              <h3>${template.headline}</h3>
+              <p style="color: #666; margin: 10px 0;"><em>${template.subheading}</em></p>
+              <pre>${template.body}</pre>
+            </div>
+          `).join('')}
+
+          <h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Social Media Content</h3>
+
+          <div class="pr-template">
+            <h4>Twitter Thread</h4>
+            ${pr.social_media.twitter.map((tweet, i) => `
+              <p style="margin: 15px 0; padding: 15px; background: white; border-radius: 8px;">
+                <strong>Tweet ${i + 1}:</strong><br>${tweet}
+              </p>
+            `).join('')}
+          </div>
+
+          <div class="pr-template">
+            <h4>LinkedIn Post</h4>
+            <pre>${pr.social_media.linkedin}</pre>
+          </div>
+
+          <div class="pr-template">
+            <h4>Hacker News Format</h4>
+            <pre>${pr.social_media.hackernews}</pre>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error generating PR:', error);
+        container.innerHTML = '<div class="loading" style="color: #f44336;">Error generating PR content</div>';
+      }
+    }
+
+    // Make functions globally accessible
+    window.switchTab = switchTab;
+    window.loadAnalysis = loadAnalysis;
+    window.generateLessonPlan = generateLessonPlan;
+    window.generatePR = generatePR;
+
+    // Load job on page load
+    loadJob();
+  </script>
+</body>
+</html>

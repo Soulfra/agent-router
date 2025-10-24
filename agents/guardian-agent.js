@@ -15,11 +15,15 @@
 
 const DataSource = require('../sources/data-source');
 const OllamaTools = require('../lib/ollama-tools');
+const ExternalBugReporter = require('../lib/external-bug-reporter');
+const PatchApplicator = require('../lib/patch-applicator');
 
 class GuardianAgent {
   constructor(options = {}) {
     this.db = options.db || null;
     this.model = options.model || 'mistral:7b';
+    this.receiptParser = options.receiptParser || null;
+    this.ocrAdapter = options.ocrAdapter || null;
     this.dataSource = new DataSource({
       mode: 'api',
       db: this.db,
@@ -27,7 +31,17 @@ class GuardianAgent {
     });
     this.tools = new OllamaTools({
       db: this.db,
-      allowDangerousCommands: false // Safety: guardian can't run dangerous commands
+      allowDangerousCommands: false, // Safety: guardian can't run dangerous commands
+      receiptParser: this.receiptParser,
+      ocrAdapter: this.ocrAdapter
+    });
+    this.bugReporter = new ExternalBugReporter({
+      db: this.db,
+      verbose: options.verbose
+    });
+    this.patchApplicator = new PatchApplicator({
+      db: this.db,
+      verbose: options.verbose
     });
     this.verbose = options.verbose || false;
   }
@@ -332,6 +346,101 @@ Think step by step and be methodical.`;
     } catch (error) {
       console.error('[Guardian] Failed to fetch stats:', error.message);
       return { error: error.message };
+    }
+  }
+
+  /**
+   * Report error to external AI service for diagnosis
+   *
+   * @param {Error} error - The error object
+   * @param {Object} context - Additional context (file, line, source)
+   * @returns {Promise<Object>} - AI diagnosis and suggested fix
+   */
+  async reportError(error, context = {}) {
+    console.log('[Guardian] Reporting error to external AI for diagnosis...');
+
+    // Package bug report
+    const bugReport = this.bugReporter.packageBugReport(error, context);
+
+    // Send to OpenAI for diagnosis
+    const result = await this.bugReporter.reportToOpenAI(bugReport);
+
+    if (result.success) {
+      console.log('[Guardian] Received AI diagnosis:');
+      console.log(`  Diagnosis: ${result.diagnosis}`);
+      console.log(`  Fix: ${result.fix}`);
+
+      return result;
+    } else {
+      console.error('[Guardian] AI diagnosis failed:', result.error);
+      return result;
+    }
+  }
+
+  /**
+   * Detect error, report to AI, and auto-apply fix
+   *
+   * @param {Error} error - The error to fix
+   * @param {Object} context - Context (file, line, stackTrace)
+   * @returns {Promise<Object>} - Result of auto-healing attempt
+   */
+  async autoHealError(error, context = {}) {
+    console.log('[Guardian] Starting auto-heal workflow...');
+
+    try {
+      // Step 1: Report to AI for diagnosis
+      const diagnosis = await this.reportError(error, context);
+
+      if (!diagnosis.success || !diagnosis.fix) {
+        return {
+          success: false,
+          error: 'Failed to get AI diagnosis or suggested fix'
+        };
+      }
+
+      // Step 2: Parse AI suggestion into patch format
+      const patch = this.patchApplicator.parseSuggestion(
+        diagnosis.fix,
+        context.file
+      );
+
+      if (!patch) {
+        console.warn('[Guardian] Could not parse AI suggestion into patch');
+        return {
+          success: false,
+          error: 'Could not parse AI suggestion',
+          diagnosis
+        };
+      }
+
+      // Step 3: Apply patch
+      console.log('[Guardian] Applying AI-suggested patch...');
+      const patchResult = await this.patchApplicator.applyPatch(patch);
+
+      if (patchResult.success) {
+        console.log('[Guardian] ✓ Auto-heal successful!');
+
+        return {
+          success: true,
+          diagnosis,
+          patch: patchResult
+        };
+      } else {
+        console.warn('[Guardian] Patch application failed:', patchResult.error);
+
+        return {
+          success: false,
+          diagnosis,
+          patchError: patchResult.error
+        };
+      }
+
+    } catch (error) {
+      console.error('[Guardian] Auto-heal workflow failed:', error.message);
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
 }

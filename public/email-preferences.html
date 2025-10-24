@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Preferences - CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+      padding-bottom: 40px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section h2 {
+      font-size: 1.8rem;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-description {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 1.05rem;
+    }
+
+    .email-display {
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      color: #667eea;
+      font-weight: 600;
+      display: inline-block;
+      margin: 10px 0;
+    }
+
+    .preference-group {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 20px 0;
+    }
+
+    .preference-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .preference-item:last-child {
+      border-bottom: none;
+    }
+
+    .preference-label {
+      flex: 1;
+    }
+
+    .preference-label h3 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .preference-label p {
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #ccc;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-switch.active {
+      background: #667eea;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-switch.active::after {
+      left: 33px;
+    }
+
+    select {
+      padding: 10px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+      min-width: 150px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 25px 0;
+    }
+
+    .stat-card {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #667eea;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 28px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+
+    .button.secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .button.secondary:hover {
+      background: #f8f9fa;
+    }
+
+    .button.danger {
+      background: #dc3545;
+    }
+
+    .button.danger:hover {
+      background: #c82333;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .delivery-status {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .delivery-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .delivery-item.delivered {
+      border-left-color: #28a745;
+    }
+
+    .delivery-item.bounced {
+      border-left-color: #dc3545;
+    }
+
+    .delivery-date {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      border: 3px solid rgba(102,126,234,0.3);
+      border-radius: 50%;
+      border-top-color: #667eea;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s ease-in-out infinite;
+      margin: 40px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    footer {
+      background: #f8f9fa;
+      padding: 30px;
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📧 Email Preferences</h1>
+      <p>Control what emails you receive and how often</p>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loading-state" style="padding: 60px;">
+      <div class="spinner"></div>
+      <p style="text-align: center; color: #666; margin-top: 20px;">Loading your preferences...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="content hidden">
+
+      <!-- Email Info Section -->
+      <div class="section">
+        <h2>👤 Your Email</h2>
+        <p class="section-description">This is the email address receiving our communications</p>
+        <div class="email-display" id="user-email">Loading...</div>
+        <div class="alert info" style="margin-top: 15px;">
+          <span>ℹ️</span>
+          <span>Want to change your email? Contact <a href="mailto:support@calos.ai">support@calos.ai</a></span>
+        </div>
+      </div>
+
+      <!-- Subscription Status -->
+      <div class="section">
+        <h2>📬 Subscription Status</h2>
+        <div class="preference-group">
+          <div class="preference-item">
+            <div class="preference-label">
+              <h3>Email Subscription</h3>
+              <p id="subscription-status-text">You are subscribed to our emails</p>
+            </div>
+            <div class="toggle-switch active" id="subscription-toggle" onclick="toggleSubscription()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email Frequency -->
+      <div class="section">
+        <h2>⏰ Email Frequency</h2>
+        <p class="section-description">Choose how often you want to hear from us</p>
+        <div class="preference-group">
+          <div class="preference-item">
+            <div class="preference-label">
+              <h3>Frequency</h3>
+              <p>Control email volume</p>
+            </div>
+            <select id="frequency-select" onchange="updateFrequency()">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="never">Never (unsubscribe)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Preferences -->
+      <div class="section">
+        <h2>🎯 Content Preferences</h2>
+        <p class="section-description">Pick what types of emails you want to receive</p>
+        <div class="preference-group">
+          <div class="preference-item">
+            <div class="preference-label">
+              <h3>Job Opportunities</h3>
+              <p>Matching your skills and interests</p>
+            </div>
+            <div class="toggle-switch active" id="jobs-toggle" onclick="togglePreference('jobs')"></div>
+          </div>
+          <div class="preference-item">
+            <div class="preference-label">
+              <h3>Learning Resources</h3>
+              <p>Courses, tutorials, and study guides</p>
+            </div>
+            <div class="toggle-switch active" id="learning-toggle" onclick="togglePreference('learning')"></div>
+          </div>
+          <div class="preference-item">
+            <div class="preference-label">
+              <h3>Expert Interviews</h3>
+              <p>Recorded interviews with industry experts</p>
+            </div>
+            <div class="toggle-switch active" id="interviews-toggle" onclick="togglePreference('interviews')"></div>
+          </div>
+          <div class="preference-item">
+            <div class="preference-label">
+              <h3>Platform Updates</h3>
+              <p>New features and announcements</p>
+            </div>
+            <div class="toggle-switch active" id="updates-toggle" onclick="togglePreference('updates')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Statistics -->
+      <div class="section">
+        <h2>📊 Delivery Statistics</h2>
+        <p class="section-description">Track your email delivery and engagement</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📨</div>
+            <span class="stat-number" id="emails-sent">0</span>
+            <span class="stat-label">Emails Sent</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <span class="stat-number" id="emails-delivered">0</span>
+            <span class="stat-label">Delivered</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">👁️</div>
+            <span class="stat-number" id="emails-opened">0</span>
+            <span class="stat-label">Opened</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">↩️</div>
+            <span class="stat-number" id="emails-bounced">0</span>
+            <span class="stat-label">Bounced</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Emails -->
+      <div class="section">
+        <h2>📬 Recent Emails</h2>
+        <p class="section-description">Your last 5 emails and their delivery status</p>
+        <div class="delivery-status" id="recent-emails">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="section">
+        <h2>⚙️ Actions</h2>
+        <p class="section-description">Manage your data and preferences</p>
+        <div style="margin-top: 20px;">
+          <button class="button secondary" onclick="exportData()">
+            📥 Export My Data (GDPR)
+          </button>
+          <button class="button secondary" onclick="window.location.href='/unsubscribe.html?token=' + getToken()">
+            🚫 Unsubscribe from All
+          </button>
+          <button class="button danger" onclick="deleteAccount()">
+            🗑️ Delete My Account
+          </button>
+        </div>
+      </div>
+
+      <!-- Success Message -->
+      <div id="success-message" class="alert success hidden">
+        <span>✓</span>
+        <span>Preferences saved successfully!</span>
+      </div>
+    </div>
+
+    <footer>
+      <p><strong>Need help?</strong> Contact us at <a href="mailto:support@calos.ai">support@calos.ai</a></p>
+      <p style="margin-top: 15px;">
+        <a href="/">Home</a> •
+        <a href="/careers.html">Careers</a> •
+        <a href="/privacy">Privacy Policy</a> •
+        <a href="/terms">Terms of Service</a>
+      </p>
+      <p style="margin-top: 15px; font-size: 0.85rem; opacity: 0.7;">
+        © 2025 CALOS. All rights reserved.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // State
+    let userPreferences = {
+      email: '',
+      userId: '',
+      subscribed: true,
+      frequency: 'weekly',
+      contentPreferences: {
+        jobs: true,
+        learning: true,
+        interviews: true,
+        updates: true
+      },
+      stats: {
+        sent: 0,
+        delivered: 0,
+        opened: 0,
+        bounced: 0
+      },
+      recentEmails: []
+    };
+
+    // Get token from URL
+    function getToken() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('token') || '';
+    }
+
+    // Initialize
+    async function init() {
+      const token = getToken();
+
+      if (!token) {
+        alert('Invalid access link. Please use the link from your email.');
+        return;
+      }
+
+      await loadPreferences(token);
+    }
+
+    // Load preferences
+    async function loadPreferences(token) {
+      try {
+        const response = await fetch(`/api/email/preferences/${token}`);
+        const data = await response.json();
+
+        if (data.success) {
+          userPreferences = { ...userPreferences, ...data.preferences };
+          renderPreferences();
+          document.getElementById('loading-state').classList.add('hidden');
+          document.getElementById('main-content').classList.remove('hidden');
+        } else {
+          alert('Failed to load preferences: ' + data.error);
+        }
+
+      } catch (error) {
+        console.error('Load preferences error:', error);
+        alert('Network error. Please try again later.');
+      }
+    }
+
+    // Render preferences
+    function renderPreferences() {
+      // Email
+      document.getElementById('user-email').textContent = userPreferences.email;
+
+      // Subscription status
+      const toggle = document.getElementById('subscription-toggle');
+      const statusText = document.getElementById('subscription-status-text');
+      if (userPreferences.subscribed) {
+        toggle.classList.add('active');
+        statusText.textContent = 'You are subscribed to our emails';
+      } else {
+        toggle.classList.remove('active');
+        statusText.textContent = 'You are not subscribed';
+      }
+
+      // Frequency
+      document.getElementById('frequency-select').value = userPreferences.frequency;
+
+      // Content preferences
+      for (const [key, value] of Object.entries(userPreferences.contentPreferences)) {
+        const toggle = document.getElementById(`${key}-toggle`);
+        if (value) {
+          toggle.classList.add('active');
+        } else {
+          toggle.classList.remove('active');
+        }
+      }
+
+      // Stats
+      document.getElementById('emails-sent').textContent = userPreferences.stats.sent || 0;
+      document.getElementById('emails-delivered').textContent = userPreferences.stats.delivered || 0;
+      document.getElementById('emails-opened').textContent = userPreferences.stats.opened || 0;
+      document.getElementById('emails-bounced').textContent = userPreferences.stats.bounced || 0;
+
+      // Recent emails
+      renderRecentEmails();
+    }
+
+    // Render recent emails
+    function renderRecentEmails() {
+      const container = document.getElementById('recent-emails');
+
+      if (!userPreferences.recentEmails || userPreferences.recentEmails.length === 0) {
+        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No recent emails found</p>';
+        return;
+      }
+
+      container.innerHTML = userPreferences.recentEmails.map(email => `
+        <div class="delivery-item ${email.status}">
+          <div>
+            <strong>${email.subject}</strong>
+            <div class="delivery-date">${new Date(email.sentAt).toLocaleDateString()}</div>
+          </div>
+          <span style="color: ${email.status === 'delivered' ? '#28a745' : email.status === 'bounced' ? '#dc3545' : '#667eea'}">
+            ${email.status === 'delivered' ? '✓ Delivered' : email.status === 'bounced' ? '↩️ Bounced' : '📨 Sent'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    // Toggle subscription
+    async function toggleSubscription() {
+      const token = getToken();
+      const newStatus = !userPreferences.subscribed;
+
+      try {
+        const response = await fetch(`/api/email/preferences/${token}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscribed: newStatus })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          userPreferences.subscribed = newStatus;
+          renderPreferences();
+          showSuccess();
+        }
+      } catch (error) {
+        console.error('Toggle subscription error:', error);
+        alert('Failed to update subscription');
+      }
+    }
+
+    // Update frequency
+    async function updateFrequency() {
+      const token = getToken();
+      const frequency = document.getElementById('frequency-select').value;
+
+      if (frequency === 'never') {
+        window.location.href = '/unsubscribe.html?token=' + token;
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/email/preferences/${token}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ frequency })
+        });
+
+        if (response.ok) {
+          userPreferences.frequency = frequency;
+          showSuccess();
+        }
+      } catch (error) {
+        console.error('Update frequency error:', error);
+      }
+    }
+
+    // Toggle content preference
+    async function togglePreference(type) {
+      const token = getToken();
+      const newValue = !userPreferences.contentPreferences[type];
+
+      try {
+        const response = await fetch(`/api/email/preferences/${token}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contentPreferences: {
+              ...userPreferences.contentPreferences,
+              [type]: newValue
+            }
+          })
+        });
+
+        if (response.ok) {
+          userPreferences.contentPreferences[type] = newValue;
+          renderPreferences();
+          showSuccess();
+        }
+      } catch (error) {
+        console.error('Toggle preference error:', error);
+      }
+    }
+
+    // Export data
+    async function exportData() {
+      const token = getToken();
+      window.location.href = `/api/email/export/${token}`;
+    }
+
+    // Delete account
+    async function deleteAccount() {
+      if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        return;
+      }
+
+      const token = getToken();
+
+      try {
+        const response = await fetch(`/api/email/delete/${token}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          alert('Your account has been deleted.');
+          window.location.href = '/';
+        }
+      } catch (error) {
+        alert('Failed to delete account. Please contact support.');
+      }
+    }
+
+    // Show success message
+    function showSuccess() {
+      const msg = document.getElementById('success-message');
+      msg.classList.remove('hidden');
+      setTimeout(() => {
+        msg.classList.add('hidden');
+      }, 3000);
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

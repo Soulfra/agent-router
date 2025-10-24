@@ -1,0 +1,261 @@
+#!/usr/bin/env node
+
+/**
+ * Brand File Generator
+ *
+ * Generates brand-specific HTML/CSS files for all 12 domains
+ * Uses MultiBrandOrchestrator configs for colors and branding
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Load brand configs
+const MultiBrandOrchestrator = require('../lib/multi-brand-orchestrator');
+const orchestrator = new MultiBrandOrchestrator();
+
+const BRANDS_DIR = path.join(__dirname, '../public/brands');
+const TEMPLATES_DIR = path.join(__dirname, '../templates');
+
+// Brand configs from orchestrator
+const brandConfigs = {
+  'soulfra': {
+    domain: 'soulfra.com',
+    name: 'Soulfra',
+    tagline: 'Universal Identity Without KYC',
+    primary: '#3498db',
+    secondary: '#2ecc71',
+    accent: '#e74c3c',
+    emoji: '🔐'
+  },
+  'calriven': {
+    domain: 'calriven.com',
+    name: 'Calriven',
+    tagline: 'AI Agent Operating System',
+    primary: '#667eea',
+    secondary: '#764ba2',
+    accent: '#61dafb',
+    emoji: '🤖'
+  },
+  'deathtodata': {
+    domain: 'deathtodata.com',
+    name: 'DeathToData',
+    tagline: 'Search Engine Philosophy',
+    primary: '#e74c3c',
+    secondary: '#c0392b',
+    accent: '#f39c12',
+    emoji: '💀'
+  },
+  'finishthisidea': {
+    domain: 'finishthisidea.com',
+    name: 'FinishThisIdea',
+    tagline: 'Project Completion Service',
+    primary: '#4CAF50',
+    secondary: '#45a049',
+    accent: '#FFC107',
+    emoji: '💡'
+  },
+  'finishthisrepo': {
+    domain: 'finishthisrepo.com',
+    name: 'FinishThisRepo',
+    tagline: 'Code Completion Marketplace',
+    primary: '#24292e',
+    secondary: '#0366d6',
+    accent: '#28a745',
+    emoji: '💻'
+  },
+  'ipomyagent': {
+    domain: 'ipomyagent.com',
+    name: 'IPOMyAgent',
+    tagline: 'AI Agent Marketplace',
+    primary: '#9C27B0',
+    secondary: '#7B1FA2',
+    accent: '#E91E63',
+    emoji: '📈'
+  },
+  'hollowtown': {
+    domain: 'hollowtown.com',
+    name: 'HollowTown',
+    tagline: 'Virtual World Platform',
+    primary: '#8B4513',
+    secondary: '#A0522D',
+    accent: '#FFD700',
+    emoji: '🏚️'
+  },
+  'coldstartkit': {
+    domain: 'coldstartkit.com',
+    name: 'ColdStartKit',
+    tagline: 'Startup Launch Templates',
+    primary: '#00BCD4',
+    secondary: '#0097A7',
+    accent: '#FF5722',
+    emoji: '🚀'
+  },
+  'brandaidkit': {
+    domain: 'brandaidkit.com',
+    name: 'BrandAidKit',
+    tagline: 'Complete Brand Creation Platform',
+    primary: '#FF6B6B',
+    secondary: '#4ECDC4',
+    accent: '#FFE66D',
+    emoji: '🎨'
+  },
+  'dealordelete': {
+    domain: 'dealordelete.com',
+    name: 'DealOrDelete',
+    tagline: 'Decision Making Tool',
+    primary: '#FF9800',
+    secondary: '#F57C00',
+    accent: '#FFC107',
+    emoji: '⚡'
+  },
+  'saveorsink': {
+    domain: 'saveorsink.com',
+    name: 'SaveOrSink',
+    tagline: 'System Rescue Service',
+    primary: '#2196F3',
+    secondary: '#1976D2',
+    accent: '#FFC107',
+    emoji: '🛟'
+  },
+  'cringeproof': {
+    domain: 'cringeproof.com',
+    name: 'CringeProof',
+    tagline: 'Social Content Optimizer',
+    primary: '#ec4899',
+    secondary: '#db2777',
+    accent: '#f9a8d4',
+    emoji: '🎴'
+  }
+};
+
+/**
+ * Generate index.html for each brand
+ */
+function generateIndexHTML(brandKey, config) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${config.name} - ${config.tagline}</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, ${config.primary} 0%, ${config.secondary} 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 800px;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 4em;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .tagline {
+      font-size: 1.5em;
+      margin-bottom: 40px;
+      opacity: 0.9;
+    }
+
+    .links {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .link-btn {
+      padding: 15px 30px;
+      background: white;
+      color: ${config.primary};
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .link-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    footer {
+      margin-top: 60px;
+      opacity: 0.7;
+    }
+
+    footer a {
+      color: white;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${config.emoji} ${config.name}</h1>
+    <p class="tagline">${config.tagline}</p>
+
+    <div class="links">
+      <a href="/vibe-check.html" class="link-btn">Vibe Checker</a>
+      <a href="/card-games.html" class="link-btn">Card Games</a>
+    </div>
+
+    <footer>
+      <p>Powered by <a href="https://calos.fun">CALOS</a></p>
+    </footer>
+  </div>
+</body>
+</html>
+`;
+}
+
+/**
+ * Generate all brand files
+ */
+function generateAllBrands() {
+  console.log('[BrandGenerator] Generating files for all 12 brands...');
+
+  for (const [brandKey, config] of Object.entries(brandConfigs)) {
+    const brandDir = path.join(BRANDS_DIR, brandKey);
+
+    // Create brand directory if it doesn't exist
+    if (!fs.existsSync(brandDir)) {
+      fs.mkdirSync(brandDir, { recursive: true });
+    }
+
+    // Generate index.html
+    const indexHTML = generateIndexHTML(brandKey, config);
+    fs.writeFileSync(path.join(brandDir, 'index.html'), indexHTML);
+
+    console.log(`✅ Generated ${brandKey}/index.html`);
+  }
+
+  console.log('\n[BrandGenerator] ✨ All brand files generated!');
+  console.log(`\nBrand folders: ${Object.keys(brandConfigs).length}`);
+  console.log(`Files created: ${Object.keys(brandConfigs).length} x 1 = ${Object.keys(brandConfigs).length}`);
+}
+
+// Run generator
+if (require.main === module) {
+  generateAllBrands();
+}
+
+module.exports = { generateAllBrands, brandConfigs };

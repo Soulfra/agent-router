@@ -18,13 +18,11 @@ class DataSource {
     this.mode = options.mode || 'api'; // 'api' or 'local'
     this.db = options.db || null; // Database connection (when local mode)
     this.cachingEnabled = options.caching !== false; // Default: true
+    this.vaultBridge = options.vaultBridge || null; // VaultBridge for auto key retrieval
 
-    // Initialize OpenAI client for API mode
-    if (this.mode === 'api') {
-      this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    }
+    // Don't initialize OpenAI client in constructor anymore
+    // We'll create it dynamically when needed with the right API key
+    this.openai = null;
   }
 
   /**
@@ -73,11 +71,33 @@ class DataSource {
     }
 
     // Fetch from API
-    if (!process.env.OPENAI_API_KEY) {
-      return '⚠️ OpenAI API key not configured. Set OPENAI_API_KEY in .env file.';
+    // Use VaultBridge to get API key (or fall back to env var)
+    let apiKey = null;
+    let keySource = 'system';
+
+    if (this.vaultBridge) {
+      try {
+        const keyData = await this.vaultBridge.getKey('openai', context);
+        apiKey = keyData.key;
+        keySource = keyData.source;
+        console.log(`[DataSource] Using ${keySource} OpenAI key`);
+      } catch (error) {
+        console.warn('[DataSource] VaultBridge failed, falling back to env:', error.message);
+        apiKey = process.env.OPENAI_API_KEY;
+      }
+    } else {
+      // Fallback to environment variable
+      apiKey = process.env.OPENAI_API_KEY;
     }
 
-    const response = await this.openai.chat.completions.create({
+    if (!apiKey) {
+      return '⚠️ OpenAI API key not configured. Add via BYOK, user settings, or set OPENAI_API_KEY in .env file.';
+    }
+
+    // Create OpenAI client with the retrieved API key
+    const openaiClient = new OpenAI({ apiKey });
+
+    const response = await openaiClient.chat.completions.create({
       model: model,
       messages: messages,
       temperature: options.temperature || 0.7,
@@ -124,8 +144,24 @@ class DataSource {
     }
 
     // Fetch from API
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return '⚠️ Anthropic API key not configured. Set ANTHROPIC_API_KEY in .env file.';
+    // Use VaultBridge to get API key
+    let apiKey = null;
+
+    if (this.vaultBridge) {
+      try {
+        const keyData = await this.vaultBridge.getKey('anthropic', context);
+        apiKey = keyData.key;
+        console.log(`[DataSource] Using ${keyData.source} Anthropic key`);
+      } catch (error) {
+        console.warn('[DataSource] VaultBridge failed, falling back to env:', error.message);
+        apiKey = process.env.ANTHROPIC_API_KEY;
+      }
+    } else {
+      apiKey = process.env.ANTHROPIC_API_KEY;
+    }
+
+    if (!apiKey) {
+      return '⚠️ Anthropic API key not configured. Add via BYOK, user settings, or set ANTHROPIC_API_KEY in .env file.';
     }
 
     const response = await axios.post(
@@ -138,7 +174,7 @@ class DataSource {
       },
       {
         headers: {
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json'
         }
@@ -174,8 +210,24 @@ class DataSource {
     }
 
     // Fetch from API
-    if (!process.env.DEEPSEEK_API_KEY) {
-      return '⚠️ DeepSeek API key not configured. Set DEEPSEEK_API_KEY in .env file.';
+    // Use VaultBridge to get API key
+    let apiKey = null;
+
+    if (this.vaultBridge) {
+      try {
+        const keyData = await this.vaultBridge.getKey('deepseek', context);
+        apiKey = keyData.key;
+        console.log(`[DataSource] Using ${keyData.source} DeepSeek key`);
+      } catch (error) {
+        console.warn('[DataSource] VaultBridge failed, falling back to env:', error.message);
+        apiKey = process.env.DEEPSEEK_API_KEY;
+      }
+    } else {
+      apiKey = process.env.DEEPSEEK_API_KEY;
+    }
+
+    if (!apiKey) {
+      return '⚠️ DeepSeek API key not configured. Add via BYOK, user settings, or set DEEPSEEK_API_KEY in .env file.';
     }
 
     const response = await axios.post(
@@ -188,7 +240,7 @@ class DataSource {
       },
       {
         headers: {
-          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         }
       }
@@ -223,7 +275,7 @@ class DataSource {
     }
 
     // Fetch from Ollama API
-    const ollamaUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+    const ollamaUrl = process.env.OLLAMA_API_URL || 'http://127.0.0.1:11434';
 
     try {
       const response = await axios.post(

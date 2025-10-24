@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Roasting - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1200px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; transition: transform 0.2s; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    .code-card { background: #0a0a15; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea; }
+    .code-snippet { background: #000; padding: 15px; border-radius: 5px; margin: 15px 0; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+    .voting-section { display: flex; gap: 15px; margin-top: 20px; }
+    .vote-btn { flex: 1; padding: 20px; font-size: 16px; border-radius: 10px; transition: all 0.3s; }
+    .vote-btn.based { background: linear-gradient(135deg, #4caf50, #45a049); }
+    .vote-btn.cringe { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .vote-btn.mid { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .vote-btn:hover { transform: scale(1.05); }
+    .roast-text { color: #f39c12; font-size: 14px; margin: 10px 0; font-style: italic; }
+    .votes-display { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+    .vote-stat { background: #0a0a15; padding: 15px; border-radius: 8px; text-align: center; }
+    .vote-count { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+    .vote-count.based { color: #4caf50; }
+    .vote-count.cringe { color: #e74c3c; }
+    .vote-count.mid { color: #f39c12; }
+    .vote-label { font-size: 12px; color: #888; text-transform: uppercase; }
+    textarea { width: 100%; padding: 15px; background: #0a0a15; border: 1px solid: #2a2a3e; border-radius: 5px; color: #e0e0e0; font-family: inherit; font-size: 13px; resize: vertical; }
+  </style>
+</head>
+<body>
+  <h1>Code Roasting Arena</h1>
+  <p class="subtitle">Submit code for brutal honest feedback - Vote Based/Cringe/Mid</p>
+
+  <div class="section">
+    <h2>Current Code Under Review</h2>
+    <div class="code-card">
+      <strong>Submission by: <span id="author">Anonymous Dev</span></strong>
+      <div class="roast-text" id="roast-comment">"This code gave me anxiety"</div>
+      <div class="code-snippet" id="code-display">
+function calculateTotal(items) {
+  var total = 0;
+  for (var i = 0; i < items.length; i++) {
+    total = total + items[i].price;
+  }
+  return total;
+}</div>
+    </div>
+
+    <div class="votes-display">
+      <div class="vote-stat">
+        <div class="vote-count based" id="based-count">42</div>
+        <div class="vote-label">Based</div>
+      </div>
+      <div class="vote-stat">
+        <div class="vote-count mid" id="mid-count">28</div>
+        <div class="vote-label">Mid</div>
+      </div>
+      <div class="vote-stat">
+        <div class="vote-count cringe" id="cringe-count">156</div>
+        <div class="vote-label">Cringe</div>
+      </div>
+    </div>
+
+    <div class="voting-section">
+      <button class="vote-btn based" onclick="vote('based')">BASED</button>
+      <button class="vote-btn mid" onclick="vote('mid')">MID</button>
+      <button class="vote-btn cringe" onclick="vote('cringe')">CRINGE</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Submit Your Code for Roasting</h2>
+    <textarea id="code-input" rows="10" placeholder="Paste your code here for public roasting...">const add = (a, b) => a + b;</textarea>
+    <br><br>
+    <button onclick="submitCode()">Submit for Roasting</button>
+    <button onclick="loadExample()" style="background: linear-gradient(135deg, #888, #666);">Load Example</button>
+  </div>
+
+  <div class="section">
+    <h2>Recent Roasts</h2>
+    <div id="recent-roasts">
+      <div class="code-card" style="border-left-color: #e74c3c;">
+        <strong>Classic var loop</strong>
+        <div class="roast-text">"var in 2024? Are you time traveling?"</div>
+        <div style="margin-top: 10px; font-size: 12px; color: #888;">Based: 5 | Mid: 12 | Cringe: 89</div>
+      </div>
+      <div class="code-card" style="border-left-color: #4caf50;">
+        <strong>Clean functional reduce</strong>
+        <div class="roast-text">"Actually readable code. Rare W"</div>
+        <div style="margin-top: 10px; font-size: 12px; color: #888;">Based: 134 | Mid: 23 | Cringe: 8</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let votes = { based: 42, mid: 28, cringe: 156 };
+
+    const ROASTS = {
+      based: [
+        "Clean, concise, beautiful. Chef's kiss.",
+        "This is how you code. Take notes, juniors.",
+        "Absolutely based. No notes.",
+        "Peak engineering. Respect."
+      ],
+      mid: [
+        "It works, but at what cost?",
+        "Not great, not terrible.",
+        "This is... code. Technically.",
+        "I've seen worse. I've also seen better."
+      ],
+      cringe: [
+        "Delete this and start over.",
+        "Who hurt you?",
+        "This code gave me anxiety.",
+        "I'm forwarding this to your manager.",
+        "Please tell me this is a joke."
+      ]
+    };
+
+    const EXAMPLES = [
+      { code: 'function add(a, b) { return a + b; }', roast: "Unironically clean. Based.", author: "Clean Coder" },
+      { code: 'if (x == true) { return true; } else { return false; }', roast: "Just return x. Please.", author: "Junior Dev" },
+      { code: 'const result = array.reduce((acc, item) => acc + item.value, 0);', roast: "Actually good code. Rare.", author: "Functional Fan" },
+      { code: 'for (var i = 0; i < arr.length; i++) { console.log(arr[i]); }', roast: "var in 2024? Time traveler?", author: "Legacy Maintainer" }
+    ];
+
+    function vote(type) {
+      votes[type]++;
+      updateVotes();
+      showFeedback(type);
+    }
+
+    function updateVotes() {
+      document.getElementById('based-count').textContent = votes.based;
+      document.getElementById('mid-count').textContent = votes.mid;
+      document.getElementById('cringe-count').textContent = votes.cringe;
+
+      // Save to localStorage
+      localStorage.setItem('roast-votes', JSON.stringify(votes));
+    }
+
+    function showFeedback(type) {
+      const messages = {
+        based: ['Nice choice!', 'Based voter', 'You get it'],
+        mid: ['Fair assessment', 'Reasonable take', 'Neutral gang'],
+        cringe: ['Harsh but fair', 'Brutal honesty', 'Destroyed']
+      };
+      alert(messages[type][Math.floor(Math.random() * messages[type].length)]);
+    }
+
+    function submitCode() {
+      const code = document.getElementById('code-input').value;
+      if (!code.trim()) {
+        alert('Please enter some code first!');
+        return;
+      }
+
+      document.getElementById('code-display').textContent = code;
+      document.getElementById('author').textContent = 'You';
+
+      // Generate random roast
+      const types = ['based', 'mid', 'cringe'];
+      const randomType = types[Math.floor(Math.random() * types.length)];
+      const roast = ROASTS[randomType][Math.floor(Math.random() * ROASTS[randomType].length)];
+
+      document.getElementById('roast-comment').textContent = `"${roast}"`;
+
+      // Reset votes for new submission
+      votes = { based: 0, mid: 0, cringe: 0 };
+      updateVotes();
+
+      alert('Code submitted for roasting! Prepare for judgment.');
+    }
+
+    function loadExample() {
+      const example = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
+      document.getElementById('code-input').value = example.code;
+      document.getElementById('code-display').textContent = example.code;
+      document.getElementById('author').textContent = example.author;
+      document.getElementById('roast-comment').textContent = `"${example.roast}"`;
+
+      // Random votes
+      votes = {
+        based: Math.floor(Math.random() * 100),
+        mid: Math.floor(Math.random() * 50),
+        cringe: Math.floor(Math.random() * 150)
+      };
+      updateVotes();
+    }
+
+    // Load saved votes
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('roast-votes');
+      if (saved) {
+        votes = JSON.parse(saved);
+        updateVotes();
+      }
+    });
+  </script>
+</body>
+</html>

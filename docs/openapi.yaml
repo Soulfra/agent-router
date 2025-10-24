@@ -1,0 +1,850 @@
+openapi: 3.0.3
+info:
+  title: CalOS Multi-LLM Router API
+  version: 1.1.0
+  description: |
+    CalOS Agent Router - AI-powered routing system with bot detection, multi-provider LLM support, and reputation-based rate limiting.
+
+    ## Features
+    - 🤖 **4 LLM Providers**: OpenAI (GPT-4), Anthropic (Claude), DeepSeek, Ollama (local)
+    - 🛡️ **Bot Detection**: Zero-knowledge proof-of-personhood without KYC
+    - 🔐 **Soulfra Identity**: Self-sovereign cryptographic identity
+    - 📊 **Smart Routing**: Automatic provider selection based on task type
+    - ⚡ **Rate Limiting**: Reputation-based tiered limits
+    - 💰 **Cost Optimization**: Prefer free/cheap providers when possible
+
+    ## Authentication Flow
+    1. `POST /api/llm/request-access` - Get challenge
+    2. Create Soulfra identity, solve proof-of-work
+    3. `POST /api/llm/verify-personhood` - Get access token
+    4. Use access token in `Authorization: Bearer <token>` header
+
+    ## Domain Contexts (Task Types)
+    - `code`: Programming, debugging, code review
+    - `creative`: Writing, stories, creative content
+    - `reasoning`: Complex analysis, logic, explanations
+    - `fact`: Simple factual queries
+    - `simple`: Basic questions
+
+  contact:
+    name: CalOS Development
+    url: https://github.com/calos
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.calos.ai
+    description: Production server (if deployed)
+
+tags:
+  - name: Authentication
+    description: Bot detection and proof-of-personhood
+  - name: LLM Operations
+    description: Text completion and streaming
+  - name: Session Management
+    description: Session and rate limit info
+  - name: System
+    description: System statistics and monitoring
+
+paths:
+  /api/llm/request-access:
+    post:
+      tags:
+        - Authentication
+      summary: Request access to LLM
+      description: |
+        Get a challenge to prove personhood. This is the first step in the authentication flow.
+
+        **Flow:**
+        1. Call this endpoint to get a challenge
+        2. Create Soulfra identity locally
+        3. Solve challenge (proof-of-work ~3 seconds)
+        4. Submit proof to /api/llm/verify-personhood
+      operationId: requestAccess
+      responses:
+        '200':
+          description: Challenge created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessChallenge'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/llm/verify-personhood:
+    post:
+      tags:
+        - Authentication
+      summary: Verify personhood and get access token
+      description: |
+        Submit proof of personhood to get an access token.
+
+        **Required proofs:**
+        - Authentication response (signed challenge)
+        - Proof of work (4 leading zeros, ~3 seconds)
+        - Time proof (account age)
+        - Reputation (historical actions)
+      operationId: verifyPersonhood
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonhoodProof'
+      responses:
+        '200':
+          description: Personhood verified, access token granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '400':
+          description: Invalid request (missing fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Verification failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/llm/models:
+    get:
+      tags:
+        - LLM Operations
+      summary: List available models
+      description: Get list of all available LLM models from all providers
+      operationId: listModels
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/llm/complete:
+    post:
+      tags:
+        - LLM Operations
+      summary: Complete a prompt
+      description: |
+        Send a prompt to the multi-LLM router. The router automatically selects the best provider based on:
+        - Task type (code, creative, reasoning, fact, simple)
+        - Routing strategy (smart, cheapest, fastest, best-quality)
+        - Provider availability
+        - Cost optimization
+
+        **Task Type Routing:**
+        - `code`: Ollama CodeLlama > GPT-4 > Claude
+        - `creative`: Claude > GPT-4 > DeepSeek
+        - `reasoning`: DeepSeek Reasoner > GPT-4 > Claude
+        - `fact`: Ollama > DeepSeek > GPT-3.5
+        - `simple`: Ollama (free and fast)
+      operationId: complete
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
+      responses:
+        '200':
+          description: Completion successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied (blacklisted or session expired)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+        '500':
+          description: LLM error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/llm/stream:
+    post:
+      tags:
+        - LLM Operations
+      summary: Stream a completion
+      description: |
+        Stream a completion using Server-Sent Events (SSE).
+
+        **Event types:**
+        - `start`: Streaming started
+        - `chunk`: Text chunk
+        - `done`: Streaming completed
+        - `error`: Error occurred
+      operationId: stream
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
+      responses:
+        '200':
+          description: Streaming response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream
+                example: |
+                  data: {"type":"start","session":"soulfra_..."}
+
+                  data: {"type":"chunk","text":"Hello"}
+
+                  data: {"type":"chunk","text":" world"}
+
+                  data: {"type":"done","response":{"provider":"ollama","latency":1234}}
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /api/llm/session:
+    get:
+      tags:
+        - Session Management
+      summary: Get session info
+      description: Get current session information including reputation and request count
+      operationId: getSession
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Session Management
+      summary: Revoke session
+      description: Revoke the current session (logout)
+      operationId: revokeSession
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/llm/rate-limit:
+    get:
+      tags:
+        - Session Management
+      summary: Get rate limit status
+      description: Get current rate limit status and remaining requests
+      operationId: getRateLimit
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Rate limit status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitStatus'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/llm/stats:
+    get:
+      tags:
+        - System
+      summary: Get system statistics
+      description: Get system-wide statistics for monitoring (public endpoint)
+      operationId: getStats
+      responses:
+        '200':
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStats'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Access token obtained from `/api/llm/verify-personhood` endpoint.
+        Include in Authorization header: `Authorization: Bearer <access_token>`
+
+  schemas:
+    AccessChallenge:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        sessionID:
+          type: string
+          description: Session identifier (valid for 5 minutes)
+          example: "9ed82b7080269a4ebb39fbe068148cc8"
+        challenge:
+          type: string
+          description: Hex-encoded random challenge (32 bytes)
+          example: "acc40ab2b97fc89f3534cdeb407f8bfa..."
+        expiresAt:
+          type: string
+          format: date-time
+          description: Challenge expiration time (ISO 8601)
+          example: "2025-10-12T20:49:04.123Z"
+        requirements:
+          type: object
+          properties:
+            powDifficulty:
+              type: integer
+              description: Proof of work difficulty (leading zeros)
+              example: 4
+            mustProvideIdentity:
+              type: boolean
+              example: true
+            mustCompleteProofOfWork:
+              type: boolean
+              example: true
+        instructions:
+          type: object
+          description: Step-by-step instructions
+          additionalProperties: true
+
+    PersonhoodProof:
+      type: object
+      required:
+        - sessionID
+        - identityID
+        - authResponse
+        - proofOfWork
+      properties:
+        sessionID:
+          type: string
+          description: Session ID from request-access
+          example: "9ed82b7080269a4ebb39fbe068148cc8"
+        identityID:
+          type: string
+          description: Soulfra identity ID
+          example: "soulfra_2aaf0c4d1a9d8e0b302e454ff4a14013"
+        authResponse:
+          type: object
+          description: Signed authentication response
+          additionalProperties: true
+        proofOfWork:
+          type: object
+          description: Proof of work (4 leading zeros)
+          additionalProperties: true
+        timeProof:
+          type: object
+          description: Time-based proof (account age)
+          additionalProperties: true
+        reputation:
+          type: object
+          description: Reputation score
+          additionalProperties: true
+
+    VerificationResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        verified:
+          type: boolean
+          example: true
+        accessToken:
+          type: string
+          description: Access token (valid for 24 hours)
+          example: "soulfra_b54751c6419386021cce8a63..."
+        identityID:
+          type: string
+          example: "soulfra_2aaf0c4d1a9d8e0b302e454ff4a14013"
+        reputation:
+          $ref: '#/components/schemas/Reputation'
+        tier:
+          $ref: '#/components/schemas/AccessTier'
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-10-13T20:44:04.123Z"
+        message:
+          type: string
+          example: "Personhood verified. Access granted."
+
+    Reputation:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Reputation score (0-100)
+          example: 27
+        factors:
+          type: array
+          items:
+            type: object
+            properties:
+              factor:
+                type: string
+                enum: [account_age, proof_of_work, historical_reputation]
+              value:
+                oneOf:
+                  - type: integer
+                  - type: object
+              score:
+                type: integer
+
+    AccessTier:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [new, established, trusted, verified]
+          example: "established"
+        description:
+          type: string
+          example: "Established account - standard access"
+        rateLimit:
+          type: object
+          properties:
+            requestsPerHour:
+              type: integer
+              example: 100
+            requestsPerDay:
+              type: integer
+              example: 500
+
+    CompletionRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: The prompt to complete
+          example: "Explain quantum computing in simple terms"
+        systemPrompt:
+          type: string
+          description: System prompt (optional)
+          example: "You are a helpful assistant."
+        taskType:
+          type: string
+          enum: [code, creative, reasoning, fact, simple]
+          description: Task type for smart routing
+          example: "reasoning"
+        maxTokens:
+          type: integer
+          description: Maximum tokens to generate
+          default: 1000
+          example: 500
+        temperature:
+          type: number
+          format: float
+          description: Sampling temperature (0.0 to 2.0)
+          default: 0.7
+          example: 0.7
+        preferredProvider:
+          type: string
+          enum: [openai, anthropic, deepseek, ollama]
+          description: Force specific provider (optional)
+        model:
+          type: string
+          description: Force specific model (optional)
+          example: "gpt-4"
+
+    CompletionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        response:
+          type: object
+          properties:
+            text:
+              type: string
+              example: "Quantum computing is..."
+            provider:
+              type: string
+              enum: [openai, anthropic, deepseek, ollama]
+              example: "ollama"
+            model:
+              type: string
+              example: "llama3.2:3b"
+            usage:
+              type: object
+              properties:
+                prompt_tokens:
+                  type: integer
+                  example: 15
+                completion_tokens:
+                  type: integer
+                  example: 200
+                total_tokens:
+                  type: integer
+                  example: 215
+            finishReason:
+              type: string
+              enum: [stop, length]
+              example: "stop"
+            latency:
+              type: integer
+              description: Response time in milliseconds
+              example: 2893
+        session:
+          type: object
+          properties:
+            identityID:
+              type: string
+            tier:
+              type: string
+            requestCount:
+              type: integer
+        rateLimit:
+          type: object
+          properties:
+            remaining:
+              type: object
+              properties:
+                hourly:
+                  type: integer
+                daily:
+                  type: integer
+            limits:
+              type: object
+              properties:
+                hourly:
+                  type: integer
+                daily:
+                  type: integer
+            resetAt:
+              type: object
+              properties:
+                hourly:
+                  type: string
+                  format: date-time
+                daily:
+                  type: string
+                  format: date-time
+
+    ModelsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        providers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                enum: [openai, anthropic, deepseek, ollama]
+                example: "ollama"
+              models:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: "llama3.2:3b"
+                    contextWindow:
+                      type: integer
+                      example: 128000
+                    cost:
+                      type: number
+                      description: Cost per 1M tokens (USD)
+                      example: 0
+
+    SessionInfo:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        session:
+          type: object
+          properties:
+            identityID:
+              type: string
+            tier:
+              $ref: '#/components/schemas/AccessTier'
+            reputation:
+              $ref: '#/components/schemas/Reputation'
+            requestCount:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+            expiresAt:
+              type: string
+              format: date-time
+
+    RateLimitStatus:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        rateLimit:
+          type: object
+          properties:
+            exists:
+              type: boolean
+            identityID:
+              type: string
+            tier:
+              type: string
+            limits:
+              type: object
+              properties:
+                hourly:
+                  type: integer
+                daily:
+                  type: integer
+            remaining:
+              type: object
+              properties:
+                hourly:
+                  type: integer
+                daily:
+                  type: integer
+            resetAt:
+              type: object
+              properties:
+                hourly:
+                  type: string
+                  format: date-time
+                daily:
+                  type: string
+                  format: date-time
+            totalRequests:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+            lastRequest:
+              type: string
+              format: date-time
+
+    SystemStats:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        stats:
+          type: object
+          properties:
+            botDetection:
+              type: object
+              properties:
+                activeSessions:
+                  type: integer
+                activeChallenges:
+                  type: integer
+                blacklistedIdentities:
+                  type: integer
+                sessionsByTier:
+                  type: object
+                  properties:
+                    new:
+                      type: integer
+                    established:
+                      type: integer
+                    trusted:
+                      type: integer
+                    verified:
+                      type: integer
+            rateLimiting:
+              type: object
+              properties:
+                totalBuckets:
+                  type: integer
+                totalRequests:
+                  type: integer
+            llm:
+              type: object
+              properties:
+                totalRequests:
+                  type: integer
+                successfulRequests:
+                  type: integer
+                failedRequests:
+                  type: integer
+                totalTokens:
+                  type: integer
+                totalCost:
+                  type: number
+            timestamp:
+              type: string
+              format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "invalid_request"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Missing required field: prompt"
+        reason:
+          type: string
+          description: Detailed error reason (optional)
+
+    RateLimitError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "rate_limit_exceeded"
+        reason:
+          type: string
+          enum: [hourly_limit_exceeded, daily_limit_exceeded]
+          example: "hourly_limit_exceeded"
+        limits:
+          type: object
+          properties:
+            hourly:
+              type: integer
+            daily:
+              type: integer
+        remaining:
+          type: object
+          properties:
+            hourly:
+              type: integer
+            daily:
+              type: integer
+        resetAt:
+          type: object
+          properties:
+            hourly:
+              type: string
+              format: date-time
+            daily:
+              type: string
+              format: date-time
+        message:
+          type: string
+          example: "Rate limit exceeded. You can make 100 requests per hour."

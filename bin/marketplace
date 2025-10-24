@@ -1,0 +1,426 @@
+#!/usr/bin/env node
+
+/**
+ * Talent Marketplace CLI
+ *
+ * Interactive command-line tool for managing the talent marketplace system.
+ *
+ * Commands:
+ *   marketplace validate     - Run system validation tests
+ *   marketplace init-db      - Initialize database (run migrations)
+ *   marketplace status       - Show system status
+ *   marketplace shell        - Interactive REPL with loaded modules
+ *   marketplace menu         - Interactive menu system
+ *   marketplace help         - Show this help
+ */
+
+const { spawn } = require('child_process');
+const { createInterface } = require('readline');
+const path = require('path');
+const fs = require('fs');
+
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m'
+};
+
+const ROOT_DIR = path.join(__dirname, '..');
+
+// ============================================================================
+// Help
+// ============================================================================
+
+function showHelp() {
+  console.log(`
+${colors.bright}${colors.cyan}Talent Marketplace CLI${colors.reset}
+
+${colors.bright}USAGE:${colors.reset}
+  marketplace <command> [options]
+
+${colors.bright}COMMANDS:${colors.reset}
+  ${colors.green}validate${colors.reset}      Run comprehensive system validation tests
+  ${colors.green}init-db${colors.reset}       Initialize database (run migrations)
+  ${colors.green}status${colors.reset}        Show system status and health checks
+  ${colors.green}shell${colors.reset}         Interactive Node.js REPL with loaded modules
+  ${colors.green}menu${colors.reset}          Interactive menu system
+  ${colors.green}help${colors.reset}          Show this help message
+
+${colors.bright}EXAMPLES:${colors.reset}
+  marketplace validate              # Run all validation tests
+  marketplace validate --verbose    # Run with detailed output
+  marketplace init-db               # Run database migrations
+  marketplace shell                 # Start interactive shell
+  marketplace menu                  # Start interactive menu
+
+${colors.bright}SYSTEM INFO:${colors.reset}
+  Location: ${ROOT_DIR}
+  Modules:  8 core libraries, 50+ API endpoints
+  Database: PostgreSQL (via $DATABASE_URL)
+`);
+}
+
+// ============================================================================
+// Validate Command
+// ============================================================================
+
+async function runValidation(args) {
+  const verbose = args.includes('--verbose');
+
+  console.log(`${colors.blue}Running system validation...${colors.reset}\n`);
+
+  const validatorPath = path.join(ROOT_DIR, 'scripts', 'validate-marketplace-system.js');
+
+  const validatorArgs = ['node', validatorPath];
+  if (verbose) validatorArgs.push('--verbose');
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn('node', [validatorPath, ...(verbose ? ['--verbose'] : [])], {
+      cwd: ROOT_DIR,
+      stdio: 'inherit'
+    });
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Validation failed with code ${code}`));
+      }
+    });
+  });
+}
+
+// ============================================================================
+// Init DB Command
+// ============================================================================
+
+async function initDatabase(args) {
+  console.log(`${colors.blue}Initializing database...${colors.reset}\n`);
+
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error(`${colors.red}✗ DATABASE_URL environment variable not set${colors.reset}`);
+    console.log(`\n${colors.yellow}Set DATABASE_URL first:${colors.reset}`);
+    console.log(`  export DATABASE_URL="postgresql://user:pass@host:port/dbname"\n`);
+    process.exit(1);
+  }
+
+  const migrations = [
+    'migrations/056_decision_tracking.sql',
+    'migrations/057_marketplace_reputation.sql'
+  ];
+
+  for (const migration of migrations) {
+    const migrationPath = path.join(ROOT_DIR, migration);
+
+    if (!fs.existsSync(migrationPath)) {
+      console.error(`${colors.red}✗ Migration file not found: ${migration}${colors.reset}`);
+      continue;
+    }
+
+    console.log(`${colors.cyan}Running migration: ${migration}${colors.reset}`);
+
+    await new Promise((resolve, reject) => {
+      const proc = spawn('psql', [dbUrl, '-f', migrationPath], {
+        cwd: ROOT_DIR,
+        stdio: 'inherit'
+      });
+
+      proc.on('close', (code) => {
+        if (code === 0) {
+          console.log(`${colors.green}✓ Migration complete: ${migration}${colors.reset}\n`);
+          resolve();
+        } else {
+          console.error(`${colors.red}✗ Migration failed: ${migration}${colors.reset}\n`);
+          reject(new Error(`Migration failed with code ${code}`));
+        }
+      });
+    });
+  }
+
+  console.log(`${colors.green}✓ Database initialized successfully${colors.reset}\n`);
+}
+
+// ============================================================================
+// Status Command
+// ============================================================================
+
+async function showStatus(args) {
+  console.log(`${colors.blue}System Status Check${colors.reset}\n`);
+
+  // Check environment
+  console.log(`${colors.bright}Environment:${colors.reset}`);
+  console.log(`  DATABASE_URL: ${process.env.DATABASE_URL ? colors.green + 'Set' + colors.reset : colors.red + 'Not set' + colors.reset}`);
+  console.log(`  NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`  Node.js: ${process.version}\n`);
+
+  // Check files
+  console.log(`${colors.bright}Core Libraries:${colors.reset}`);
+  const libs = [
+    'lib/decision-tracker.js',
+    'lib/decision-archive.js',
+    'lib/decision-todo.js',
+    'lib/reputation-engine.js',
+    'lib/idea-marketplace.js',
+    'lib/github-activity-feed.js',
+    'lib/profile-comms.js',
+    'routes/talent-marketplace-routes.js'
+  ];
+
+  for (const lib of libs) {
+    const exists = fs.existsSync(path.join(ROOT_DIR, lib));
+    const status = exists ? `${colors.green}✓${colors.reset}` : `${colors.red}✗${colors.reset}`;
+    console.log(`  ${status} ${lib}`);
+  }
+
+  console.log(`\n${colors.bright}Migrations:${colors.reset}`);
+  const migrations = [
+    'migrations/056_decision_tracking.sql',
+    'migrations/057_marketplace_reputation.sql'
+  ];
+
+  for (const migration of migrations) {
+    const exists = fs.existsSync(path.join(ROOT_DIR, migration));
+    const status = exists ? `${colors.green}✓${colors.reset}` : `${colors.red}✗${colors.reset}`;
+    console.log(`  ${status} ${migration}`);
+  }
+
+  console.log(`\n${colors.bright}Scripts:${colors.reset}`);
+  const scripts = [
+    'scripts/validate-marketplace-system.js'
+  ];
+
+  for (const script of scripts) {
+    const exists = fs.existsSync(path.join(ROOT_DIR, script));
+    const status = exists ? `${colors.green}✓${colors.reset}` : `${colors.red}✗${colors.reset}`;
+    console.log(`  ${status} ${script}`);
+  }
+
+  console.log('');
+}
+
+// ============================================================================
+// Shell Command
+// ============================================================================
+
+async function startShell(args) {
+  console.log(`${colors.blue}Starting interactive marketplace shell...${colors.reset}\n`);
+
+  // Load all modules
+  console.log(`${colors.gray}Loading modules...${colors.reset}`);
+
+  const DecisionTracker = require(path.join(ROOT_DIR, 'lib/decision-tracker'));
+  const DecisionArchive = require(path.join(ROOT_DIR, 'lib/decision-archive'));
+  const DecisionTodo = require(path.join(ROOT_DIR, 'lib/decision-todo'));
+  const ReputationEngine = require(path.join(ROOT_DIR, 'lib/reputation-engine'));
+  const IdeaMarketplace = require(path.join(ROOT_DIR, 'lib/idea-marketplace'));
+  const GitHubActivityFeed = require(path.join(ROOT_DIR, 'lib/github-activity-feed'));
+  const ProfileComms = require(path.join(ROOT_DIR, 'lib/profile-comms'));
+
+  // Create instances
+  const decisionTracker = new DecisionTracker();
+  const reputationEngine = new ReputationEngine();
+  const decisionArchive = new DecisionArchive({ tracker: decisionTracker });
+  const decisionTodo = new DecisionTodo();
+  const ideaMarketplace = new IdeaMarketplace({ reputationEngine });
+  const activityFeed = new GitHubActivityFeed({ reputationEngine });
+  const profileComms = new ProfileComms();
+
+  console.log(`${colors.green}✓ All modules loaded${colors.reset}\n`);
+  console.log(`${colors.bright}Available instances:${colors.reset}`);
+  console.log(`  ${colors.cyan}decisionTracker${colors.reset}   - Decision version control`);
+  console.log(`  ${colors.cyan}decisionArchive${colors.reset}   - Decision archive with lineage`);
+  console.log(`  ${colors.cyan}decisionTodo${colors.reset}      - Decision todo system`);
+  console.log(`  ${colors.cyan}reputationEngine${colors.reset}  - Karma and badges`);
+  console.log(`  ${colors.cyan}ideaMarketplace${colors.reset}   - Idea submissions`);
+  console.log(`  ${colors.cyan}activityFeed${colors.reset}      - GitHub activity feed`);
+  console.log(`  ${colors.cyan}profileComms${colors.reset}      - Profile messaging\n`);
+  console.log(`${colors.gray}Type .exit to quit${colors.reset}\n`);
+
+  // Start REPL
+  const repl = require('repl');
+  const replServer = repl.start({
+    prompt: `${colors.magenta}marketplace>${colors.reset} `,
+    useColors: true
+  });
+
+  // Add instances to REPL context
+  replServer.context.decisionTracker = decisionTracker;
+  replServer.context.decisionArchive = decisionArchive;
+  replServer.context.decisionTodo = decisionTodo;
+  replServer.context.reputationEngine = reputationEngine;
+  replServer.context.ideaMarketplace = ideaMarketplace;
+  replServer.context.activityFeed = activityFeed;
+  replServer.context.profileComms = profileComms;
+
+  // Add constructors too
+  replServer.context.DecisionTracker = DecisionTracker;
+  replServer.context.DecisionArchive = DecisionArchive;
+  replServer.context.DecisionTodo = DecisionTodo;
+  replServer.context.ReputationEngine = ReputationEngine;
+  replServer.context.IdeaMarketplace = IdeaMarketplace;
+  replServer.context.GitHubActivityFeed = GitHubActivityFeed;
+  replServer.context.ProfileComms = ProfileComms;
+}
+
+// ============================================================================
+// Menu Command
+// ============================================================================
+
+async function startMenu(args) {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const question = (prompt) => new Promise((resolve) => rl.question(prompt, resolve));
+
+  while (true) {
+    console.clear();
+    console.log(`${colors.bright}${colors.cyan}═══════════════════════════════════════════════${colors.reset}`);
+    console.log(`${colors.bright}${colors.cyan}    TALENT MARKETPLACE - INTERACTIVE MENU    ${colors.reset}`);
+    console.log(`${colors.bright}${colors.cyan}═══════════════════════════════════════════════${colors.reset}\n`);
+
+    console.log(`${colors.bright}System Operations:${colors.reset}`);
+    console.log(`  ${colors.green}1${colors.reset}. Run validation tests`);
+    console.log(`  ${colors.green}2${colors.reset}. Check system status`);
+    console.log(`  ${colors.green}3${colors.reset}. Initialize database (run migrations)`);
+    console.log(`  ${colors.green}4${colors.reset}. Start interactive shell\n`);
+
+    console.log(`${colors.bright}Documentation:${colors.reset}`);
+    console.log(`  ${colors.green}5${colors.reset}. View validation results`);
+    console.log(`  ${colors.green}6${colors.reset}. View complete guide`);
+    console.log(`  ${colors.green}7${colors.reset}. View API reference\n`);
+
+    console.log(`  ${colors.red}0${colors.reset}. Exit\n`);
+
+    const choice = await question(`${colors.magenta}Select option:${colors.reset} `);
+    console.log('');
+
+    try {
+      switch (choice.trim()) {
+        case '1':
+          await runValidation(['--verbose']);
+          break;
+        case '2':
+          await showStatus([]);
+          break;
+        case '3':
+          await initDatabase([]);
+          break;
+        case '4':
+          rl.close();
+          await startShell([]);
+          return;
+        case '5':
+          viewFile('VALIDATION_RESULTS.md');
+          break;
+        case '6':
+          viewFile('TALENT_MARKETPLACE_COMPLETE_GUIDE.md');
+          break;
+        case '7':
+          console.log(`${colors.cyan}API Documentation:${colors.reset}`);
+          console.log(`  See TALENT_MARKETPLACE_COMPLETE_GUIDE.md for full API reference`);
+          console.log(`  50+ endpoints covering all marketplace systems\n`);
+          break;
+        case '0':
+          console.log(`${colors.gray}Goodbye!${colors.reset}`);
+          rl.close();
+          return;
+        default:
+          console.log(`${colors.red}Invalid option${colors.reset}`);
+      }
+
+      if (choice.trim() !== '0' && choice.trim() !== '4') {
+        await question(`\n${colors.gray}Press Enter to continue...${colors.reset}`);
+      }
+    } catch (error) {
+      console.error(`${colors.red}Error: ${error.message}${colors.reset}`);
+      await question(`\n${colors.gray}Press Enter to continue...${colors.reset}`);
+    }
+  }
+}
+
+function viewFile(filename) {
+  const filepath = path.join(ROOT_DIR, '..', filename);
+
+  if (!fs.existsSync(filepath)) {
+    console.log(`${colors.red}✗ File not found: ${filename}${colors.reset}`);
+    return;
+  }
+
+  // Use 'less' if available, otherwise cat
+  const viewer = process.platform === 'win32' ? 'type' : 'less';
+
+  spawn(viewer, [filepath], {
+    stdio: 'inherit'
+  });
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0] || 'help';
+
+  try {
+    switch (command) {
+      case 'validate':
+        await runValidation(args.slice(1));
+        break;
+      case 'init-db':
+        await initDatabase(args.slice(1));
+        break;
+      case 'status':
+        await showStatus(args.slice(1));
+        break;
+      case 'shell':
+        await startShell(args.slice(1));
+        break;
+      case 'menu':
+        await startMenu(args.slice(1));
+        break;
+      case 'help':
+      case '--help':
+      case '-h':
+        showHelp();
+        break;
+      default:
+        console.error(`${colors.red}Unknown command: ${command}${colors.reset}`);
+        console.log(`Run 'marketplace help' for usage information\n`);
+        process.exit(1);
+    }
+  } catch (error) {
+    console.error(`${colors.red}Error: ${error.message}${colors.reset}`);
+    if (process.env.DEBUG) {
+      console.error(error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+// Error handling
+process.on('unhandledRejection', (error) => {
+  console.error(`${colors.red}Unhandled error:${colors.reset}`, error);
+  process.exit(1);
+});
+
+process.on('SIGINT', () => {
+  console.log(`\n${colors.gray}Interrupted${colors.reset}`);
+  process.exit(0);
+});
+
+// Run
+if (require.main === module) {
+  main();
+}
+
+module.exports = { main };

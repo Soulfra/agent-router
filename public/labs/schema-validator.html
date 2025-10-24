@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schema Validator - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1200px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    textarea { width: 100%; padding: 15px; background: #0a0a15; border: 1px solid #2a2a3e; border-radius: 5px; color: #e0e0e0; font-family: inherit; font-size: 13px; resize: vertical; }
+    .output { background: #0a0a15; padding: 15px; border-radius: 5px; font-size: 13px; line-height: 1.6; min-height: 100px; max-height: 400px; overflow-y: auto; border: 1px solid #2a2a3e; }
+    .output.error { border-left: 4px solid #e74c3c; background: #1a0a0a; }
+    .output.success { border-left: 4px solid #4caf50; }
+    .validation-result { padding: 12px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid; }
+    .validation-result.valid { border-left-color: #4caf50; background: rgba(76, 175, 80, 0.1); }
+    .validation-result.invalid { border-left-color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+    .error-list { margin-top: 10px; font-size: 12px; color: #e74c3c; }
+    .error-item { padding: 5px 0; }
+    .schema-examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+    .schema-btn { padding: 12px; background: #0a0a15; border: 1px solid #2a2a3e; border-radius: 5px; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .schema-btn:hover { border-color: #667eea; background: #1a1a2e; }
+    .schema-btn-title { font-weight: bold; color: #667eea; margin-bottom: 5px; }
+    .schema-btn-desc { font-size: 11px; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>CalOS Schema Validator</h1>
+  <p class="subtitle">Validate JSON data against CalOS schemas - zero dependencies</p>
+
+  <div class="section">
+    <h2>Schema Definition</h2>
+    <textarea id="schema-input" rows="12" placeholder='{"type": "object", "properties": {...}}'>{
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string", "required": true },
+    "email": { "type": "string", "pattern": "^[^@]+@[^@]+\\.[^@]+$" },
+    "level": { "type": "number", "min": 1, "max": 100 },
+    "premium": { "type": "boolean" }
+  },
+  "required": ["userId", "email"]
+}</textarea>
+    <div class="schema-examples">
+      <div class="schema-btn" onclick="loadSchema('user')">
+        <div class="schema-btn-title">User Schema</div>
+        <div class="schema-btn-desc">Validate user objects</div>
+      </div>
+      <div class="schema-btn" onclick="loadSchema('config')">
+        <div class="schema-btn-title">Config Schema</div>
+        <div class="schema-btn-desc">App configuration</div>
+      </div>
+      <div class="schema-btn" onclick="loadSchema('api')">
+        <div class="schema-btn-title">API Response</div>
+        <div class="schema-btn-desc">Validate API data</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Data to Validate</h2>
+    <textarea id="data-input" rows="10" placeholder='{"userId": "123", "email": "user@example.com", ...}'>{
+  "userId": "user-123",
+  "email": "john@example.com",
+  "level": 5,
+  "premium": true
+}</textarea>
+    <br><br>
+    <button onclick="validate()">Validate Data</button>
+    <button onclick="loadTestData('valid')" style="background: linear-gradient(135deg, #4caf50, #45a049);">Load Valid Data</button>
+    <button onclick="loadTestData('invalid')" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Load Invalid Data</button>
+  </div>
+
+  <div class="section">
+    <h2>Validation Result</h2>
+    <div id="result-container">
+      <pre class="output">Click "Validate Data" to check your JSON...</pre>
+    </div>
+  </div>
+
+  <script>
+    const SCHEMAS = {
+      user: {
+        type: "object",
+        properties: {
+          userId: { type: "string", required: true },
+          email: { type: "string", pattern: "^[^@]+@[^@]+\\.[^@]+$" },
+          level: { type: "number", min: 1, max: 100 },
+          premium: { type: "boolean" }
+        },
+        required: ["userId", "email"]
+      },
+      config: {
+        type: "object",
+        properties: {
+          appName: { type: "string", required: true },
+          port: { type: "number", min: 1024, max: 65535 },
+          debug: { type: "boolean" },
+          database: {
+            type: "object",
+            properties: {
+              host: { type: "string" },
+              port: { type: "number" }
+            }
+          }
+        },
+        required: ["appName", "port"]
+      },
+      api: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", required: true },
+          data: { type: "object" },
+          error: { type: "string" },
+          timestamp: { type: "number" }
+        },
+        required: ["success"]
+      }
+    };
+
+    const TEST_DATA = {
+      valid: {
+        userId: "user-123",
+        email: "john@example.com",
+        level: 5,
+        premium: true
+      },
+      invalid: {
+        userId: "user-456",
+        email: "invalid-email",
+        level: 150,
+        premium: "yes"
+      }
+    };
+
+    function validate() {
+      try {
+        const schema = JSON.parse(document.getElementById('schema-input').value);
+        const data = JSON.parse(document.getElementById('data-input').value);
+
+        const errors = validateAgainstSchema(data, schema);
+
+        displayResult(errors);
+      } catch (error) {
+        displayError(`Parse error: ${error.message}`);
+      }
+    }
+
+    function validateAgainstSchema(data, schema, path = '') {
+      const errors = [];
+
+      // Check required fields
+      if (schema.required) {
+        schema.required.forEach(field => {
+          if (!(field in data)) {
+            errors.push(`Missing required field: ${path}${field}`);
+          }
+        });
+      }
+
+      // Check properties
+      if (schema.properties) {
+        Object.entries(schema.properties).forEach(([key, propSchema]) => {
+          const value = data[key];
+          const currentPath = path ? `${path}.${key}` : key;
+
+          if (value === undefined) {
+            if (propSchema.required) {
+              errors.push(`Missing required field: ${currentPath}`);
+            }
+            return;
+          }
+
+          // Type validation
+          if (propSchema.type) {
+            const actualType = Array.isArray(value) ? 'array' : typeof value;
+            if (actualType !== propSchema.type) {
+              errors.push(`Type mismatch at ${currentPath}: expected ${propSchema.type}, got ${actualType}`);
+            }
+          }
+
+          // Number validation
+          if (propSchema.type === 'number') {
+            if (propSchema.min !== undefined && value < propSchema.min) {
+              errors.push(`Value at ${currentPath} (${value}) is below minimum (${propSchema.min})`);
+            }
+            if (propSchema.max !== undefined && value > propSchema.max) {
+              errors.push(`Value at ${currentPath} (${value}) exceeds maximum (${propSchema.max})`);
+            }
+          }
+
+          // String pattern validation
+          if (propSchema.type === 'string' && propSchema.pattern) {
+            const regex = new RegExp(propSchema.pattern);
+            if (!regex.test(value)) {
+              errors.push(`Value at ${currentPath} does not match pattern: ${propSchema.pattern}`);
+            }
+          }
+
+          // Nested object validation
+          if (propSchema.type === 'object' && propSchema.properties) {
+            errors.push(...validateAgainstSchema(value, propSchema, currentPath + '.'));
+          }
+        });
+      }
+
+      return errors;
+    }
+
+    function displayResult(errors) {
+      const container = document.getElementById('result-container');
+
+      if (errors.length === 0) {
+        container.innerHTML = `
+          <div class="validation-result valid">
+            <strong style="color: #4caf50;">✓ Valid!</strong>
+            <div style="margin-top: 5px; font-size: 13px;">Data matches schema perfectly.</div>
+          </div>
+        `;
+      } else {
+        let html = `
+          <div class="validation-result invalid">
+            <strong style="color: #e74c3c;">✗ Invalid</strong>
+            <div style="margin-top: 5px; font-size: 13px;">Found ${errors.length} validation error(s):</div>
+            <div class="error-list">
+        `;
+
+        errors.forEach(error => {
+          html += `<div class="error-item">• ${error}</div>`;
+        });
+
+        html += `</div></div>`;
+        container.innerHTML = html;
+      }
+    }
+
+    function displayError(message) {
+      const container = document.getElementById('result-container');
+      container.innerHTML = `
+        <pre class="output error">${message}</pre>
+      `;
+    }
+
+    function loadSchema(type) {
+      document.getElementById('schema-input').value = JSON.stringify(SCHEMAS[type], null, 2);
+    }
+
+    function loadTestData(type) {
+      document.getElementById('data-input').value = JSON.stringify(TEST_DATA[type], null, 2);
+    }
+  </script>
+</body>
+</html>

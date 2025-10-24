@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meme Generator API Documentation - CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Monaco', monospace;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      color: #667eea;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .section h3 {
+      font-size: 1.3rem;
+      margin: 25px 0 15px 0;
+      color: #333;
+    }
+
+    .endpoint {
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .endpoint .method {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-right: 10px;
+    }
+
+    .method.get {
+      background: #10b981;
+      color: white;
+    }
+
+    .method.post {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .endpoint .url {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 1.1rem;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .endpoint .description {
+      margin-top: 10px;
+      color: #666;
+    }
+
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 15px 0;
+    }
+
+    .code-block .comment {
+      color: #6a9955;
+    }
+
+    .code-block .string {
+      color: #ce9178;
+    }
+
+    .code-block .keyword {
+      color: #569cd6;
+    }
+
+    .code-block .function {
+      color: #dcdcaa;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .badge.free {
+      background: #10b981;
+      color: white;
+    }
+
+    .badge.rate-limited {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .info-box {
+      background: #e0f2fe;
+      border-left: 4px solid #3b82f6;
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    .warning-box {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    .success-box {
+      background: #d1fae5;
+      border-left: 4px solid #10b981;
+      padding: 15px 20px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    table th, table td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+      margin: 10px 10px 10px 0;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎨 Meme Generator API</h1>
+    <p>Free, rate-limited API for generating viral dev memes</p>
+  </header>
+
+  <div class="container">
+    <!-- Overview -->
+    <div class="section">
+      <h2>📖 Overview</h2>
+      <p>
+        The CALOS Meme Generator API allows you to programmatically generate viral dev memes
+        in GIF and MP4 formats. Perfect for Twitter bots, Discord integrations, or any project
+        that needs dank dev humor.
+      </p>
+
+      <div class="success-box" style="margin-top: 20px;">
+        <strong>✨ 100% Free</strong><br>
+        No API keys, no credit card, no sign-up. Just start making memes!
+      </div>
+
+      <div style="margin-top: 20px;">
+        <span class="badge free">Free Forever</span>
+        <span class="badge rate-limited">100 requests/day per IP</span>
+      </div>
+    </div>
+
+    <!-- Getting Started -->
+    <div class="section">
+      <h2>🚀 Getting Started</h2>
+
+      <h3>Base URL</h3>
+      <div class="code-block">
+http://localhost:5001/api/public/memes
+      </div>
+
+      <h3>Rate Limits</h3>
+      <table>
+        <tr>
+          <th>Limit</th>
+          <th>Window</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>100 requests</td>
+          <td>24 hours</td>
+          <td>Per IP address, resets daily</td>
+        </tr>
+      </table>
+
+      <div class="info-box">
+        <strong>💡 Rate Limit Headers</strong><br>
+        Every response includes:<br>
+        • <code>X-RateLimit-Limit</code>: Your daily limit (100)<br>
+        • <code>X-RateLimit-Remaining</code>: Requests remaining<br>
+        • <code>X-RateLimit-Reset</code>: When your limit resets
+      </div>
+    </div>
+
+    <!-- Endpoints -->
+    <div class="section">
+      <h2>📡 API Endpoints</h2>
+
+      <!-- GET /templates -->
+      <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/api/public/memes/templates</span>
+        <div class="description">
+          List all available meme templates with metadata
+        </div>
+      </div>
+
+      <h3>Example Request</h3>
+      <div class="code-block">
+<span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'http://localhost:5001/api/public/memes/templates'</span>);
+<span class="keyword">const</span> data = <span class="keyword">await</span> response.<span class="function">json</span>();
+console.<span class="function">log</span>(data);
+      </div>
+
+      <h3>Example Response</h3>
+      <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"count"</span>: 8,
+  <span class="string">"templates"</span>: [
+    {
+      <span class="string">"id"</span>: <span class="string">"npm-install"</span>,
+      <span class="string">"name"</span>: <span class="string">"npm install"</span>,
+      <span class="string">"description"</span>: <span class="string">"The classic npm install experience"</span>,
+      <span class="string">"category"</span>: <span class="string">"packages"</span>,
+      <span class="string">"hashtags"</span>: [<span class="string">"#npm"</span>, <span class="string">"#JavaScript"</span>, <span class="string">"#DevLife"</span>],
+      <span class="string">"frameCount"</span>: 3
+    },
+    <span class="comment">// ... more templates</span>
+  ]
+}
+      </div>
+
+      <!-- POST /generate/:templateId -->
+      <div class="endpoint" style="margin-top: 40px;">
+        <span class="method post">POST</span>
+        <span class="url">/api/public/memes/generate/:templateId</span>
+        <div class="description">
+          Generate a meme from a specific template. Returns base64 data URLs for instant preview.
+        </div>
+      </div>
+
+      <h3>Parameters</h3>
+      <table>
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>templateId</td>
+          <td>string</td>
+          <td>Yes</td>
+          <td>Template ID from /templates endpoint</td>
+        </tr>
+        <tr>
+          <td>format</td>
+          <td>string</td>
+          <td>No</td>
+          <td>"both" | "gif" | "mp4" (default: "both")</td>
+        </tr>
+        <tr>
+          <td>quality</td>
+          <td>string</td>
+          <td>No</td>
+          <td>"high" | "medium" | "low" (default: "medium")</td>
+        </tr>
+      </table>
+
+      <h3>Example Request</h3>
+      <div class="code-block">
+<span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'http://localhost:5001/api/public/memes/generate/npm-install'</span>, {
+  <span class="string">method</span>: <span class="string">'POST'</span>,
+  <span class="string">headers</span>: {
+    <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>
+  },
+  <span class="string">body</span>: JSON.<span class="function">stringify</span>({
+    <span class="string">format</span>: <span class="string">'both'</span>  <span class="comment">// Optional</span>
+  })
+});
+
+<span class="keyword">const</span> data = <span class="keyword">await</span> response.<span class="function">json</span>();
+console.<span class="function">log</span>(data);
+      </div>
+
+      <h3>Example Response</h3>
+      <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"template"</span>: {
+    <span class="string">"id"</span>: <span class="string">"npm-install"</span>,
+    <span class="string">"name"</span>: <span class="string">"npm install"</span>,
+    <span class="string">"description"</span>: <span class="string">"The classic npm install experience"</span>
+  },
+  <span class="string">"caption"</span>: <span class="string">"POV: You ran npm install"</span>,
+  <span class="string">"shareText"</span>: <span class="string">"POV: You ran npm install #npm #JavaScript #DevLife"</span>,
+  <span class="string">"hashtags"</span>: [<span class="string">"#npm"</span>, <span class="string">"#JavaScript"</span>, <span class="string">"#DevLife"</span>],
+  <span class="string">"frames"</span>: 3,
+  <span class="string">"gif"</span>: {
+    <span class="string">"dataUrl"</span>: <span class="string">"data:image/gif;base64,R0lGODlh..."</span>,
+    <span class="string">"sizeMB"</span>: <span class="string">"2.1"</span>,
+    <span class="string">"path"</span>: <span class="string">"/tmp/public-api-1234567890.gif"</span>
+  },
+  <span class="string">"mp4"</span>: {
+    <span class="string">"dataUrl"</span>: <span class="string">"data:video/mp4;base64,AAAAIGZ..."</span>,
+    <span class="string">"sizeMB"</span>: <span class="string">"0.8"</span>,
+    <span class="string">"path"</span>: <span class="string">"/tmp/public-api-1234567890.mp4"</span>
+  },
+  <span class="string">"generatedAt"</span>: <span class="string">"2025-01-22T10:30:00.000Z"</span>
+}
+      </div>
+
+      <!-- GET /stats -->
+      <div class="endpoint" style="margin-top: 40px;">
+        <span class="method get">GET</span>
+        <span class="url">/api/public/memes/stats</span>
+        <div class="description">
+          Check your current API usage and rate limit status
+        </div>
+      </div>
+
+      <h3>Example Response</h3>
+      <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"usage"</span>: {
+    <span class="string">"used"</span>: 42,
+    <span class="string">"limit"</span>: 100,
+    <span class="string">"remaining"</span>: 58,
+    <span class="string">"resetAt"</span>: <span class="string">"2025-01-23T00:00:00.000Z"</span>,
+    <span class="string">"resetIn"</span>: 49320  <span class="comment">// seconds</span>
+  }
+}
+      </div>
+
+      <!-- GET /health -->
+      <div class="endpoint" style="margin-top: 40px;">
+        <span class="method get">GET</span>
+        <span class="url">/api/public/memes/health</span>
+        <div class="description">
+          Health check endpoint - verify API is operational
+        </div>
+      </div>
+    </div>
+
+    <!-- Available Templates -->
+    <div class="section">
+      <h2>🎨 Available Templates</h2>
+      <p>Current templates (more coming soon!):</p>
+
+      <table style="margin-top: 20px;">
+        <tr>
+          <th>Template ID</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><code>npm-install</code></td>
+          <td>npm install</td>
+          <td>packages</td>
+          <td>The classic npm install black hole</td>
+        </tr>
+        <tr>
+          <td><code>works-locally</code></td>
+          <td>Works on My Machine</td>
+          <td>deployment</td>
+          <td>It worked in dev, I swear!</td>
+        </tr>
+        <tr>
+          <td><code>css-centering</code></td>
+          <td>CSS Centering</td>
+          <td>frontend</td>
+          <td>The eternal struggle to center a div</td>
+        </tr>
+        <tr>
+          <td><code>quick-hotfix</code></td>
+          <td>Quick Hotfix</td>
+          <td>deployment</td>
+          <td>Famous last words before prod explodes</td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align: center; color: #666; font-style: italic;">
+            ...and 4 more AI-themed templates!
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Code Examples -->
+    <div class="section">
+      <h2>💻 Code Examples</h2>
+
+      <h3>JavaScript / Node.js</h3>
+      <div class="code-block">
+<span class="comment">// Generate a meme and display it</span>
+<span class="keyword">async function</span> <span class="function">generateMeme</span>() {
+  <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'http://localhost:5001/api/public/memes/generate/npm-install'</span>, {
+    <span class="string">method</span>: <span class="string">'POST'</span>
+  });
+
+  <span class="keyword">const</span> data = <span class="keyword">await</span> response.<span class="function">json</span>();
+
+  <span class="comment">// Use the base64 data URL in an img tag</span>
+  document.<span class="function">querySelector</span>(<span class="string">'img'</span>).src = data.gif.dataUrl;
+
+  <span class="comment">// Or download the file</span>
+  <span class="keyword">const</span> link = document.<span class="function">createElement</span>(<span class="string">'a'</span>);
+  link.href = data.gif.dataUrl;
+  link.download = <span class="string">'meme.gif'</span>;
+  link.<span class="function">click</span>();
+}
+
+<span class="function">generateMeme</span>();
+      </div>
+
+      <h3>Python</h3>
+      <div class="code-block">
+<span class="keyword">import</span> requests
+
+<span class="comment"># Generate a meme</span>
+response = requests.<span class="function">post</span>(
+    <span class="string">'http://localhost:5001/api/public/memes/generate/npm-install'</span>
+)
+
+data = response.<span class="function">json</span>()
+<span class="function">print</span>(data[<span class="string">'caption'</span>])
+<span class="function">print</span>(data[<span class="string">'gif'</span>][<span class="string">'sizeMB'</span>], <span class="string">'MB'</span>)
+      </div>
+
+      <h3>cURL</h3>
+      <div class="code-block">
+<span class="comment"># List templates</span>
+curl http://localhost:5001/api/public/memes/templates
+
+<span class="comment"># Generate meme</span>
+curl -X POST http://localhost:5001/api/public/memes/generate/npm-install
+
+<span class="comment"># Check usage stats</span>
+curl http://localhost:5001/api/public/memes/stats
+      </div>
+    </div>
+
+    <!-- Error Handling -->
+    <div class="section">
+      <h2>⚠️ Error Handling</h2>
+
+      <h3>Rate Limit Exceeded (429)</h3>
+      <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">false</span>,
+  <span class="string">"error"</span>: <span class="string">"Rate limit exceeded"</span>,
+  <span class="string">"code"</span>: <span class="string">"RATE_LIMIT_EXCEEDED"</span>,
+  <span class="string">"limit"</span>: 100,
+  <span class="string">"window"</span>: <span class="string">"24 hours"</span>,
+  <span class="string">"resetInHours"</span>: 12,
+  <span class="string">"message"</span>: <span class="string">"You've reached your daily limit of 100 requests..."</span>
+}
+      </div>
+
+      <h3>Template Not Found (404)</h3>
+      <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">false</span>,
+  <span class="string">"error"</span>: <span class="string">"Template not found"</span>,
+  <span class="string">"templateId"</span>: <span class="string">"invalid-template"</span>,
+  <span class="string">"availableTemplates"</span>: [<span class="string">"npm-install"</span>, <span class="string">"works-locally"</span>, ...]
+}
+      </div>
+    </div>
+
+    <!-- Support -->
+    <div class="section">
+      <h2>🤝 Support & Contact</h2>
+      <p>
+        Need higher rate limits? Want to integrate this into your product? Have questions?
+      </p>
+
+      <div style="margin-top: 20px;">
+        <a href="/edutech-dashboard.html" class="btn">Try Live Dashboard</a>
+        <a href="/ragebait-generator.html" class="btn">Interactive Generator</a>
+        <a href="https://github.com/calos/agent-router/issues" class="btn btn-secondary">Report Issue</a>
+      </div>
+
+      <div class="info-box" style="margin-top: 20px;">
+        <strong>💼 Enterprise?</strong><br>
+        Need higher limits, custom templates, or white-label integration? Contact us for enterprise pricing.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      Built with ❤️ by <a href="https://calos.io">CALOS</a> •
+      <a href="/edutech-dashboard.html">Dashboard</a> •
+      <a href="https://github.com/calos/agent-router">GitHub</a>
+    </p>
+    <p style="margin-top: 10px; font-size: 0.9rem;">
+      Free forever • No strings attached • Just make dank memes
+    </p>
+  </footer>
+</body>
+</html>

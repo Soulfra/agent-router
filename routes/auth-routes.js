@@ -3,6 +3,7 @@
  *
  * User registration, login, and session management
  * Cross-domain SSO for CalOS network
+ * Email integration for password reset, verification, welcome emails
  */
 
 const express = require('express');
@@ -23,14 +24,31 @@ const {
   refreshAccessToken
 } = require('../middleware/sso-auth');
 
+const EmailService = require('../lib/email-service');
+
 // Database connection (injected via initRoutes)
 let db = null;
+
+// Email service (initialized in initRoutes)
+let emailService = null;
 
 /**
  * Initialize routes with database connection
  */
 function initRoutes(database) {
   db = database;
+
+  // Initialize email service
+  emailService = new EmailService({
+    provider: process.env.EMAIL_PROVIDER || 'console',
+    apiKey: process.env.EMAIL_API_KEY,
+    fromAddress: process.env.EMAIL_FROM_ADDRESS,
+    fromName: process.env.EMAIL_FROM_NAME,
+    baseUrl: process.env.BASE_URL
+  });
+
+  console.log('[AuthRoutes] Email service initialized');
+
   return router;
 }
 
@@ -123,17 +141,65 @@ router.post('/register', async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // TODO: Send verification email
-    console.log(`[Auth] Verification link: /api/auth/verify-email?token=${verificationToken}`);
+    // Send verification email
+    try {
+      await emailService.sendEmailVerification(user.email, verificationToken);
+      console.log(`[Auth] Verification email sent to ${user.email}`);
+    } catch (error) {
+      console.error('[Auth] Failed to send verification email:', error.message);
+      // Don't fail registration if email fails
+    }
+
+    // Auto-login: Create session immediately after registration
+    const sessionData = await createSession(user.user_id, null, req);
+
+    // Send welcome email (async, don't wait)
+    emailService.sendWelcome(user.email, user.display_name || user.username)
+      .then(() => console.log(`[Auth] Welcome email sent to ${user.email}`))
+      .catch(error => console.error('[Auth] Failed to send welcome email:', error.message));
+
+    // Add device as trusted automatically on registration
+    // This captures device fingerprint and location (IP address)
+    try {
+      const deviceId = await addTrustedDevice(
+        user.user_id,
+        req,
+        `First device - ${new Date().toLocaleDateString()}`
+      );
+      console.log(`[Auth] Trusted device added for new user: ${deviceId}`);
+    } catch (error) {
+      console.warn('[Auth] Failed to add trusted device on registration:', error.message);
+      // Don't fail registration if device trust fails
+    }
+
+    // Set cookies
+    res.cookie('calos_session', sessionData.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 4 * 60 * 60 * 1000 // 4 hours (matches SESSION_TOKEN_HOURS)
+    });
+
+    res.cookie('calos_refresh', sessionData.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
 
     res.status(201).json({
       success: true,
+      accessToken: sessionData.accessToken,
+      refreshToken: sessionData.refreshToken,
+      sessionId: sessionData.sessionId,
+      expiresIn: sessionData.expiresIn,
       user: {
         userId: user.user_id,
         email: user.email,
         username: user.username,
         displayName: user.display_name,
-        walletAddress: user.wallet_address
+        walletAddress: user.wallet_address,
+        emailVerified: false // New accounts not verified yet
       },
       message: 'Account created successfully. Please check your email to verify your account.'
     });
@@ -628,8 +694,14 @@ router.post('/forgot-password', async (req, res) => {
       WHERE user_id = $3
     `, [resetToken, resetExpires, userId]);
 
-    // TODO: Send password reset email
-    console.log(`[Auth] Password reset link: /api/auth/reset-password?token=${resetToken}`);
+    // Send password reset email
+    try {
+      await emailService.sendPasswordReset(email, resetToken);
+      console.log(`[Auth] Password reset email sent to ${email}`);
+    } catch (error) {
+      console.error('[Auth] Failed to send password reset email:', error.message);
+      // Still return success (don't reveal if email exists)
+    }
 
     res.json({
       success: true,
@@ -710,5 +782,295 @@ router.post('/reset-password', async (req, res) => {
     res.status(500).json({ error: 'Failed to reset password' });
   }
 });
+
+// ============================================================================
+// QR CODE LOGIN ROUTES
+// ============================================================================
+
+const QRLoginSystem = require('../lib/qr-login-system');
+const qrLogin = new QRLoginSystem();
+
+/**
+ * POST /api/auth/qr/generate
+ * Generate QR code for desktop login
+ */
+router.post('/qr/generate', async (req, res) => {
+  try {
+    const { deviceId, metadata } = req.body;
+
+    const result = await qrLogin.generateQRCode({
+      deviceId,
+      metadata,
+      callbackUrl: `${req.protocol}://${req.get('host')}/qr-scanner.html`
+    });
+
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('[QR Login] Generate error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/auth/qr/verify
+ * Verify QR scan from iPhone
+ */
+router.post('/qr/verify', async (req, res) => {
+  try {
+    const { sessionId, userId, deviceId, fingerprintId, authMethod, oauth } = req.body;
+
+    if (!sessionId || !userId || !deviceId || !fingerprintId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: sessionId, userId, deviceId, fingerprintId'
+      });
+    }
+
+    const result = await qrLogin.verifyQRScan(sessionId, {
+      userId,
+      deviceId,
+      fingerprintId,
+      authMethod: authMethod || 'device-fingerprint',
+      oauth: oauth || null
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('[QR Login] Verify error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/auth/qr/status/:sessionId
+ * Check QR login status (polling endpoint for desktop)
+ */
+router.get('/qr/status/:sessionId', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const status = qrLogin.getSessionStatus(sessionId);
+
+    res.json(status);
+  } catch (error) {
+    console.error('[QR Login] Status error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/auth/token/create
+ * Create login token from verified session
+ */
+router.post('/token/create', (req, res) => {
+  try {
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing sessionId'
+      });
+    }
+
+    const result = qrLogin.createLoginToken(sessionId);
+
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('[QR Login] Token create error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/auth/token/verify
+ * Verify login token
+ */
+router.post('/token/verify', (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing token'
+      });
+    }
+
+    const result = qrLogin.verifyLoginToken(token);
+
+    res.json(result);
+  } catch (error) {
+    console.error('[QR Login] Token verify error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/auth/qr/stats
+ * Get QR login system stats
+ */
+router.get('/qr/stats', (req, res) => {
+  try {
+    const stats = qrLogin.getStats();
+
+    res.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('[QR Login] Stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * QR + OAuth Integration Routes
+ */
+const QROAuthBridge = require('../lib/qr-oauth-bridge');
+let qrOAuthBridge = null;
+
+async function getQROAuthBridge() {
+  if (!qrOAuthBridge) {
+    qrOAuthBridge = new QROAuthBridge();
+    await qrOAuthBridge.init();
+  }
+  return qrOAuthBridge;
+}
+
+/**
+ * POST /api/auth/qr-oauth/session
+ * Create QR session with OAuth action
+ */
+router.post('/qr-oauth/session', async (req, res) => {
+  try {
+    const { deviceFingerprint } = req.body;
+
+    if (!deviceFingerprint) {
+      return res.status(400).json({
+        error: 'deviceFingerprint is required'
+      });
+    }
+
+    const bridge = await getQROAuthBridge();
+    const session = await bridge.createQRAuthSession(deviceFingerprint);
+
+    res.json({
+      success: true,
+      ...session
+    });
+
+  } catch (error) {
+    console.error('[Auth] QR OAuth session error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/auth/qr-oauth/link
+ * Link Google account to QR session (called after OAuth callback)
+ */
+router.post('/qr-oauth/link', async (req, res) => {
+  try {
+    const { sessionId, googleUser, subscribeNewsletter = true } = req.body;
+
+    if (!sessionId || !googleUser) {
+      return res.status(400).json({
+        error: 'sessionId and googleUser are required'
+      });
+    }
+
+    const bridge = await getQROAuthBridge();
+
+    // Complete the full flow
+    const result = await bridge.completeQROAuthFlow(sessionId, googleUser, {
+      subscribeNewsletter
+    });
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('[Auth] QR OAuth link error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/auth/qr-oauth/poll/:sessionId
+ * Poll for QR OAuth completion (desktop polls this)
+ */
+router.get('/qr-oauth/poll/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    const bridge = await getQROAuthBridge();
+    const status = await bridge.pollQRAuthStatus(sessionId);
+
+    res.json(status);
+
+  } catch (error) {
+    console.error('[Auth] QR OAuth poll error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/auth/qr-oauth/newsletter/:userId
+ * Get newsletter status for user
+ */
+router.get('/qr-oauth/newsletter/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const bridge = await getQROAuthBridge();
+    const status = await bridge.getNewsletterStatus(userId);
+
+    res.json(status);
+
+  } catch (error) {
+    console.error('[Auth] Newsletter status error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Export QR login WebSocket handler
+module.exports.handleQRWebSocket = function(ws, sessionId) {
+  qrLogin.registerWebSocket(sessionId, ws);
+};
 
 module.exports = { router, initRoutes };

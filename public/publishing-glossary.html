@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CALOS Publishing Glossary | Interactive Knowledge Graph</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/styles/themes.css">
+  <link rel="stylesheet" href="/styles/glossary.css">
+
+  <!-- D3.js -->
+  <script src="/lib/d3.v7.min.js"></script>
+
+  <!-- Theme Manager -->
+  <script src="/lib/theme-manager.js"></script>
+
+  <!-- D3 Graph Viewer -->
+  <script src="/lib/d3-graph-viewer.js"></script>
+
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>CALOS Publishing Glossary</h1>
+    <p>Interactive knowledge graph of content publishing concepts • "The D&D Player's Handbook for CALOS"</p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Theme:</label>
+        <select id="theme-select">
+          <option value="auto">Auto (System)</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="high-contrast">High Contrast</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Documentation:</label>
+        <select id="doc-select">
+          <option value="content-publishing-system">Content Publishing System</option>
+          <option value="multiplayer-portal">Multiplayer Portal System</option>
+          <option value="portfolio-hub">Portfolio Hub</option>
+          <option value="combined">All Combined</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Filter Type:</label>
+        <select id="type-filter">
+          <option value="">All Types</option>
+          <option value="heading">Headings</option>
+          <option value="term">Terms</option>
+          <option value="code">Code</option>
+          <option value="inline-code">Inline Code</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <input type="text" id="search-input" class="search-input" placeholder="Search concepts...">
+      </div>
+
+      <button id="clear-btn" class="secondary">Clear Filters</button>
+      <button id="export-btn" class="secondary">Export PNG</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-view="graph">Graph View</button>
+    <button class="tab" data-view="hierarchy">Hierarchical Glossary</button>
+    <button class="tab" data-view="network">Concept Network</button>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Main Panel -->
+    <div class="main-panel">
+      <!-- Graph View -->
+      <div id="graph-view" class="view active">
+        <div id="graph-container"></div>
+        <div class="legend">
+          <h4>Node Types</h4>
+          <div class="legend-item">
+            <div class="legend-color heading"></div>
+            <div class="legend-label">Heading</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color term"></div>
+            <div class="legend-label">Term</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color code"></div>
+            <div class="legend-label">Code</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color inline-code"></div>
+            <div class="legend-label">Inline Code</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hierarchy View -->
+      <div id="hierarchy-view" class="view">
+        <div id="hierarchy-container">
+          <div class="loading">Loading hierarchy...</div>
+        </div>
+      </div>
+
+      <!-- Network View -->
+      <div id="network-view" class="view">
+        <div id="network-container">
+          <div class="loading">Loading network analysis...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h3>Graph Statistics</h3>
+      <div class="stats" id="stats-container">
+        <div class="stat-row">
+          <span class="stat-label">Total Concepts:</span>
+          <span class="stat-value" id="stat-concepts">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Relationships:</span>
+          <span class="stat-value" id="stat-relationships">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Documents:</span>
+          <span class="stat-value" id="stat-documents">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Density:</span>
+          <span class="stat-value" id="stat-density">-</span>
+        </div>
+      </div>
+
+      <div id="concept-detail-container" class="concept-detail">
+        <h3>Concept Details</h3>
+        <div class="concept-label" id="detail-label"></div>
+        <div class="concept-type" id="detail-type"></div>
+        <div class="concept-definition" id="detail-definition"></div>
+
+        <div class="related-concepts">
+          <h4 style="font-size: 14px; margin-bottom: 10px; color: #555;">Related Concepts</h4>
+          <div id="related-concepts-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Defensive: Prevent Chrome extension errors from breaking page
+    (function() {
+      'use strict';
+
+      // Check if we're in a browser extension context and bail out
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+        console.warn('[Glossary] Running in extension context - some features may not work');
+      }
+
+      let viewer = null;
+      let currentGraph = null;
+      let currentDoc = 'content-publishing-system';
+      let themeManager = null;
+
+      // Global error handler to catch all errors
+      window.addEventListener('error', (event) => {
+        console.error('[Glossary] Uncaught error:', event.error);
+        // Don't let errors break the page
+        event.preventDefault();
+      });
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        try {
+          console.log('[Glossary] Page loaded, initializing...');
+
+          // Initialize theme manager
+          themeManager = new ThemeManager();
+
+      // Set theme selector to current theme
+      const themeSelect = document.getElementById('theme-select');
+      themeSelect.value = themeManager.getCurrentTheme();
+
+          loadGraph(currentDoc);
+          setupEventListeners();
+        } catch (error) {
+          console.error('[Glossary] Initialization error:', error);
+          alert('Failed to initialize glossary. Please check console for details.');
+        }
+      });
+
+    // Load graph from API
+    async function loadGraph(docName) {
+      try {
+        const endpoint = docName === 'combined'
+          ? '/api/glossary/combined'
+          : `/api/glossary/graph/${docName}`;
+
+        console.log('[Publishing Glossary] Loading graph from:', endpoint);
+        const response = await fetch(endpoint);
+
+        if (!response.ok) {
+          const errorMsg = `API Error: ${response.status} ${response.statusText}\n\nThe glossary API is not responding. This usually means:\n- The server needs to be restarted\n- The /api/glossary routes are not loaded`;
+          alert(errorMsg);
+          console.error('[Publishing Glossary] API error:', response.status, response.statusText);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          alert('Failed to load graph: ' + data.error);
+          return;
+        }
+
+        console.log('[Publishing Glossary] Graph loaded successfully:', data.nodes.length, 'nodes,', data.edges.length, 'edges');
+
+        currentGraph = data;
+        renderGraph(data);
+        updateStats(data);
+
+      } catch (error) {
+        console.error('Error loading graph:', error);
+        alert('Failed to load graph: ' + error.message);
+      }
+    }
+
+    // Render graph with D3
+    function renderGraph(graphData) {
+      // Destroy existing viewer
+      if (viewer) {
+        viewer.destroy();
+      }
+
+      // Create new viewer
+      const container = document.getElementById('graph-container');
+      container.innerHTML = '';
+
+      viewer = new D3GraphViewer('#graph-container', {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        onClick: (node) => showConceptDetail(node),
+        onHover: (node) => {
+          // Optional: show tooltip
+        }
+      });
+
+      viewer.load(graphData);
+    }
+
+    // Update statistics
+    function updateStats(graphData) {
+      document.getElementById('stat-concepts').textContent = graphData.nodes.length;
+      document.getElementById('stat-relationships').textContent = graphData.edges.length;
+      document.getElementById('stat-documents').textContent =
+        graphData.metadata.sourceFiles?.length || graphData.metadata.sourceFile ? 1 : 0;
+
+      const density = ((graphData.edges.length * 2) / (graphData.nodes.length * (graphData.nodes.length - 1))).toFixed(4);
+      document.getElementById('stat-density').textContent = density;
+    }
+
+    // Show concept detail
+    async function showConceptDetail(node) {
+      const container = document.getElementById('concept-detail-container');
+      container.classList.add('active');
+
+      document.getElementById('detail-label').textContent = node.label;
+      document.getElementById('detail-type').textContent = node.type;
+      document.getElementById('detail-definition').textContent = node.definition;
+
+      // Load related concepts
+      try {
+        const response = await fetch(`/api/glossary/concept/${node.id}`);
+
+        if (!response.ok) {
+          console.error('[Publishing Glossary] Failed to load concept details:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.related) {
+          const relatedList = document.getElementById('related-concepts-list');
+          relatedList.innerHTML = '';
+
+          data.related.slice(0, 10).forEach(rel => {
+            const item = document.createElement('div');
+            item.className = 'related-item';
+            item.innerHTML = `
+              <div class="related-item-label">${rel.label}</div>
+              <div class="related-item-relationship">${rel.relationshipLabel}</div>
+            `;
+            item.onclick = () => {
+              viewer.highlight(rel.id);
+              showConceptDetail(rel);
+            };
+            relatedList.appendChild(item);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading concept details:', error);
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Theme select
+      document.getElementById('theme-select').addEventListener('change', (e) => {
+        themeManager.setTheme(e.target.value);
+      });
+
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', async () => {
+          // Update tab active state
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          // Update view active state
+          const viewName = tab.dataset.view;
+          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+          document.getElementById(`${viewName}-view`).classList.add('active');
+
+          // Load view-specific data
+          if (viewName === 'hierarchy') {
+            await loadHierarchyView();
+          } else if (viewName === 'network') {
+            await loadNetworkView();
+          }
+        });
+      });
+
+      // Doc select
+      document.getElementById('doc-select').addEventListener('change', (e) => {
+        currentDoc = e.target.value;
+        loadGraph(currentDoc);
+      });
+
+      // Type filter
+      document.getElementById('type-filter').addEventListener('change', (e) => {
+        if (viewer) {
+          if (e.target.value) {
+            viewer.filter({ type: e.target.value });
+          } else {
+            viewer.clearFilters();
+          }
+        }
+      });
+
+      // Search
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        if (viewer) {
+          viewer.search(e.target.value);
+        }
+      });
+
+      // Clear filters
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        if (viewer) {
+          viewer.clearHighlight();
+          viewer.clearFilters();
+        }
+        document.getElementById('type-filter').value = '';
+        document.getElementById('search-input').value = '';
+        document.getElementById('concept-detail-container').classList.remove('active');
+      });
+
+      // Export
+      document.getElementById('export-btn').addEventListener('click', () => {
+        if (viewer) {
+          viewer.exportImage();
+        }
+      });
+    }
+
+    // Load hierarchy view
+    async function loadHierarchyView() {
+      try {
+        const endpoint = currentDoc === 'combined'
+          ? '/api/glossary/combined'
+          : `/api/glossary/graph/${currentDoc}`;
+
+        console.log('[Publishing Glossary] Loading hierarchy view from:', endpoint);
+        const response = await fetch(endpoint);
+
+        if (!response.ok) {
+          console.error('[Publishing Glossary] Failed to load hierarchy:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.success) return;
+
+        const container = document.getElementById('hierarchy-container');
+        container.innerHTML = '';
+
+        // Group by category
+        const sections = data.nodes.filter(n => n.type === 'heading' && n.category === 'section');
+
+        sections.forEach(section => {
+          const sectionDiv = document.createElement('div');
+          sectionDiv.className = 'hierarchy-section';
+
+          const title = document.createElement('div');
+          title.className = 'hierarchy-title';
+          title.textContent = section.label;
+          sectionDiv.appendChild(title);
+
+          // Find subsections
+          const subsections = data.edges
+            .filter(e => e.source === section.id && e.type === 'parent-child')
+            .map(e => data.nodes.find(n => n.id === e.target))
+            .filter(n => n);
+
+          subsections.forEach(sub => {
+            const subDiv = document.createElement('div');
+            subDiv.className = 'hierarchy-item';
+            subDiv.innerHTML = `
+              <h4>${sub.label}</h4>
+              <p>${sub.definition}</p>
+            `;
+            subDiv.onclick = () => {
+              // Switch to graph view and highlight
+              document.querySelector('.tab[data-view="graph"]').click();
+              setTimeout(() => viewer.highlight(sub.id), 100);
+            };
+            sectionDiv.appendChild(subDiv);
+          });
+
+          container.appendChild(sectionDiv);
+        });
+
+      } catch (error) {
+        console.error('Error loading hierarchy:', error);
+      }
+    }
+
+    // Load network view
+    async function loadNetworkView() {
+      try {
+        console.log('[Publishing Glossary] Loading network view for:', currentDoc);
+        const response = await fetch(`/api/glossary/network/${currentDoc}`);
+
+        if (!response.ok) {
+          console.error('[Publishing Glossary] Failed to load network view:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!data.success) return;
+
+        const container = document.getElementById('network-container');
+        container.innerHTML = '';
+
+        // Hubs
+        const hubsDiv = document.createElement('div');
+        hubsDiv.className = 'network-hubs';
+        hubsDiv.innerHTML = '<h3>Knowledge Hubs (Most Connected)</h3>';
+
+        data.hubs.forEach(hub => {
+          const item = document.createElement('div');
+          item.className = 'hub-item';
+          item.innerHTML = `
+            <h4>
+              ${hub.label}
+              <span class="hub-degree">${hub.degree} connections</span>
+            </h4>
+            <p>${hub.definition}</p>
+          `;
+          item.onclick = () => {
+            document.querySelector('.tab[data-view="graph"]').click();
+            setTimeout(() => viewer.highlight(hub.id), 100);
+          };
+          hubsDiv.appendChild(item);
+        });
+
+        container.appendChild(hubsDiv);
+
+        // Gaps
+        const gapsDiv = document.createElement('div');
+        gapsDiv.className = 'network-gaps';
+        gapsDiv.innerHTML = '<h3>Structural Gaps (Isolated Concepts)</h3>';
+
+        data.gaps.forEach(gap => {
+          const item = document.createElement('div');
+          item.className = 'gap-item';
+          item.innerHTML = `
+            <h4>${gap.label}</h4>
+            <p>${gap.definition}</p>
+          `;
+          gapsDiv.appendChild(item);
+        });
+
+        container.appendChild(gapsDiv);
+
+        // Suggestions
+        if (data.suggestions && data.suggestions.length > 0) {
+          const suggestionsDiv = document.createElement('div');
+          suggestionsDiv.innerHTML = '<h3 style="font-size: 20px; color: #667eea; margin: 30px 0 15px;">AI Suggestions</h3>';
+
+          data.suggestions.forEach(sug => {
+            const item = document.createElement('div');
+            item.className = 'suggestion';
+            item.innerHTML = `
+              <strong>${sug.type.toUpperCase()}: ${sug.concept}</strong>
+              <p>${sug.suggestion}</p>
+            `;
+            suggestionsDiv.appendChild(item);
+          });
+
+          container.appendChild(suggestionsDiv);
+        }
+
+      } catch (error) {
+        console.error('Error loading network:', error);
+      }
+    }
+
+    // Defensive: Make all functions available globally but wrapped
+    window.GlossaryApp = {
+      loadGraph,
+      renderGraph,
+      updateStats,
+      showConceptDetail,
+      setupEventListeners,
+      loadHierarchyView,
+      loadNetworkView
+    };
+
+    console.log('[Glossary] All functions loaded and ready');
+
+    })(); // End defensive wrapper
+  </script>
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset Preview Dashboard - CalOS</title>
+  <link rel="stylesheet" href="/themes/default.css">
+  <style>
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+      border-radius: 12px;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      color: white;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-secondary);
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .control-group label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .control-group select,
+    .control-group input {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .btn {
+      background: var(--accent-primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--accent-secondary);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-top: 5px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+    }
+
+    .asset-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .asset-card:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .asset-preview {
+      width: 100%;
+      height: 240px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .asset-preview img,
+    .asset-preview video {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .asset-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent-primary);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .asset-badge.watermarked {
+      background: #44cc44;
+    }
+
+    .asset-info {
+      padding: 15px;
+    }
+
+    .asset-filename {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .asset-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+
+    .asset-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .asset-actions button {
+      flex: 1;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .btn-download {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .btn-download:hover {
+      background: var(--accent-secondary);
+    }
+
+    .btn-copy {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-copy:hover {
+      background: var(--bg-primary);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      opacity: 0.6;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .empty-state-text {
+      font-size: 1.2rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2rem;
+      opacity: 0.6;
+    }
+
+    .filter-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: var(--accent-primary);
+      color: white;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    @media (max-width: 768px) {
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">📸 Asset Preview Dashboard</div>
+    <div class="subtitle">View all generated ragebait, watermarks, and brand assets</div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Format:</label>
+      <select id="formatFilter">
+        <option value="all">All Formats</option>
+        <option value="gif">GIF Only</option>
+        <option value="mp4">MP4 Only</option>
+        <option value="png">PNG Only</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Type:</label>
+      <select id="typeFilter">
+        <option value="all">All Types</option>
+        <option value="watermarked">Watermarked</option>
+        <option value="original">Original</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Sort:</label>
+      <select id="sortOrder">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="name">Name (A-Z)</option>
+        <option value="size">Size (Largest)</option>
+      </select>
+    </div>
+
+    <button class="btn" onclick="loadAssets()">🔄 Refresh</button>
+    <button class="btn btn-secondary" onclick="window.location.href='/command-center.html'">← Command Center</button>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="stat-value" id="totalAssets">0</div>
+      <div class="stat-label">Total Assets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="totalSize">0 MB</div>
+      <div class="stat-label">Total Size</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="watermarkedCount">0</div>
+      <div class="stat-label">Watermarked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="originalCount">0</div>
+      <div class="stat-label">Original</div>
+    </div>
+  </div>
+
+  <div class="gallery" id="gallery">
+    <div class="loading">Loading assets...</div>
+  </div>
+
+  <script>
+    let allAssets = [];
+
+    // Load assets on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAssets();
+
+      // Add filter/sort listeners
+      document.getElementById('formatFilter').addEventListener('change', filterAndSort);
+      document.getElementById('typeFilter').addEventListener('change', filterAndSort);
+      document.getElementById('sortOrder').addEventListener('change', filterAndSort);
+    });
+
+    async function loadAssets() {
+      try {
+        const response = await fetch('/api/assets/list');
+        const data = await response.json();
+
+        allAssets = data.assets || [];
+        updateStats();
+        filterAndSort();
+      } catch (error) {
+        console.error('Failed to load assets:', error);
+        document.getElementById('gallery').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <div class="empty-state-text">Failed to load assets</div>
+          </div>
+        `;
+      }
+    }
+
+    function updateStats() {
+      const watermarked = allAssets.filter(a => a.watermarked).length;
+      const original = allAssets.length - watermarked;
+      const totalSize = allAssets.reduce((sum, a) => sum + (a.size || 0), 0);
+
+      document.getElementById('totalAssets').textContent = allAssets.length;
+      document.getElementById('totalSize').textContent = formatSize(totalSize);
+      document.getElementById('watermarkedCount').textContent = watermarked;
+      document.getElementById('originalCount').textContent = original;
+    }
+
+    function filterAndSort() {
+      const formatFilter = document.getElementById('formatFilter').value;
+      const typeFilter = document.getElementById('typeFilter').value;
+      const sortOrder = document.getElementById('sortOrder').value;
+
+      // Filter
+      let filtered = allAssets.filter(asset => {
+        // Format filter
+        if (formatFilter !== 'all' && asset.ext !== `.${formatFilter}`) {
+          return false;
+        }
+
+        // Type filter
+        if (typeFilter === 'watermarked' && !asset.watermarked) {
+          return false;
+        }
+        if (typeFilter === 'original' && asset.watermarked) {
+          return false;
+        }
+
+        return true;
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        switch (sortOrder) {
+          case 'newest':
+            return b.mtime - a.mtime;
+          case 'oldest':
+            return a.mtime - b.mtime;
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'size':
+            return (b.size || 0) - (a.size || 0);
+          default:
+            return 0;
+        }
+      });
+
+      renderGallery(filtered);
+    }
+
+    function renderGallery(assets) {
+      const gallery = document.getElementById('gallery');
+
+      if (assets.length === 0) {
+        gallery.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🎨</div>
+            <div class="empty-state-text">No assets found. Try generating some ragebait!</div>
+          </div>
+        `;
+        return;
+      }
+
+      gallery.innerHTML = assets.map(asset => `
+        <div class="asset-card">
+          <div class="asset-preview">
+            ${renderAssetPreview(asset)}
+            ${asset.watermarked ? '<div class="asset-badge watermarked">Watermarked</div>' : '<div class="asset-badge">Original</div>'}
+          </div>
+          <div class="asset-info">
+            <div class="asset-filename" title="${asset.name}">${asset.name}</div>
+            <div class="asset-meta">
+              <span>📁 ${asset.ext.toUpperCase().slice(1)}</span>
+              <span>📦 ${formatSize(asset.size)}</span>
+              <span>🕐 ${formatDate(asset.mtime)}</span>
+            </div>
+            <div class="asset-actions">
+              <button class="btn-download" onclick="downloadAsset('${asset.path}', '${asset.name}')">
+                ⬇ Download
+              </button>
+              <button class="btn-copy" onclick="copyPath('${asset.path}')">
+                📋 Copy Path
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAssetPreview(asset) {
+      if (asset.ext === '.gif' || asset.ext === '.png') {
+        return `<img src="${asset.url}" alt="${asset.name}">`;
+      } else if (asset.ext === '.mp4' || asset.ext === '.mov') {
+        return `<video src="${asset.url}" autoplay loop muted playsinline></video>`;
+      } else {
+        return `<div style="opacity: 0.5;">Preview not available</div>`;
+      }
+    }
+
+    async function downloadAsset(path, filename) {
+      const url = `/api/assets/download?path=${encodeURIComponent(path)}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    }
+
+    async function copyPath(path) {
+      try {
+        await navigator.clipboard.writeText(path);
+        alert('Path copied to clipboard!');
+      } catch (error) {
+        console.error('Failed to copy:', error);
+      }
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      // Less than 1 hour
+      if (diff < 3600000) {
+        const mins = Math.floor(diff / 60000);
+        return mins === 0 ? 'Just now' : `${mins}m ago`;
+      }
+
+      // Less than 24 hours
+      if (diff < 86400000) {
+        const hours = Math.floor(diff / 3600000);
+        return `${hours}h ago`;
+      }
+
+      // Less than 7 days
+      if (diff < 604800000) {
+        const days = Math.floor(diff / 86400000);
+        return `${days}d ago`;
+      }
+
+      // Older - show date
+      return date.toLocaleDateString();
+    }
+  </script>
+</body>
+</html>

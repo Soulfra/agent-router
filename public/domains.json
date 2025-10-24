@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2025-01-24T00:00:00.000Z",
+  "totalDomains": 13,
+  "verifiedDomains": 0,
+  "domains": [],
+  "metadata": {
+    "mainDomain": "calriven.com",
+    "repository": "https://github.com/your-username/agent-router",
+    "publicUrl": "https://calriven.com/domains.json",
+    "verificationMethod": "DNS A/AAAA record lookup",
+    "note": "This file is auto-generated. Run 'npm run verify-domains' to update."
+  },
+  "knownDomains": [
+    "calriven.com",
+    "soulfra.com",
+    "deathtodata.com",
+    "finishthisidea.com",
+    "dealordelete.com",
+    "saveorsink.com",
+    "cringeproof.com",
+    "finishthisrepo.com",
+    "ipomyagent.com",
+    "hollowtown.com",
+    "hookclinic.com",
+    "businessaiclassroom.com",
+    "roughsparks.com"
+  ]
+}

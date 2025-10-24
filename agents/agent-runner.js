@@ -15,11 +15,13 @@ let dataSource = null;
 /**
  * Initialize data source with database connection
  * @param {object} db - Database connection (optional, for local mode)
+ * @param {object} vaultBridge - VaultBridge instance (optional, for contextual key retrieval)
  */
-function initDataSource(db = null) {
+function initDataSource(db = null, vaultBridge = null) {
   dataSource = new DataSource({
     mode: 'api', // Default to API mode
     db: db,
+    vaultBridge: vaultBridge, // For contextual API key retrieval
     caching: true // Enable caching by default
   });
 }
@@ -39,11 +41,15 @@ async function runAgent(agent, input, context = {}) {
     // Normalize agent ID (remove @ if present)
     const agentId = agent.startsWith('@') ? agent.substring(1) : agent;
 
-    // Handle Ollama variants (@ollama, @ollama:codellama, etc.)
+    // Handle Ollama variants (@ollama, @ollama:codellama, @ollama:codellama:7b, etc.)
     if (agentId.startsWith('ollama')) {
-      const parts = agentId.split(':');
-      const model = parts[1] || 'mistral'; // Default to mistral
-      return await runOllama(model, input, context);
+      // Extract model name after 'ollama:' prefix
+      // @ollama → mistral (default)
+      // @ollama:mistral → mistral
+      // @ollama:codellama:7b → codellama:7b
+      const modelPart = agentId.substring('ollama'.length);
+      const model = modelPart.startsWith(':') ? modelPart.substring(1) : 'mistral';
+      return await runOllama(model || 'mistral', input, context);
     }
 
     switch (agentId) {
@@ -177,10 +183,12 @@ async function runDeepSeek(input, context) {
  * 4. Ollama sees results and continues or finishes
  */
 async function runOllama(model, input, context) {
-  // Initialize tools with database access
+  // Initialize tools with database access and receipt processing
   const tools = new OllamaTools({
     db: context.db || null,
-    allowDangerousCommands: context.allowDangerousCommands || false
+    allowDangerousCommands: context.allowDangerousCommands || false,
+    receiptParser: context.receiptParser || null,
+    ocrAdapter: context.ocrAdapter || null
   });
 
   // Enhanced system prompt with tool definitions
@@ -350,7 +358,7 @@ async function runPriceAgent(input, context) {
  * Check if Ollama is available
  */
 async function checkOllamaAvailability() {
-  const ollamaUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+  const ollamaUrl = process.env.OLLAMA_API_URL || 'http://127.0.0.1:11434';
 
   try {
     const response = await axios.get(`${ollamaUrl}/api/tags`, { timeout: 3000 });

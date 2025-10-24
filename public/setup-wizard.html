@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Setup Wizard - ColdStartKit</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .wizard-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 2em;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 0.95em;
+    }
+
+    .progress-bar {
+      background: #f0f0f0;
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    .step h2 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .step p {
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .option-cards {
+      display: grid;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .option-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .option-card:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .option-card.selected {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .option-card h3 {
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .option-card p {
+      color: #666;
+      font-size: 0.9em;
+      margin: 0;
+    }
+
+    .option-card .badge {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      margin-left: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      font-family: 'Courier New', monospace;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-group small {
+      color: #999;
+      font-size: 0.85em;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+
+    .code-block {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      margin: 15px 0;
+      overflow-x: auto;
+    }
+
+    .success-message {
+      background: #4caf50;
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .warning-message {
+      background: #ff9800;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    .provider-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .status-indicator.active {
+      background: #4caf50;
+    }
+
+    .status-indicator.inactive {
+      background: #f44336;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="wizard-container">
+    <div class="logo">
+      <h1>🚀 OAuth Setup Wizard</h1>
+      <p>ColdStartKit Template - Set up in 5 minutes</p>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+
+    <!-- Step 1: Welcome -->
+    <div class="step active" id="step1">
+      <h2>Welcome to OAuth Starter!</h2>
+      <p>This wizard will help you set up multi-provider OAuth authentication for your app.</p>
+
+      <div class="option-cards">
+        <div class="option-card" onclick="selectDeployment('vercel')">
+          <h3>Deploy to Vercel <span class="badge">Recommended</span></h3>
+          <p>Free tier, automatic scaling, GitHub integration</p>
+        </div>
+
+        <div class="option-card" onclick="selectDeployment('railway')">
+          <h3>Deploy to Railway</h3>
+          <p>$5 free credit (~500 hours), great for full-stack apps</p>
+        </div>
+
+        <div class="option-card" onclick="selectDeployment('local')">
+          <h3>Run Locally</h3>
+          <p>Test on your machine before deploying</p>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-secondary" disabled>Back</button>
+        <button class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: OAuth Providers -->
+    <div class="step" id="step2">
+      <h2>Choose OAuth Providers</h2>
+      <p>Which social login methods do you want?</p>
+
+      <div class="option-cards">
+        <div class="option-card selected" id="provider-github" onclick="toggleProvider('github')">
+          <h3>✓ GitHub <span class="badge">Auto-configured</span></h3>
+          <p>Works automatically with Vercel Auth - no setup required</p>
+        </div>
+
+        <div class="option-card" id="provider-twitter" onclick="toggleProvider('twitter')">
+          <h3>Twitter/X</h3>
+          <p>Requires OAuth app creation at developer.x.com</p>
+        </div>
+
+        <div class="option-card" id="provider-discord" onclick="toggleProvider('discord')">
+          <h3>Discord</h3>
+          <p>Requires OAuth app creation at discord.com/developers</p>
+        </div>
+
+        <div class="option-card" id="provider-linkedin" onclick="toggleProvider('linkedin')">
+          <h3>LinkedIn</h3>
+          <p>Requires OAuth app creation at linkedin.com/developers</p>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>Tip:</strong> Start with GitHub only (zero config). You can add other providers later!
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <button class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Environment Variables -->
+    <div class="step" id="step3">
+      <h2>Configure Environment Variables</h2>
+      <p>Add your OAuth credentials (skip any you didn't select)</p>
+
+      <div id="twitter-config" class="hidden">
+        <div class="form-group">
+          <label>Twitter Client ID</label>
+          <input type="text" id="twitter-client-id" placeholder="Your Twitter Client ID">
+          <small>Get from <a href="https://developer.x.com/en/portal/dashboard" target="_blank">developer.x.com</a></small>
+        </div>
+
+        <div class="form-group">
+          <label>Twitter Client Secret</label>
+          <input type="password" id="twitter-client-secret" placeholder="Your Twitter Client Secret">
+        </div>
+      </div>
+
+      <div id="discord-config" class="hidden">
+        <div class="form-group">
+          <label>Discord Client ID</label>
+          <input type="text" id="discord-client-id" placeholder="Your Discord Client ID">
+          <small>Get from <a href="https://discord.com/developers/applications" target="_blank">discord.com/developers</a></small>
+        </div>
+
+        <div class="form-group">
+          <label>Discord Client Secret</label>
+          <input type="password" id="discord-client-secret" placeholder="Your Discord Client Secret">
+        </div>
+      </div>
+
+      <div id="linkedin-config" class="hidden">
+        <div class="form-group">
+          <label>LinkedIn Client ID</label>
+          <input type="text" id="linkedin-client-id" placeholder="Your LinkedIn Client ID">
+          <small>Get from <a href="https://www.linkedin.com/developers/apps" target="_blank">linkedin.com/developers</a></small>
+        </div>
+
+        <div class="form-group">
+          <label>LinkedIn Client Secret</label>
+          <input type="password" id="linkedin-client-secret" placeholder="Your LinkedIn Client Secret">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Parent Domain</label>
+        <input type="text" id="parent-domain" placeholder="yourdomain.com" value="soulfra.com">
+        <small>Subdomains will be created as: @yourhandle.yourdomain.com</small>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <button class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Generate Config -->
+    <div class="step" id="step4">
+      <h2>Your Configuration</h2>
+      <p>Copy this to your .env file or Vercel environment variables:</p>
+
+      <div class="code-block" id="env-output"></div>
+
+      <div class="warning-message">
+        <strong>⚠️ Security Warning:</strong> Never commit .env files to Git! Add .env to your .gitignore.
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <button class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Complete -->
+    <div class="step" id="step5">
+      <div class="success-message">
+        <h2>🎉 Setup Complete!</h2>
+        <p>Your OAuth system is ready to deploy</p>
+      </div>
+
+      <h3>Next Steps:</h3>
+
+      <div class="option-cards">
+        <div class="option-card">
+          <h3>1. Deploy to Vercel</h3>
+          <div class="code-block">
+vercel
+# Follow prompts, paste environment variables when asked
+vercel --prod
+          </div>
+        </div>
+
+        <div class="option-card">
+          <h3>2. Update OAuth Callback URLs</h3>
+          <p>After deployment, update callback URLs in each OAuth app:</p>
+          <div class="code-block">
+https://YOUR-VERCEL-URL.vercel.app/api/auth/callback?provider=twitter
+https://YOUR-VERCEL-URL.vercel.app/api/auth/callback?provider=github
+https://YOUR-VERCEL-URL.vercel.app/api/auth/callback?provider=discord
+https://YOUR-VERCEL-URL.vercel.app/api/auth/callback?provider=linkedin
+          </div>
+        </div>
+
+        <div class="option-card">
+          <h3>3. Test Your Login</h3>
+          <div class="code-block">
+Visit: https://YOUR-VERCEL-URL.vercel.app/login.html
+Click "Sign in with GitHub"
+          </div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <button class="btn btn-primary" onclick="window.location.href='/login.html'">Go to Login →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    let selectedDeployment = null;
+    let selectedProviders = new Set(['github']);
+
+    function updateProgress() {
+      const progress = (currentStep / 5) * 100;
+      document.getElementById('progress').style.width = progress + '%';
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step' + step).classList.add('active');
+      updateProgress();
+    }
+
+    function nextStep() {
+      if (currentStep === 2) {
+        // Show config fields for selected providers
+        document.getElementById('twitter-config').classList.toggle('hidden', !selectedProviders.has('twitter'));
+        document.getElementById('discord-config').classList.toggle('hidden', !selectedProviders.has('discord'));
+        document.getElementById('linkedin-config').classList.toggle('hidden', !selectedProviders.has('linkedin'));
+      }
+
+      if (currentStep === 3) {
+        // Generate .env output
+        generateEnvOutput();
+      }
+
+      if (currentStep < 5) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    function selectDeployment(type) {
+      selectedDeployment = type;
+      document.querySelectorAll('.option-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.target.closest('.option-card').classList.add('selected');
+    }
+
+    function toggleProvider(provider) {
+      if (provider === 'github') return; // GitHub is always enabled
+
+      if (selectedProviders.has(provider)) {
+        selectedProviders.delete(provider);
+        document.getElementById('provider-' + provider).classList.remove('selected');
+      } else {
+        selectedProviders.add(provider);
+        document.getElementById('provider-' + provider).classList.add('selected');
+      }
+    }
+
+    function generateEnvOutput() {
+      let env = [];
+
+      env.push('# OAuth Credentials');
+      env.push('# Generated by ColdStartKit Setup Wizard\n');
+
+      if (selectedProviders.has('twitter')) {
+        const clientId = document.getElementById('twitter-client-id').value || 'your_twitter_client_id';
+        const clientSecret = document.getElementById('twitter-client-secret').value || 'your_twitter_client_secret';
+        env.push('TWITTER_CLIENT_ID=' + clientId);
+        env.push('TWITTER_CLIENT_SECRET=' + clientSecret);
+        env.push('');
+      }
+
+      env.push('GITHUB_CLIENT_ID=auto');
+      env.push('GITHUB_CLIENT_SECRET=auto');
+      env.push('');
+
+      if (selectedProviders.has('discord')) {
+        const clientId = document.getElementById('discord-client-id').value || 'your_discord_client_id';
+        const clientSecret = document.getElementById('discord-client-secret').value || 'your_discord_client_secret';
+        env.push('DISCORD_CLIENT_ID=' + clientId);
+        env.push('DISCORD_CLIENT_SECRET=' + clientSecret);
+        env.push('');
+      }
+
+      if (selectedProviders.has('linkedin')) {
+        const clientId = document.getElementById('linkedin-client-id').value || 'your_linkedin_client_id';
+        const clientSecret = document.getElementById('linkedin-client-secret').value || 'your_linkedin_client_secret';
+        env.push('LINKEDIN_CLIENT_ID=' + clientId);
+        env.push('LINKEDIN_CLIENT_SECRET=' + clientSecret);
+        env.push('');
+      }
+
+      const parentDomain = document.getElementById('parent-domain').value || 'soulfra.com';
+      env.push('PARENT_DOMAIN=' + parentDomain);
+      env.push('OAUTH_CALLBACK_BASE_URL=https://your-app.vercel.app');
+      env.push('NODE_ENV=production');
+
+      document.getElementById('env-output').textContent = env.join('\n');
+    }
+
+    // Initialize
+    updateProgress();
+  </script>
+</body>
+</html>

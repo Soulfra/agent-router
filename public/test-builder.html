@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self';">
+  <title>Builder Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+    h1 { color: #333; }
+    .test { margin: 20px 0; padding: 15px; border: 2px solid #ccc; border-radius: 8px; }
+    .pass { background: #d4edda; border-color: #28a745; }
+    .fail { background: #f8d7da; border-color: #dc3545; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+    button:hover { background: #0056b3; }
+    #errors { background: #fff3cd; padding: 15px; margin: 10px 0; border-radius: 4px; border: 1px solid #ffc107; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Builder Debug Test</h1>
+  <p><strong>URL:</strong> <code id="current-url"></code></p>
+
+  <div id="errors"></div>
+
+  <div class="test" id="test-onclick">
+    <h3>Test 1: onclick Handler</h3>
+    <button onclick="testClick()">Click Me</button>
+    <p id="click-result">Not clicked yet</p>
+  </div>
+
+  <div class="test" id="test-fetch">
+    <h3>Test 2: API Connectivity</h3>
+    <button onclick="testAPI()">Test API</button>
+    <pre id="api-result">Not tested yet</pre>
+  </div>
+
+  <div class="test" id="test-libraries">
+    <h3>Test 3: External Libraries</h3>
+    <p>xterm.js: <span id="xterm-status">Loading...</span></p>
+    <p>marked.js: <span id="marked-status">Loading...</span></p>
+    <p>highlight.js: <span id="hljs-status">Loading...</span></p>
+  </div>
+
+  <div class="test" id="test-csp">
+    <h3>Test 4: CSP Headers</h3>
+    <p id="csp-info">Checking CSP...</p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.0/marked.min.js" onerror="logError('marked.js failed to load')"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onerror="logError('highlight.js failed to load')"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js" onerror="logError('xterm.js failed to load')"></script>
+
+  <script>
+    // Show current URL
+    document.getElementById('current-url').textContent = window.location.href;
+
+    // Error logger
+    const errorDiv = document.getElementById('errors');
+    function logError(msg) {
+      errorDiv.innerHTML += `<p style="color: red; margin: 5px 0;"><strong>❌ ${msg}</strong></p>`;
+      console.error(msg);
+    }
+
+    // Capture console errors
+    window.onerror = function(msg, url, line, col, error) {
+      logError(`JS Error: ${msg} at ${url}:${line}:${col}`);
+      return false;
+    };
+
+    // Capture unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(event) {
+      logError(`Unhandled promise rejection: ${event.reason}`);
+    });
+
+    // Test 1: onclick
+    function testClick() {
+      document.getElementById('click-result').innerHTML = '<strong style="color: green;">✅ onclick works!</strong>';
+      document.getElementById('test-onclick').classList.add('pass');
+      logError = function() {}; // Silence future errors since JS is working
+    }
+
+    // Test 2: API
+    async function testAPI() {
+      try {
+        const response = await fetch('/api/builder/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'llama3.2:3b' })
+        });
+        const data = await response.json();
+        document.getElementById('api-result').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('test-fetch').classList.add('pass');
+      } catch (error) {
+        document.getElementById('api-result').textContent = `❌ Error: ${error.message}`;
+        document.getElementById('test-fetch').classList.add('fail');
+        logError(`API test failed: ${error.message}`);
+      }
+    }
+
+    // Test 3: Libraries (check when page loads)
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        let allLoaded = true;
+
+        // Check xterm
+        if (typeof Terminal !== 'undefined') {
+          document.getElementById('xterm-status').innerHTML = '<strong style="color: green;">✅ Loaded (v' + (Terminal.version || 'unknown') + ')</strong>';
+        } else {
+          document.getElementById('xterm-status').innerHTML = '<strong style="color: red;">❌ Not loaded</strong>';
+          logError('xterm.js did not load - Terminal constructor undefined');
+          allLoaded = false;
+        }
+
+        // Check marked
+        if (typeof marked !== 'undefined') {
+          document.getElementById('marked-status').innerHTML = '<strong style="color: green;">✅ Loaded</strong>';
+        } else {
+          document.getElementById('marked-status').innerHTML = '<strong style="color: red;">❌ Not loaded</strong>';
+          logError('marked.js did not load');
+          allLoaded = false;
+        }
+
+        // Check hljs
+        if (typeof hljs !== 'undefined') {
+          document.getElementById('hljs-status').innerHTML = '<strong style="color: green;">✅ Loaded</strong>';
+        } else {
+          document.getElementById('hljs-status').innerHTML = '<strong style="color: red;">❌ Not loaded</strong>';
+          logError('highlight.js did not load');
+          allLoaded = false;
+        }
+
+        if (allLoaded) {
+          document.getElementById('test-libraries').classList.add('pass');
+        } else {
+          document.getElementById('test-libraries').classList.add('fail');
+        }
+
+        // Test 4: Check CSP
+        const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (meta) {
+          document.getElementById('csp-info').innerHTML = `<strong>Meta CSP:</strong> <code style="font-size: 12px;">${meta.content}</code>`;
+        } else {
+          document.getElementById('csp-info').innerHTML = '<strong style="color: red;">No CSP meta tag found</strong>';
+        }
+      }, 2000); // Wait 2 seconds for libs to load
+    });
+  </script>
+</body>
+</html>

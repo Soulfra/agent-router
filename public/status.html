@@ -441,12 +441,20 @@
       checkWeb()
     ]);
 
-    // Auto-refresh every 10 seconds
-    setInterval(() => {
-      checkModel();
-      checkOllama();
-      checkWeb();
+    // Auto-refresh every 10 seconds (with idle detection to prevent API spam)
+    const refreshInterval = setInterval(() => {
+      // Only refresh if tab is visible (don't spam server when hidden)
+      if (document.visibilityState === 'visible') {
+        checkModel();
+        checkOllama();
+        checkWeb();
+      }
     }, 10000);
+
+    // Cleanup on page unload (prevent memory leaks)
+    window.addEventListener('beforeunload', () => {
+      clearInterval(refreshInterval);
+    });
   </script>
 </body>
 </html>

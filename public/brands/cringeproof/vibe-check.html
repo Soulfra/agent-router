@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CringeProof - Emoji Vibe Checker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    header h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    header p {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+
+    .checker-card {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+    }
+
+    .input-area {
+      margin-bottom: 30px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 15px;
+      border: 2px solid #ec4899;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #db2777;
+      box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+    }
+
+    .context-selector {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .context-btn {
+      padding: 10px 20px;
+      border: 2px solid #ec4899;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    .context-btn:hover {
+      background: #fce7f3;
+    }
+
+    .context-btn.active {
+      background: #ec4899;
+      color: white;
+    }
+
+    .check-btn {
+      width: 100%;
+      padding: 15px;
+      background: #ec4899;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.2em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .check-btn:hover {
+      background: #db2777;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(236, 72, 153, 0.3);
+    }
+
+    .results {
+      display: none;
+    }
+
+    .results.active {
+      display: block;
+    }
+
+    .verdict {
+      text-align: center;
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .verdict.based {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .verdict.neutral {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .verdict.cringe {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .score-display {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+    }
+
+    .score-item {
+      text-align: center;
+    }
+
+    .score-value {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #ec4899;
+    }
+
+    .score-label {
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .emoji-breakdown {
+      margin-top: 20px;
+    }
+
+    .emoji-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .emoji-icon {
+      font-size: 2em;
+    }
+
+    .emoji-details {
+      flex: 1;
+    }
+
+    .emoji-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .emoji-reasoning {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .emoji-score {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .emoji-score.based {
+      color: #10b981;
+    }
+
+    .emoji-score.neutral {
+      color: #f59e0b;
+    }
+
+    .emoji-score.cringe {
+      color: #ef4444;
+    }
+
+    .warnings {
+      margin-top: 20px;
+    }
+
+    .warning-item {
+      background: #fef2f2;
+      border-left: 4px solid #ef4444;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .suggestions {
+      margin-top: 20px;
+    }
+
+    .suggestion-item {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      display: none;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #fce7f3;
+      border-top: 4px solid #ec4899;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      margin-top: 40px;
+      opacity: 0.8;
+    }
+
+    footer a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎴 CringeProof</h1>
+      <p>Social Content Optimizer</p>
+    </header>
+
+    <div class="checker-card">
+      <div class="input-area">
+        <textarea id="message-input" placeholder="Type your message with emojis here... 💀🔥✨"></textarea>
+
+        <div class="context-selector">
+          <button class="context-btn active" data-context="casual">Casual</button>
+          <button class="context-btn" data-context="professional">Professional</button>
+          <button class="context-btn" data-context="gen_z">Gen Z</button>
+          <button class="context-btn" data-context="millennial">Millennial</button>
+        </div>
+      </div>
+
+      <button class="check-btn" id="check-btn">Check Vibe</button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Analyzing your vibe...</p>
+      </div>
+
+      <div class="results" id="results">
+        <div class="verdict" id="verdict">BASED</div>
+
+        <div class="score-display">
+          <div class="score-item">
+            <div class="score-value" id="vibe-score">0</div>
+            <div class="score-label">Vibe Score</div>
+          </div>
+          <div class="score-item">
+            <div class="score-value" id="cringe-score">0</div>
+            <div class="score-label">Cringe Score</div>
+          </div>
+        </div>
+
+        <div class="emoji-breakdown">
+          <h3>Emoji Breakdown</h3>
+          <div id="emoji-list"></div>
+        </div>
+
+        <div class="warnings" id="warnings" style="display: none;">
+          <h3>⚠️ Warnings</h3>
+          <div id="warnings-list"></div>
+        </div>
+
+        <div class="suggestions" id="suggestions" style="display: none;">
+          <h3>✨ Suggestions</h3>
+          <div id="suggestions-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Powered by <a href="https://calos.fun">CALOS</a> | <a href="/card-games.html">Play Card Games</a></p>
+    </footer>
+  </div>
+
+  <script src="/brands/shared/emoji-api.js"></script>
+  <script>
+    // API endpoint (adjust based on deployment)
+    const API_BASE = window.location.hostname === 'localhost'
+      ? 'http://localhost:5001'
+      : 'https://api.calos.fun';
+
+    // State
+    let selectedContext = 'casual';
+
+    // Context selector
+    document.querySelectorAll('.context-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.context-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedContext = btn.dataset.context;
+      });
+    });
+
+    // Check button
+    document.getElementById('check-btn').addEventListener('click', checkVibe);
+
+    async function checkVibe() {
+      const message = document.getElementById('message-input').value.trim();
+
+      if (!message) {
+        alert('Please enter a message with emojis!');
+        return;
+      }
+
+      // Show loading
+      document.getElementById('loading').classList.add('active');
+      document.getElementById('results').classList.remove('active');
+
+      try {
+        // Call vibe check API
+        const response = await fetch(`${API_BASE}/api/cringeproof/vibe-check`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message,
+            context: {
+              type: selectedContext
+            }
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          displayResults(data.result);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to check vibe'));
+        }
+
+      } catch (error) {
+        console.error('Error checking vibe:', error);
+        alert('Failed to connect to API. Using demo mode.');
+
+        // Demo mode fallback
+        displayDemoResults(message);
+      } finally {
+        document.getElementById('loading').classList.remove('active');
+      }
+    }
+
+    function displayResults(result) {
+      // Verdict
+      const verdictEl = document.getElementById('verdict');
+      verdictEl.textContent = result.verdict.toUpperCase();
+      verdictEl.className = `verdict ${result.verdict}`;
+
+      // Scores
+      document.getElementById('vibe-score').textContent = Math.round(result.score.overallVibeScore);
+      document.getElementById('cringe-score').textContent = Math.round(result.score.overallCringeScore);
+
+      // Emoji breakdown
+      const emojiList = document.getElementById('emoji-list');
+      emojiList.innerHTML = '';
+
+      result.score.emojis.forEach(emoji => {
+        const item = document.createElement('div');
+        item.className = 'emoji-item';
+        item.innerHTML = `
+          <div class="emoji-icon">${emoji.emoji}</div>
+          <div class="emoji-details">
+            <div class="emoji-name">${emoji.metadata.name}</div>
+            <div class="emoji-reasoning">${emoji.reasoning}</div>
+          </div>
+          <div class="emoji-score ${emoji.verdict}">${Math.round(emoji.cringeScore)}</div>
+        `;
+        emojiList.appendChild(item);
+      });
+
+      // Warnings
+      if (result.warnings.length > 0) {
+        document.getElementById('warnings').style.display = 'block';
+        const warningsList = document.getElementById('warnings-list');
+        warningsList.innerHTML = '';
+        result.warnings.forEach(warning => {
+          const item = document.createElement('div');
+          item.className = 'warning-item';
+          item.textContent = warning;
+          warningsList.appendChild(item);
+        });
+      } else {
+        document.getElementById('warnings').style.display = 'none';
+      }
+
+      // Suggestions
+      if (result.suggestions.length > 0) {
+        document.getElementById('suggestions').style.display = 'block';
+        const suggestionsList = document.getElementById('suggestions-list');
+        suggestionsList.innerHTML = '';
+        result.suggestions.forEach(suggestion => {
+          const item = document.createElement('div');
+          item.className = 'suggestion-item';
+          item.textContent = suggestion;
+          suggestionsList.appendChild(item);
+        });
+      } else {
+        document.getElementById('suggestions').style.display = 'none';
+      }
+
+      // Show results
+      document.getElementById('results').classList.add('active');
+    }
+
+    function displayDemoResults(message) {
+      // Extract emojis
+      const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+      const emojis = message.match(emojiRegex) || [];
+
+      // Demo scoring
+      const demoResult = {
+        verdict: emojis.length > 3 ? 'cringe' : 'based',
+        score: {
+          overallVibeScore: Math.random() * 40 + 60,
+          overallCringeScore: emojis.length > 3 ? 75 : 25,
+          emojis: emojis.map(emoji => ({
+            emoji,
+            metadata: { name: 'Emoji' },
+            reasoning: 'Demo mode - connect to backend for real analysis',
+            verdict: 'neutral',
+            cringeScore: 50
+          }))
+        },
+        warnings: emojis.length > 3 ? ['⚠️ Too many emojis detected'] : [],
+        suggestions: ['✨ Connect to backend API for real vibe checking']
+      };
+
+      displayResults(demoResult);
+    }
+
+    // Enter key to check
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        checkVibe();
+      }
+    });
+  </script>
+</body>
+</html>

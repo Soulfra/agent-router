@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Radar | CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #0a0e27;
+      color: #00ff88;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #00ff88;
+      padding-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      color: #00ff88;
+      text-shadow: 0 0 10px #00ff88;
+      margin-bottom: 10px;
+    }
+
+    .header .subtitle {
+      color: #888;
+      font-size: 0.9em;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: #151b3d;
+      border: 1px solid #00ff88;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      color: #888;
+      font-size: 0.8em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .value {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #00ff88;
+    }
+
+    .section {
+      background: #151b3d;
+      border: 1px solid #00ff88;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1.3em;
+      color: #00ff88;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #00ff88;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background: #1a2347;
+      color: #00ff88;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.85em;
+    }
+
+    tr:hover {
+      background: #1a2347;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .badge-internal {
+      background: #2196F3;
+      color: white;
+    }
+
+    .badge-external {
+      background: #FF9800;
+      color: white;
+    }
+
+    .badge-low {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .badge-medium {
+      background: #FF9800;
+      color: white;
+    }
+
+    .badge-high {
+      background: #F44336;
+      color: white;
+    }
+
+    .badge-critical {
+      background: #9C27B0;
+      color: white;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .radar-canvas {
+      width: 100%;
+      height: 400px;
+      background: #0a0e27;
+      border: 1px solid #00ff88;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .radar-sweep {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, transparent 0%, rgba(0, 255, 136, 0.1) 100%);
+      animation: sweep 4s linear infinite;
+    }
+
+    @keyframes sweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .radar-blip {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #00ff88;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00ff88;
+      animation: blip 2s ease-in-out infinite;
+    }
+
+    @keyframes blip {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    .no-data {
+      color: #888;
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+    }
+
+    .alert {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid;
+    }
+
+    .alert-high {
+      background: rgba(244, 67, 54, 0.1);
+      border-color: #F44336;
+      color: #F44336;
+    }
+
+    .alert-medium {
+      background: rgba(255, 152, 0, 0.1);
+      border-color: #FF9800;
+      color: #FF9800;
+    }
+
+    .refresh-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #151b3d;
+      border: 1px solid #00ff88;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 0.9em;
+      color: #00ff88;
+    }
+
+    .loading {
+      animation: pulse 1s infinite;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="refresh-indicator" id="refreshIndicator">
+    🔄 Updating...
+  </div>
+
+  <div class="header">
+    <h1>🌐 NETWORK RADAR</h1>
+    <div class="subtitle">Real-time network traffic monitoring</div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-grid" id="statsGrid">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Radar Visualization -->
+  <div class="section">
+    <div class="section-title">Connection Radar</div>
+    <div class="radar-canvas" id="radarCanvas">
+      <div class="radar-sweep"></div>
+      <!-- Blips populated by JS -->
+    </div>
+  </div>
+
+  <!-- Active Connections -->
+  <div class="section">
+    <div class="section-title">Active Connections</div>
+    <div id="connectionsTable">
+      <div class="no-data">Loading...</div>
+    </div>
+  </div>
+
+  <div class="two-column">
+    <!-- Top IPs -->
+    <div class="section">
+      <div class="section-title">Top IPs</div>
+      <div id="topIPsTable">
+        <div class="no-data">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Top Endpoints -->
+    <div class="section">
+      <div class="section-title">Top Endpoints</div>
+      <div id="topEndpointsTable">
+        <div class="no-data">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bandwidth Usage -->
+  <div class="section">
+    <div class="section-title">Bandwidth Usage (Top 10)</div>
+    <div id="bandwidthTable">
+      <div class="no-data">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Suspicious Activity -->
+  <div class="section">
+    <div class="section-title">⚠️ Suspicious Activity</div>
+    <div id="suspiciousActivity">
+      <div class="no-data">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Geographic Distribution -->
+  <div class="section">
+    <div class="section-title">Geographic Distribution</div>
+    <div id="geoTable">
+      <div class="no-data">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let updateInterval;
+
+    // Fetch and display radar data
+    async function fetchRadarData() {
+      const indicator = document.getElementById('refreshIndicator');
+      indicator.textContent = '🔄 Updating...';
+      indicator.classList.add('loading');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/network-radar/radar`);
+        const data = await response.json();
+
+        if (data.success) {
+          updateStats(data.radar.stats);
+          updateConnections(data.radar.connections);
+          updateTopIPs(data.radar.topIPs);
+          updateTopEndpoints(data.radar.topEndpoints);
+          updateBandwidth(data.radar.bandwidth);
+          updateSuspicious(data.radar.suspicious);
+          updateGeo(data.radar.geo);
+          updateRadarVisualization(data.radar.connections);
+
+          indicator.textContent = `✓ Updated ${new Date().toLocaleTimeString()}`;
+        } else {
+          console.error('Radar API error:', data.error);
+          indicator.textContent = '❌ Error';
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        indicator.textContent = '❌ Error';
+      }
+
+      indicator.classList.remove('loading');
+    }
+
+    // Update stats grid
+    function updateStats(stats) {
+      const grid = document.getElementById('statsGrid');
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="label">Total Requests</div>
+          <div class="value">${stats.totalRequests.toLocaleString()}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Unique IPs</div>
+          <div class="value">${stats.uniqueIPs}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Req/Min</div>
+          <div class="value">${stats.requestsPerMinute}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Active Connections</div>
+          <div class="value">${stats.activeConnections}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Internal Traffic</div>
+          <div class="value">${stats.internal}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">External Traffic</div>
+          <div class="value">${stats.external}</div>
+        </div>
+      `;
+    }
+
+    // Update connections table
+    function updateConnections(connections) {
+      const container = document.getElementById('connectionsTable');
+
+      if (connections.length === 0) {
+        container.innerHTML = '<div class="no-data">No active connections</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>IP Address</th>
+              <th>Location</th>
+              <th>State</th>
+              <th>Requests</th>
+              <th>Type</th>
+              <th>Last Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      connections.forEach(conn => {
+        const elapsed = Math.floor((Date.now() - conn.lastSeen) / 1000);
+        const badge = conn.isInternal ?
+          '<span class="badge badge-internal">Internal</span>' :
+          '<span class="badge badge-external">External</span>';
+
+        html += `
+          <tr>
+            <td><strong>${conn.ip}</strong></td>
+            <td>${conn.location || 'Unknown'}</td>
+            <td>${conn.state}</td>
+            <td>${conn.requestCount}</td>
+            <td>${badge}</td>
+            <td>${elapsed}s ago</td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Update top IPs
+    function updateTopIPs(topIPs) {
+      const container = document.getElementById('topIPsTable');
+
+      if (!topIPs || topIPs.length === 0) {
+        container.innerHTML = '<div class="no-data">No data</div>';
+        return;
+      }
+
+      let html = '<table><tbody>';
+      topIPs.forEach(item => {
+        const badge = item.isInternal ?
+          '<span class="badge badge-internal">Internal</span>' :
+          '<span class="badge badge-external">External</span>';
+        html += `
+          <tr>
+            <td><strong>${item.ip}</strong></td>
+            <td>${badge}</td>
+            <td align="right">${item.count} requests</td>
+          </tr>
+        `;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Update top endpoints
+    function updateTopEndpoints(topEndpoints) {
+      const container = document.getElementById('topEndpointsTable');
+
+      if (!topEndpoints || topEndpoints.length === 0) {
+        container.innerHTML = '<div class="no-data">No data</div>';
+        return;
+      }
+
+      let html = '<table><tbody>';
+      topEndpoints.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${item.path}</strong></td>
+            <td align="right">${item.count} requests</td>
+          </tr>
+        `;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Update bandwidth table
+    function updateBandwidth(bandwidth) {
+      const container = document.getElementById('bandwidthTable');
+
+      if (bandwidth.length === 0) {
+        container.innerHTML = '<div class="no-data">No bandwidth data</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>IP Address</th>
+              <th>Bytes In</th>
+              <th>Bytes Out</th>
+              <th>Total</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      bandwidth.forEach(bw => {
+        const badge = bw.isInternal ?
+          '<span class="badge badge-internal">Internal</span>' :
+          '<span class="badge badge-external">External</span>';
+
+        html += `
+          <tr>
+            <td><strong>${bw.ip}</strong></td>
+            <td>${formatBytes(bw.bytesIn)}</td>
+            <td>${formatBytes(bw.bytesOut)}</td>
+            <td>${formatBytes(bw.total)}</td>
+            <td>${badge}</td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Update suspicious activity
+    function updateSuspicious(suspicious) {
+      const container = document.getElementById('suspiciousActivity');
+
+      if (suspicious.length === 0) {
+        container.innerHTML = '<div class="no-data">✅ No suspicious activity detected</div>';
+        return;
+      }
+
+      let html = '';
+      suspicious.forEach(activity => {
+        const alertClass = activity.severity === 'high' || activity.severity === 'critical' ?
+          'alert-high' : 'alert-medium';
+        const severityBadge = `<span class="badge badge-${activity.severity}">${activity.severity}</span>`;
+        const elapsed = Math.floor((Date.now() - activity.timestamp) / 1000);
+
+        html += `
+          <div class="alert ${alertClass}">
+            <strong>${activity.type.replace(/_/g, ' ').toUpperCase()}</strong> ${severityBadge}
+            <br>
+            IP: <strong>${activity.ip}</strong> - ${activity.description}
+            <br>
+            <small>${elapsed}s ago</small>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Update geo distribution
+    function updateGeo(geo) {
+      const container = document.getElementById('geoTable');
+
+      if (geo.length === 0) {
+        container.innerHTML = '<div class="no-data">No geographic data</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th>City</th>
+              <th>Requests</th>
+              <th>Unique IPs</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      geo.forEach(location => {
+        html += `
+          <tr>
+            <td><strong>${location.country}</strong></td>
+            <td>${location.city || 'N/A'}</td>
+            <td>${location.count}</td>
+            <td>${location.ips}</td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Update radar visualization
+    function updateRadarVisualization(connections) {
+      const canvas = document.getElementById('radarCanvas');
+
+      // Remove old blips
+      const oldBlips = canvas.querySelectorAll('.radar-blip');
+      oldBlips.forEach(blip => blip.remove());
+
+      // Add new blips
+      connections.slice(0, 20).forEach((conn, i) => {
+        const blip = document.createElement('div');
+        blip.className = 'radar-blip';
+
+        // Random position (polar coordinates)
+        const angle = (i / connections.length) * 2 * Math.PI;
+        const distance = 30 + Math.random() * 60; // 30-90% from center
+        const x = 50 + distance * Math.cos(angle);
+        const y = 50 + distance * Math.sin(angle);
+
+        blip.style.left = `${x}%`;
+        blip.style.top = `${y}%`;
+        blip.style.animationDelay = `${i * 0.1}s`;
+
+        if (conn.isInternal) {
+          blip.style.background = '#2196F3';
+          blip.style.boxShadow = '0 0 10px #2196F3';
+        }
+
+        canvas.appendChild(blip);
+      });
+    }
+
+    // Format bytes
+    function formatBytes(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+      if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
+      return `${(bytes / 1073741824).toFixed(2)} GB`;
+    }
+
+    // Initialize
+    fetchRadarData();
+    updateInterval = setInterval(fetchRadarData, 2000); // Update every 2s
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      clearInterval(updateInterval);
+    });
+  </script>
+</body>
+</html>

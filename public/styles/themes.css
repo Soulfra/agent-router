@@ -1,0 +1,304 @@
+/**
+ * CALOS Theme System
+ *
+ * Provides 4 built-in themes + custom MySpace-style mode:
+ * - Light (default)
+ * - Dark
+ * - High Contrast (WCAG AAA)
+ * - Auto/System (follows OS preference)
+ *
+ * Uses CSS custom properties (variables) for easy theming.
+ */
+
+/* ============================================================================
+   BASE THEME (Light Mode - Default)
+   ============================================================================ */
+
+:root {
+  /* Background colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-hover: #f0f4ff;
+  --bg-active: #e6edff;
+
+  /* Text colors */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #888888;
+  --text-inverse: #ffffff;
+
+  /* Accent colors */
+  --accent-primary: #667eea;
+  --accent-primary-hover: #5568d3;
+  --accent-secondary: #764ba2;
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-error: #ef4444;
+
+  /* Graph/visualization colors */
+  --graph-bg: #fafafa;
+  --graph-node-heading: #667eea;
+  --graph-node-term: #764ba2;
+  --graph-node-code: #f093fb;
+  --graph-node-inline: #4facfe;
+  --graph-edge-default: #999999;
+  --graph-edge-prerequisite: #f59e0b;
+  --graph-edge-hierarchy: #10b981;
+  --graph-edge-cooccurrence: #cccccc;
+
+  /* Border colors */
+  --border-primary: #e0e0e0;
+  --border-secondary: #ddd;
+  --border-focus: #667eea;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-focus: 0 0 0 3px rgba(102, 126, 234, 0.1);
+
+  /* Misc */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --opacity-disabled: 0.5;
+  --opacity-hover: 0.8;
+}
+
+/* ============================================================================
+   DARK THEME
+   ============================================================================ */
+
+[data-theme="dark"] {
+  /* Background colors */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #242424;
+  --bg-tertiary: #2a2a2a;
+  --bg-card: #1f1f1f;
+  --bg-hover: #2a2a40;
+  --bg-active: #353550;
+
+  /* Text colors */
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #808080;
+  --text-inverse: #1a1a1a;
+
+  /* Accent colors (slightly brighter for dark bg) */
+  --accent-primary: #8b9eff;
+  --accent-primary-hover: #7687f0;
+  --accent-secondary: #9b6bb3;
+  --accent-success: #34d399;
+  --accent-warning: #fbbf24;
+  --accent-error: #f87171;
+
+  /* Graph/visualization colors */
+  --graph-bg: #1a1a1a;
+  --graph-node-heading: #8b9eff;
+  --graph-node-term: #9b6bb3;
+  --graph-node-code: #ff9dff;
+  --graph-node-inline: #6fc5ff;
+  --graph-edge-default: #666666;
+  --graph-edge-prerequisite: #fbbf24;
+  --graph-edge-hierarchy: #34d399;
+  --graph-edge-cooccurrence: #444444;
+
+  /* Border colors */
+  --border-primary: #333333;
+  --border-secondary: #404040;
+  --border-focus: #8b9eff;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-focus: 0 0 0 3px rgba(139, 158, 255, 0.2);
+
+  /* Misc */
+  --gradient-primary: linear-gradient(135deg, #8b9eff 0%, #9b6bb3 100%);
+  --gradient-secondary: linear-gradient(135deg, #ff9dff 0%, #ff6d8c 100%);
+}
+
+/* ============================================================================
+   HIGH CONTRAST THEME (WCAG AAA - 7:1 ratio)
+   ============================================================================ */
+
+[data-theme="high-contrast"] {
+  /* Background colors (pure black/white) */
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #111111;
+  --bg-card: #000000;
+  --bg-hover: #1a1a1a;
+  --bg-active: #222222;
+
+  /* Text colors (pure white) */
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --text-tertiary: #e0e0e0;
+  --text-inverse: #000000;
+
+  /* Accent colors (maximum contrast) */
+  --accent-primary: #00ffff;      /* Cyan - high visibility */
+  --accent-primary-hover: #00e5e5;
+  --accent-secondary: #ffff00;    /* Yellow - high visibility */
+  --accent-success: #00ff00;      /* Green - high visibility */
+  --accent-warning: #ffa500;      /* Orange - high visibility */
+  --accent-error: #ff0000;        /* Red - high visibility */
+
+  /* Graph/visualization colors (high contrast) */
+  --graph-bg: #000000;
+  --graph-node-heading: #00ffff;
+  --graph-node-term: #ffff00;
+  --graph-node-code: #ff00ff;
+  --graph-node-inline: #00ff00;
+  --graph-edge-default: #ffffff;
+  --graph-edge-prerequisite: #ffa500;
+  --graph-edge-hierarchy: #00ff00;
+  --graph-edge-cooccurrence: #888888;
+
+  /* Border colors (high contrast) */
+  --border-primary: #ffffff;
+  --border-secondary: #e0e0e0;
+  --border-focus: #00ffff;
+
+  /* Shadow (more pronounced) */
+  --shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.3);
+  --shadow-md: 0 2px 8px rgba(255, 255, 255, 0.3);
+  --shadow-lg: 0 2px 10px rgba(255, 255, 255, 0.4);
+  --shadow-focus: 0 0 0 3px rgba(0, 255, 255, 0.5);
+
+  /* Misc */
+  --gradient-primary: linear-gradient(135deg, #00ffff 0%, #ffff00 100%);
+  --gradient-secondary: linear-gradient(135deg, #ff00ff 0%, #ff0000 100%);
+}
+
+/* ============================================================================
+   AUTO/SYSTEM THEME (follows OS preference via prefers-color-scheme)
+   ============================================================================ */
+
+/* When user selects "auto" theme, remove data-theme attribute
+   and let media queries handle it */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* Dark mode system preference */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #242424;
+    --bg-tertiary: #2a2a2a;
+    --bg-card: #1f1f1f;
+    --bg-hover: #2a2a40;
+    --bg-active: #353550;
+
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --text-tertiary: #808080;
+    --text-inverse: #1a1a1a;
+
+    --accent-primary: #8b9eff;
+    --accent-primary-hover: #7687f0;
+    --accent-secondary: #9b6bb3;
+    --accent-success: #34d399;
+    --accent-warning: #fbbf24;
+    --accent-error: #f87171;
+
+    --graph-bg: #1a1a1a;
+    --graph-node-heading: #8b9eff;
+    --graph-node-term: #9b6bb3;
+    --graph-node-code: #ff9dff;
+    --graph-node-inline: #6fc5ff;
+    --graph-edge-default: #666666;
+    --graph-edge-prerequisite: #fbbf24;
+    --graph-edge-hierarchy: #34d399;
+    --graph-edge-cooccurrence: #444444;
+
+    --border-primary: #333333;
+    --border-secondary: #404040;
+    --border-focus: #8b9eff;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 2px 10px rgba(0, 0, 0, 0.4);
+    --shadow-focus: 0 0 0 3px rgba(139, 158, 255, 0.2);
+
+    --gradient-primary: linear-gradient(135deg, #8b9eff 0%, #9b6bb3 100%);
+    --gradient-secondary: linear-gradient(135deg, #ff9dff 0%, #ff6d8c 100%);
+  }
+}
+
+/* High contrast system preference */
+@media (prefers-contrast: more) {
+  :root:not([data-theme]) {
+    --bg-primary: #000000;
+    --bg-secondary: #000000;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --accent-primary: #00ffff;
+    --border-primary: #ffffff;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   CUSTOM THEME (MySpace-style user customization)
+   ============================================================================ */
+
+/* Custom theme variables will be injected dynamically via JavaScript
+   when user creates a custom theme. The theme-manager.js will apply
+   inline styles to override these variables. */
+
+[data-theme="custom"] {
+  /* User-defined colors loaded from localStorage */
+  /* See theme-manager.js for implementation */
+}
+
+/* ============================================================================
+   FORCED COLORS MODE (Windows High Contrast Mode)
+   ============================================================================ */
+
+@media (forced-colors: active) {
+  :root {
+    /* Let system colors take over */
+    --bg-primary: Canvas;
+    --text-primary: CanvasText;
+    --accent-primary: LinkText;
+    --border-primary: ButtonBorder;
+  }
+
+  /* Ensure SVG/graphs remain visible */
+  svg {
+    forced-color-adjust: auto;
+  }
+}
+
+/* ============================================================================
+   COLOR SCHEME DECLARATION (for browser UI)
+   ============================================================================ */
+
+/* Tell browser which color scheme is active (affects scrollbars, form controls) */
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="high-contrast"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+  }
+}

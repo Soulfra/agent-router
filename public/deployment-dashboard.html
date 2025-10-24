@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deployment Dashboard - CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      color: #2d3748;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+    }
+
+    .environment-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-left: 1rem;
+    }
+
+    .env-staging {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .env-production {
+      background: #000;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #718096;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-danger {
+      background: #f56565;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #4a5568;
+      color: white;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .content-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .content-table th {
+      text-align: left;
+      padding: 0.75rem;
+      background: #f7fafc;
+      font-weight: 600;
+    }
+
+    .content-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .status-locked {
+      background: #fed7d7;
+      color: #c53030;
+    }
+
+    .status-ready {
+      background: #c6f6d5;
+      color: #2f855a;
+    }
+
+    .theme-preview {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .theme-staging {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .theme-production {
+      background: #fff;
+      border: 2px solid #000;
+      color: #000;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-info {
+      background: #e0f2fe;
+      color: #1e40af;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+
+    .alert-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #a0aec0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      🚀 Deployment Dashboard
+      <span class="environment-badge" id="envBadge">Loading...</span>
+    </h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Email Rules</div>
+        <div class="stat-value" id="statEmailRules">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Routing Rules</div>
+        <div class="stat-value" id="statRoutingRules">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">OAuth Providers</div>
+        <div class="stat-value" id="statOAuthProviders">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Agents</div>
+        <div class="stat-value" id="statAgents">-</div>
+      </div>
+    </div>
+
+    <div id="alerts"></div>
+
+    <div class="card">
+      <h2>Current Environment</h2>
+      <div id="environmentInfo" class="loading">Loading...</div>
+    </div>
+
+    <div class="card">
+      <h2>Current Theme</h2>
+      <div id="themeInfo" class="loading">Loading...</div>
+    </div>
+
+    <div class="card">
+      <h2>Deployment Actions</h2>
+      <p>Promote staging content to production with Craigslist-style minimal theme.</p>
+      <div class="button-group">
+        <button class="btn btn-primary" id="promoteBtn" onclick="promote()">
+          Promote to Production
+        </button>
+        <button class="btn btn-secondary" id="dryRunBtn" onclick="dryRun()">
+          Dry Run
+        </button>
+        <button class="btn btn-danger" id="rollbackBtn" onclick="rollback()">
+          Rollback
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Deployment History</h2>
+      <table class="content-table" id="historyTable">
+        <thead>
+          <tr>
+            <th>Backup Name</th>
+            <th>Created</th>
+            <th>Size</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="4" class="loading">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5001/api';
+
+    let currentEnvironment = null;
+
+    // Initialize
+    async function init() {
+      await loadEnvironment();
+      await loadPromotableContent();
+      await loadHistory();
+
+      // Refresh every 30 seconds
+      setInterval(loadEnvironment, 30000);
+    }
+
+    // Load environment info
+    async function loadEnvironment() {
+      try {
+        const response = await fetch(`${API_BASE}/deployment/environment`);
+        const data = await response.json();
+
+        if (data.success) {
+          currentEnvironment = data.environment;
+
+          // Update badge
+          const badge = document.getElementById('envBadge');
+          badge.textContent = data.environment.env.toUpperCase();
+          badge.className = `environment-badge env-${data.environment.env}`;
+
+          // Update environment info
+          const envInfo = document.getElementById('environmentInfo');
+          envInfo.innerHTML = `
+            <p><strong>Environment:</strong> ${data.environment.env}</p>
+            <p><strong>Production Mode:</strong> ${data.environment.isProduction ? 'Yes' : 'No'}</p>
+            <p><strong>Staging Mode:</strong> ${data.environment.isStaging ? 'Yes' : 'No'}</p>
+          `;
+
+          // Update theme info
+          const themeInfo = document.getElementById('themeInfo');
+          themeInfo.innerHTML = `
+            <div class="theme-preview theme-${data.environment.theme}">
+              <strong>${data.environment.themeLabel}</strong>
+              <p>Debug: ${data.environment.themeFeatures.debug ? 'Enabled' : 'Disabled'}</p>
+              <p>Animations: ${data.environment.themeFeatures.animations ? 'Enabled' : 'Disabled'}</p>
+              <p>Colorful: ${data.environment.themeFeatures.colorful ? 'Yes' : 'No (B&W)'}</p>
+            </div>
+          `;
+
+          // Enable/disable buttons
+          const isProduction = data.environment.isProduction;
+          document.getElementById('promoteBtn').disabled = isProduction;
+
+          if (isProduction) {
+            showAlert('info', 'Currently in production mode. Cannot promote from production.');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load environment:', error);
+        showAlert('danger', 'Failed to load environment info');
+      }
+    }
+
+    // Load promotable content
+    async function loadPromotableContent() {
+      try {
+        const response = await fetch(`${API_BASE}/deployment/promotable`);
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('statEmailRules').textContent = data.content.emailRules;
+          document.getElementById('statRoutingRules').textContent = data.content.routingRules;
+          document.getElementById('statOAuthProviders').textContent = data.content.oauthProviders;
+          document.getElementById('statAgents').textContent = data.content.agents;
+        }
+      } catch (error) {
+        console.error('Failed to load promotable content:', error);
+      }
+    }
+
+    // Load deployment history
+    async function loadHistory() {
+      try {
+        const response = await fetch(`${API_BASE}/deployment/history?limit=10`);
+        const data = await response.json();
+
+        if (data.success && data.history.length > 0) {
+          const tbody = document.getElementById('historyBody');
+          tbody.innerHTML = data.history.map(backup => `
+            <tr>
+              <td>${backup.name}</td>
+              <td>${new Date(backup.created).toLocaleString()}</td>
+              <td>${formatBytes(backup.size)}</td>
+              <td>
+                <button class="btn btn-secondary" onclick="restoreBackup('${backup.name}')">
+                  Restore
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          document.getElementById('historyBody').innerHTML = '<tr><td colspan="4">No backups found</td></tr>';
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    }
+
+    // Promote to production
+    async function promote() {
+      if (!confirm('Are you sure you want to promote to production? This will:\n\n- Switch theme to minimal B&W (Craigslist-style)\n- Deploy content to production database\n- Restart services\n\nContinue?')) {
+        return;
+      }
+
+      showAlert('info', 'Promoting to production...');
+      document.getElementById('promoteBtn').disabled = true;
+
+      try {
+        const response = await fetch(`${API_BASE}/deployment/promote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deployer: 'dashboard' })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('success', 'Promotion successful! Reloading...');
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showAlert('danger', `Promotion failed: ${data.error}`);
+          document.getElementById('promoteBtn').disabled = false;
+        }
+      } catch (error) {
+        showAlert('danger', `Promotion failed: ${error.message}`);
+        document.getElementById('promoteBtn').disabled = false;
+      }
+    }
+
+    // Dry run
+    async function dryRun() {
+      showAlert('info', 'Running dry run...');
+
+      try {
+        const response = await fetch(`${API_BASE}/deployment/promote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deployer: 'dashboard', dryRun: true })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('success', `Dry run complete. Would promote: ${data.stats.emailRules} email rules, ${data.stats.routingRules} routing rules, ${data.stats.oauthProviders} OAuth providers, ${data.stats.agents} agents`);
+        } else {
+          showAlert('danger', `Dry run failed: ${data.error}`);
+        }
+      } catch (error) {
+        showAlert('danger', `Dry run failed: ${error.message}`);
+      }
+    }
+
+    // Rollback
+    async function rollback() {
+      const backupName = prompt('Enter backup name to restore (or leave empty for latest):');
+
+      if (backupName === null) return; // Cancelled
+
+      if (!confirm(`Are you sure you want to rollback to backup: ${backupName || 'latest'}?`)) {
+        return;
+      }
+
+      showAlert('info', 'Rolling back...');
+
+      try {
+        const response = await fetch(`${API_BASE}/deployment/rollback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ backupName: backupName || undefined })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('success', 'Rollback successful! Reloading...');
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showAlert('danger', `Rollback failed: ${data.error}`);
+        }
+      } catch (error) {
+        showAlert('danger', `Rollback failed: ${error.message}`);
+      }
+    }
+
+    // Restore specific backup
+    function restoreBackup(backupName) {
+      if (!confirm(`Restore backup: ${backupName}?`)) return;
+
+      fetch(`${API_BASE}/deployment/rollback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupName })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('success', 'Backup restored! Reloading...');
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showAlert('danger', `Restore failed: ${data.error}`);
+        }
+      })
+      .catch(error => {
+        showAlert('danger', `Restore failed: ${error.message}`);
+      });
+    }
+
+    // Show alert
+    function showAlert(type, message) {
+      const alertsDiv = document.getElementById('alerts');
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.textContent = message;
+      alertsDiv.appendChild(alert);
+
+      setTimeout(() => alert.remove(), 5000);
+    }
+
+    // Format bytes
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Start app
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fractional Executive Agency - Live Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.8;
+      margin-bottom: 15px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,255,0,0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      background: #00ff00;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      margin-right: 10px;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .panel-header {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(255,255,255,0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .activity-feed {
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .activity-item {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid #667eea;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .activity-item.registry { border-left-color: #4CAF50; }
+    .activity-item.employment { border-left-color: #2196F3; }
+    .activity-item.capacity { border-left-color: #FF9800; }
+    .activity-item.billing { border-left-color: #F44336; }
+    .activity-item.product { border-left-color: #9C27B0; }
+    .activity-item.onboarding { border-left-color: #00BCD4; }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .activity-icon {
+      font-size: 1.2rem;
+      margin-right: 8px;
+    }
+
+    .activity-title {
+      font-weight: bold;
+      flex: 1;
+    }
+
+    .activity-time {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    .activity-category {
+      font-size: 0.8rem;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .agent-card {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .agent-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .agent-role {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+
+    .agent-availability {
+      margin-top: 10px;
+    }
+
+    .availability-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .availability-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      transition: width 0.5s;
+    }
+
+    .employment-list {
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .employment-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .scrollable {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.3) transparent;
+    }
+
+    .scrollable::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .scrollable::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scrollable::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+    }
+
+    .scrollable::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .refresh-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .error-message {
+      background: rgba(244,67,54,0.2);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #F44336;
+    }
+
+    .revenue-chart {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 150px;
+      margin-top: 20px;
+    }
+
+    .revenue-bar {
+      flex: 1;
+      margin: 0 5px;
+      background: linear-gradient(180deg, #4CAF50, #2E7D32);
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10px;
+      transition: transform 0.3s;
+    }
+
+    .revenue-bar:hover {
+      transform: scale(1.05);
+    }
+
+    .revenue-amount {
+      font-size: 0.9rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .revenue-label {
+      font-size: 0.7rem;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 1200px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤝 Fractional Executive Agency</h1>
+      <p class="subtitle">AI-powered fractional executives working across multiple companies</p>
+      <div class="live-indicator">
+        <div class="live-dot"></div>
+        <span>LIVE MONITORING</span>
+      </div>
+    </header>
+
+    <div id="error-container"></div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">👤 Active Agents</div>
+        <div class="stat-value" id="stat-agents">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🤝 Active Employments</div>
+        <div class="stat-value" id="stat-employments">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">💰 Total Revenue</div>
+        <div class="stat-value" id="stat-revenue">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📊 Active Subscriptions</div>
+        <div class="stat-value" id="stat-subscriptions">-</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Live Activity Feed -->
+      <div class="panel full-width">
+        <div class="panel-header">
+          <span>📡 Live Activity Feed</span>
+          <button class="refresh-btn" onclick="reconnectSSE()">↻ Reconnect</button>
+        </div>
+        <div class="activity-feed scrollable" id="activity-feed">
+          <div class="activity-item">
+            <div class="activity-header">
+              <span class="activity-icon">⏳</span>
+              <span class="activity-title">Waiting for agency events...</span>
+            </div>
+            <div class="activity-category">Initializing</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agents Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>👥 Fractional Agents</span>
+          <button class="refresh-btn" onclick="loadAgents()">↻</button>
+        </div>
+        <div class="scrollable" id="agents-panel" style="max-height: 400px;">
+          <p>Loading agents...</p>
+        </div>
+      </div>
+
+      <!-- Revenue Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>💸 Revenue Overview</span>
+          <button class="refresh-btn" onclick="loadRevenue()">↻</button>
+        </div>
+        <div id="revenue-panel">
+          <p>Loading revenue data...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let eventSource = null;
+    let activities = [];
+    const MAX_ACTIVITIES = 50;
+
+    // Initialize dashboard
+    async function initDashboard() {
+      console.log('[Dashboard] Initializing...');
+      await loadDashboardStats();
+      await loadAgents();
+      await loadRevenue();
+      connectSSE();
+
+      // Auto-refresh stats every 30 seconds
+      setInterval(loadDashboardStats, 30000);
+    }
+
+    // Load dashboard stats
+    async function loadDashboardStats() {
+      try {
+        const response = await fetch('/api/agency/dashboard');
+        const data = await response.json();
+
+        if (!data.success) {
+          showError('Agency not initialized. Bootstrap the agency first.');
+          return;
+        }
+
+        const stats = data.stats;
+
+        // Update stat cards
+        document.getElementById('stat-agents').textContent = stats.agents?.totalAgents || 0;
+        document.getElementById('stat-employments').textContent = stats.employments?.totalEmployments || 0;
+        document.getElementById('stat-revenue').textContent = `$${(stats.billing?.totalBilled || 0).toLocaleString()}`;
+        document.getElementById('stat-subscriptions').textContent = stats.products?.activeSubscriptions || 0;
+
+      } catch (error) {
+        console.error('[Dashboard] Error loading stats:', error);
+        showError('Failed to load dashboard stats: ' + error.message);
+      }
+    }
+
+    // Load agents
+    async function loadAgents() {
+      try {
+        const response = await fetch('/api/agency/agents');
+        const data = await response.json();
+
+        if (!data.success) {
+          document.getElementById('agents-panel').innerHTML = '<p>No agents available</p>';
+          return;
+        }
+
+        const agentsHtml = data.agents.map(agent => `
+          <div class="agent-card">
+            <div class="agent-header">
+              <div class="agent-name">${agent.agentName}</div>
+              <div class="agent-role">${agent.roles.join(', ')}</div>
+            </div>
+            <div class="agent-availability">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Availability</span>
+                <span>${agent.availability}%</span>
+              </div>
+              <div class="availability-bar">
+                <div class="availability-fill" style="width: ${agent.availability}%"></div>
+              </div>
+            </div>
+            <div class="employment-list">
+              <strong>${agent.employmentCount} Employment(s)</strong>
+              ${agent.allocationBreakdown ? `
+                <div style="margin-top: 5px; font-size: 0.85rem; opacity: 0.8;">
+                  Primary: ${agent.allocationBreakdown.primary}% |
+                  Side: ${agent.allocationBreakdown.side_project}% |
+                  Consulting: ${agent.allocationBreakdown.consulting}%
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+
+        document.getElementById('agents-panel').innerHTML = agentsHtml || '<p>No agents found</p>';
+
+      } catch (error) {
+        console.error('[Dashboard] Error loading agents:', error);
+        document.getElementById('agents-panel').innerHTML = '<p>Error loading agents</p>';
+      }
+    }
+
+    // Load revenue
+    async function loadRevenue() {
+      try {
+        const response = await fetch('/api/agency/revenue');
+        const data = await response.json();
+
+        if (!data.success) {
+          document.getElementById('revenue-panel').innerHTML = '<p>No revenue data available</p>';
+          return;
+        }
+
+        const report = data.report;
+
+        const revenueHtml = `
+          <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Total Revenue:</span>
+              <strong>$${report.totalRevenue.toLocaleString()}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Platform Fees (15%):</span>
+              <strong>$${report.totalPlatformFees.toLocaleString()}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Agent Revenue:</span>
+              <strong>$${report.totalAgentRevenue.toLocaleString()}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Paid Invoices:</span>
+              <strong>${report.paidInvoiceCount} / ${report.invoiceCount}</strong>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('revenue-panel').innerHTML = revenueHtml;
+
+      } catch (error) {
+        console.error('[Dashboard] Error loading revenue:', error);
+        document.getElementById('revenue-panel').innerHTML = '<p>Error loading revenue</p>';
+      }
+    }
+
+    // Connect to Server-Sent Events for live activity
+    function connectSSE() {
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      console.log('[Dashboard] Connecting to activity feed SSE...');
+
+      eventSource = new EventSource('/api/agency/activity-feed');
+
+      eventSource.onmessage = function(event) {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === 'init') {
+            // Initial historical activities
+            activities = data.activities;
+            renderActivityFeed();
+          } else if (data.type === 'activity') {
+            // New activity
+            addActivity(data.activity);
+          }
+        } catch (error) {
+          console.error('[Dashboard] Error parsing SSE message:', error);
+        }
+      };
+
+      eventSource.onerror = function(error) {
+        console.error('[Dashboard] SSE error:', error);
+        eventSource.close();
+
+        // Attempt to reconnect after 5 seconds
+        setTimeout(() => {
+          console.log('[Dashboard] Attempting to reconnect SSE...');
+          connectSSE();
+        }, 5000);
+      };
+
+      eventSource.onopen = function() {
+        console.log('[Dashboard] SSE connection established');
+        clearError();
+      };
+    }
+
+    function reconnectSSE() {
+      connectSSE();
+    }
+
+    function addActivity(activity) {
+      activities.unshift(activity);
+
+      // Keep only last MAX_ACTIVITIES
+      if (activities.length > MAX_ACTIVITIES) {
+        activities = activities.slice(0, MAX_ACTIVITIES);
+      }
+
+      renderActivityFeed();
+    }
+
+    function renderActivityFeed() {
+      const feed = document.getElementById('activity-feed');
+
+      if (activities.length === 0) {
+        feed.innerHTML = `
+          <div class="activity-item">
+            <div class="activity-header">
+              <span class="activity-icon">💤</span>
+              <span class="activity-title">No recent activity</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const html = activities.map(activity => {
+        const time = new Date(activity.timestamp).toLocaleTimeString();
+        return `
+          <div class="activity-item ${activity.category}">
+            <div class="activity-header">
+              <span class="activity-icon">${activity.icon}</span>
+              <span class="activity-title">${activity.title}</span>
+              <span class="activity-time">${time}</span>
+            </div>
+            <div class="activity-category">${activity.category} • ${activity.type}</div>
+          </div>
+        `;
+      }).join('');
+
+      feed.innerHTML = html;
+    }
+
+    function showError(message) {
+      const container = document.getElementById('error-container');
+      container.innerHTML = `
+        <div class="error-message">
+          <strong>⚠️ Error:</strong> ${message}
+        </div>
+      `;
+    }
+
+    function clearError() {
+      document.getElementById('error-container').innerHTML = '';
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', initDashboard);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    });
+  </script>
+</body>
+</html>

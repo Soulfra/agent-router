@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OAuth Screenshot Upload - CalOS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #4a5568;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            color: #a0aec0;
+            font-size: 12px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            background: #f7fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .file-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .file-name {
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .remove-btn {
+            background: #fc8181;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-btn:hover {
+            background: #f56565;
+        }
+
+        .options {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .upload-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            color: #718096;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0fff4;
+            border: 2px solid #68d391;
+            border-radius: 8px;
+        }
+
+        .result h3 {
+            color: #22543d;
+            margin-bottom: 10px;
+        }
+
+        .result-item {
+            color: #276749;
+            font-size: 14px;
+            margin: 6px 0;
+        }
+
+        .result-gif {
+            margin-top: 16px;
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 8px;
+            color: #c53030;
+        }
+
+        .provider-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .provider-github {
+            background: #333;
+            color: white;
+        }
+
+        .provider-google {
+            background: #4285f4;
+            color: white;
+        }
+
+        .provider-microsoft {
+            background: #00a4ef;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 OAuth Screenshot Upload</h1>
+        <p class="subtitle">Upload screenshots from creating your OAuth app to automatically extract credentials and generate documentation</p>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📱</div>
+            <div class="upload-text">Tap to select screenshots</div>
+            <div class="upload-hint">or drag and drop (PNG/JPEG, max 10MB each)</div>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/png,image/jpeg" multiple>
+
+        <div class="file-list" id="fileList"></div>
+
+        <div class="options">
+            <label for="provider">OAuth Provider (optional - auto-detected)</label>
+            <select id="provider">
+                <option value="">Auto-detect</option>
+                <option value="github">GitHub</option>
+                <option value="google">Google</option>
+                <option value="microsoft">Microsoft</option>
+            </select>
+
+            <label for="appName">Application Name</label>
+            <input type="text" id="appName" placeholder="e.g., Soulfra Platform" value="OAuth Application">
+
+            <label>Export Formats</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="formatGIF" checked>
+                    <span>🎬 Animated GIF (silent, small file ~40KB)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="formatMP4">
+                    <span>🎥 MP4 Video (silent, ~1-2MB)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="formatMP4Narrated">
+                    <span>🎙️ MP4 with Voiceover (narrated tutorial, ~2-3MB)</span>
+                </label>
+            </div>
+
+            <label>Animation Options</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="enableCursor" checked>
+                    <span>🖱️ Animated cursor tracking (shows where to click)</span>
+                </label>
+            </div>
+        </div>
+
+        <button class="upload-btn" id="uploadBtn" disabled>Upload & Process</button>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Processing...</div>
+        </div>
+
+        <div class="result" id="result"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+
+        let selectedFiles = [];
+
+        // Click to upload
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(f =>
+                f.type === 'image/png' || f.type === 'image/jpeg'
+            );
+
+            if (selectedFiles.length === 0) {
+                showError('Please select PNG or JPEG images only');
+                return;
+            }
+
+            renderFileList();
+            uploadBtn.disabled = false;
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+
+                const info = document.createElement('div');
+                info.className = 'file-info';
+
+                const thumb = document.createElement('img');
+                thumb.className = 'file-thumb';
+                thumb.src = URL.createObjectURL(file);
+
+                const name = document.createElement('div');
+                name.className = 'file-name';
+                name.textContent = file.name;
+
+                info.appendChild(thumb);
+                info.appendChild(name);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = () => removeFile(index);
+
+                item.appendChild(info);
+                item.appendChild(removeBtn);
+
+                fileList.appendChild(item);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+
+            if (selectedFiles.length === 0) {
+                uploadBtn.disabled = true;
+            }
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            // Hide previous results
+            result.style.display = 'none';
+            error.style.display = 'none';
+
+            // Show progress
+            progress.style.display = 'block';
+            uploadBtn.disabled = true;
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Uploading screenshots...';
+
+            // Create form data
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('screenshots', file);
+            });
+
+            const provider = document.getElementById('provider').value;
+            const appName = document.getElementById('appName').value;
+
+            // Get selected export formats
+            const exportFormats = [];
+            if (document.getElementById('formatGIF').checked) exportFormats.push('gif');
+            if (document.getElementById('formatMP4').checked) exportFormats.push('mp4');
+            if (document.getElementById('formatMP4Narrated').checked) exportFormats.push('mp4-narrated');
+
+            if (provider) formData.append('provider', provider);
+            if (appName) formData.append('appName', appName);
+            if (exportFormats.length > 0) formData.append('exportFormats', JSON.stringify(exportFormats));
+
+            // Add cursor animation preference
+            const enableCursor = document.getElementById('enableCursor').checked;
+            formData.append('enableCursorAnimation', enableCursor);
+
+            try {
+                // Simulate progress
+                let progressValue = 0;
+                const progressInterval = setInterval(() => {
+                    progressValue += 5;
+                    if (progressValue <= 90) {
+                        progressFill.style.width = progressValue + '%';
+                    }
+                }, 200);
+
+                const response = await fetch('/api/oauth/upload-screenshots', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                clearInterval(progressInterval);
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Upload failed');
+                }
+
+                // Complete progress
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Processing complete!';
+
+                // Show results
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                    showResult(data);
+                }, 500);
+
+            } catch (err) {
+                console.error('Upload error:', err);
+                progress.style.display = 'none';
+                showError(err.message);
+                uploadBtn.disabled = false;
+            }
+        });
+
+        function showResult(data) {
+            const providerClass = `provider-${data.provider || 'github'}`;
+
+            // Build export links HTML
+            let exportLinksHTML = '';
+
+            if (data.exports && Object.keys(data.exports).length > 0) {
+                exportLinksHTML = '<div style="margin-top: 20px; padding: 16px; background: #f7fafc; border-radius: 8px;">';
+                exportLinksHTML += '<h4 style="margin: 0 0 12px 0; color: #2d3748;">📦 Generated Exports</h4>';
+
+                if (data.exports.gif) {
+                    exportLinksHTML += `
+                        <div style="margin-bottom: 12px;">
+                            <a href="${data.exports.gif}" download style="color: #667eea; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                🎬 Download Animated GIF (silent, ~40KB)
+                            </a>
+                        </div>
+                    `;
+                }
+
+                if (data.exports.mp4) {
+                    exportLinksHTML += `
+                        <div style="margin-bottom: 12px;">
+                            <a href="${data.exports.mp4}" download style="color: #667eea; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                🎥 Download MP4 Video (silent, ~1-2MB)
+                            </a>
+                        </div>
+                    `;
+                }
+
+                if (data.exports.mp4Narrated) {
+                    exportLinksHTML += `
+                        <div style="margin-bottom: 12px;">
+                            <a href="${data.exports.mp4Narrated}" download style="color: #667eea; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                🎙️ Download MP4 with Voiceover (narrated tutorial, ~2-3MB)
+                            </a>
+                        </div>
+                    `;
+                }
+
+                exportLinksHTML += '</div>';
+            }
+
+            result.innerHTML = `
+                <h3>✅ OAuth Documentation Generated!</h3>
+                <div class="result-item">
+                    <strong>Provider:</strong>
+                    <span class="provider-badge ${providerClass}">${data.provider}</span>
+                </div>
+                <div class="result-item">
+                    <strong>Client ID:</strong> ${data.credentials.clientId || 'Not found'}
+                </div>
+                <div class="result-item">
+                    <strong>Client Secret:</strong> ${data.credentials.clientSecret || 'Not found'}
+                </div>
+                <div class="result-item">
+                    <strong>Annotated Screenshots:</strong> ${data.annotatedScreenshots.length}
+                </div>
+                ${data.exports && data.exports.gif ? `<img src="${data.exports.gif}?t=${Date.now()}" class="result-gif" alt="Generated GIF">` : ''}
+                ${exportLinksHTML}
+            `;
+            result.style.display = 'block';
+
+            // Reset form
+            selectedFiles = [];
+            fileList.innerHTML = '';
+            uploadBtn.disabled = true;
+            fileInput.value = '';
+        }
+
+        function showError(message) {
+            error.textContent = `❌ Error: ${message}`;
+            error.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

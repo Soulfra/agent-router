@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CalOS Lesson System - Privacy-first learning platform with 33 interactive lessons on MCP development, RPG games, zero-dependency architecture, and multi-tier SaaS">
+  <meta name="keywords" content="CalOS, MCP, Model Context Protocol, privacy-first, zero-dependency, SaaS, RPG, card game">
+  <meta name="author" content="CalOS">
+  <meta property="og:title" content="CalOS Lesson System">
+  <meta property="og:description" content="Learn privacy-first development with 33 interactive lessons">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/icon-512.png">
+  <title>CalOS Lesson System - Privacy-First Learning</title>
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-512.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <h1>CalOS Lessons</h1>
+          <span class="tagline">Privacy-First Learning Platform</span>
+        </div>
+        <div class="header-stats">
+          <div class="stat">
+            <span class="stat-value" id="total-xp">0</span>
+            <span class="stat-label">Total XP</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="completed-count">0</span>
+            <span class="stat-label">Completed</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="level">1</span>
+            <span class="stat-label">Level</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="container">
+
+      <!-- View: Track Browser (Default) -->
+      <div id="track-browser" class="view active">
+        <div class="view-header">
+          <h2>Learning Tracks</h2>
+          <p>Choose a track to begin your journey. Complete all lessons to master CalOS development.</p>
+        </div>
+
+        <div id="tracks-container" class="tracks-grid">
+          <!-- Tracks loaded dynamically -->
+        </div>
+
+        <!-- Achievements Section -->
+        <div class="achievements-section">
+          <h3>Achievements</h3>
+          <div id="achievements-container" class="achievements-grid">
+            <!-- Achievements loaded dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Lesson List -->
+      <div id="lesson-list" class="view">
+        <div class="view-header">
+          <button class="back-button" onclick="app.showTrackBrowser()">← Back to Tracks</button>
+          <div class="track-header">
+            <h2 id="track-title"></h2>
+            <p id="track-description"></p>
+          </div>
+        </div>
+
+        <div class="track-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="track-progress-fill"></div>
+          </div>
+          <div class="progress-stats">
+            <span id="track-progress-text">0/0 lessons complete</span>
+            <span id="track-xp-text">0/0 XP</span>
+          </div>
+        </div>
+
+        <div id="lessons-container" class="lessons-list">
+          <!-- Lessons loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- View: Lesson Viewer -->
+      <div id="lesson-viewer" class="view">
+        <div class="view-header">
+          <button class="back-button" onclick="app.backToLessonList()">← Back to Lessons</button>
+          <div class="lesson-header">
+            <div class="lesson-meta">
+              <span class="lesson-number" id="lesson-number"></span>
+              <span class="lesson-time" id="lesson-time"></span>
+              <span class="lesson-xp" id="lesson-xp"></span>
+            </div>
+            <h2 id="lesson-title"></h2>
+          </div>
+        </div>
+
+        <div class="lesson-content">
+          <div class="lesson-nav">
+            <button id="prev-lesson" class="nav-button" onclick="app.navigateLesson(-1)">← Previous</button>
+            <button id="next-lesson" class="nav-button" onclick="app.navigateLesson(1)">Next →</button>
+          </div>
+
+          <div class="lesson-body">
+            <div id="lesson-markdown" class="markdown-content">
+              <!-- Lesson content loaded dynamically -->
+            </div>
+
+            <div class="lesson-actions">
+              <button id="complete-lesson" class="button-primary" onclick="app.completeLesson()">
+                Mark Complete & Claim XP
+              </button>
+              <button id="open-lab" class="button-secondary" onclick="app.openLab()">
+                Open Lab
+              </button>
+            </div>
+          </div>
+
+          <!-- Embedded Lab (Optional) -->
+          <div id="lab-container" class="lab-container hidden">
+            <div class="lab-header">
+              <h3>Interactive Lab</h3>
+              <button class="close-lab" onclick="app.closeLab()">✕</button>
+            </div>
+            <iframe id="lab-iframe" class="lab-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>Built with ❤️ by CalOS | <a href="https://github.com/calos/agent-router">GitHub</a> | <a href="https://discord.gg/calos">Discord</a></p>
+      <p class="privacy-note">100% Privacy-First | Zero Telemetry | Local Storage Only</p>
+    </div>
+  </footer>
+
+  <!-- Notification Toast -->
+  <div id="notification" class="notification hidden">
+    <span id="notification-text"></span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/lessons/sw.js')
+          .then(registration => {
+            console.log('Service Worker registered successfully:', registration);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

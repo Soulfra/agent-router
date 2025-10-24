@@ -1,0 +1,276 @@
+#!/usr/bin/env node
+
+/**
+ * Doc Sync - Automatic Documentation Generator
+ *
+ * Prevents the "telephone game" by auto-generating architecture docs from code.
+ * Scans the codebase and creates GENERATED_SYSTEM_MAP.md with:
+ * - Database tables (from migrations)
+ * - API endpoints (from routes)
+ * - Core modules (from lib)
+ *
+ * Usage:
+ *   ./bin/doc-sync
+ *   node bin/doc-sync
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const ROOT_DIR = path.join(__dirname, '..');
+const OUTPUT_FILE = path.join(ROOT_DIR, 'docs', 'GENERATED_SYSTEM_MAP.md');
+
+// ANSI colors for terminal output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m'
+};
+
+function log(message, color = 'reset') {
+  console.log(`${colors[color]}${message}${colors.reset}`);
+}
+
+/**
+ * Scan migrations directory to extract database tables
+ */
+function scanMigrations() {
+  log('\n📊 Scanning migrations...', 'cyan');
+
+  const migrationsDir = path.join(ROOT_DIR, 'migrations');
+  if (!fs.existsSync(migrationsDir)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+
+  const tables = [];
+
+  files.forEach(file => {
+    const content = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+
+    // Extract table names using regex
+    const createTableRegex = /CREATE TABLE (?:IF NOT EXISTS )?([a-z_]+)/gi;
+    let match;
+
+    while ((match = createTableRegex.exec(content)) !== null) {
+      const tableName = match[1];
+      const migrationNumber = file.match(/^(\d+)/)?.[1] || '???';
+
+      // Try to find comment above table definition
+      const tablePos = content.indexOf(match[0]);
+      const beforeTable = content.substring(Math.max(0, tablePos - 500), tablePos);
+      const commentMatch = beforeTable.match(/--\s*(.+?)(?=\n(?:--|\s*CREATE))/s);
+      const description = commentMatch?.[1].trim().replace(/\n--\s*/g, ' ') || '';
+
+      tables.push({
+        name: tableName,
+        migration: migrationNumber,
+        description: description.substring(0, 100)
+      });
+    }
+  });
+
+  log(`  Found ${tables.length} tables across ${files.length} migrations`, 'green');
+  return tables;
+}
+
+/**
+ * Scan routes directory to extract API endpoints
+ */
+function scanRoutes() {
+  log('\n🛣️  Scanning routes...', 'cyan');
+
+  const routesDir = path.join(ROOT_DIR, 'routes');
+  if (!fs.existsSync(routesDir)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(routesDir)
+    .filter(f => f.endsWith('.js') || f.endsWith('.ts'))
+    .sort();
+
+  const endpoints = [];
+
+  files.forEach(file => {
+    const content = fs.readFileSync(path.join(routesDir, file), 'utf-8');
+
+    // Extract HTTP methods and paths
+    const routeRegex = /router\.(get|post|put|patch|delete|all)\(['"]([^'"]+)['"]/gi;
+    let match;
+
+    while ((match = routeRegex.exec(content)) !== null) {
+      const method = match[1].toUpperCase();
+      const path = match[2];
+
+      // Try to find comment above route definition
+      const routePos = content.indexOf(match[0]);
+      const beforeRoute = content.substring(Math.max(0, routePos - 200), routePos);
+      const commentMatch = beforeRoute.match(/\/\*\*[\s\S]*?\*\/|\/\/\s*(.+)/);
+      const description = commentMatch?.[1]?.trim() || '';
+
+      endpoints.push({
+        method,
+        path,
+        file: file.replace(/\.(js|ts)$/, ''),
+        description: description.substring(0, 100)
+      });
+    }
+  });
+
+  log(`  Found ${endpoints.length} endpoints across ${files.length} route files`, 'green');
+  return endpoints;
+}
+
+/**
+ * Scan lib directory to extract core modules
+ */
+function scanLibModules() {
+  log('\n📚 Scanning lib modules...', 'cyan');
+
+  const libDir = path.join(ROOT_DIR, 'lib');
+  if (!fs.existsSync(libDir)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(libDir)
+    .filter(f => f.endsWith('.js') || f.endsWith('.ts'))
+    .sort();
+
+  const modules = [];
+
+  files.forEach(file => {
+    const content = fs.readFileSync(path.join(libDir, file), 'utf-8');
+
+    // Extract class/function names and comments
+    const firstComment = content.match(/\/\*\*[\s\S]*?\*\//);
+    const classMatch = content.match(/class ([A-Za-z0-9]+)/);
+    const functionMatch = content.match(/function ([A-Za-z0-9]+)/);
+    const exportMatch = content.match(/module\.exports\s*=\s*([A-Za-z0-9]+)/);
+
+    const name = classMatch?.[1] || functionMatch?.[1] || exportMatch?.[1] || file.replace(/\.(js|ts)$/, '');
+    const description = firstComment?.[0]
+      .replace(/\/\*\*|\*\/|\s*\*\s*/g, ' ')
+      .trim()
+      .substring(0, 150) || '';
+
+    modules.push({
+      file,
+      name,
+      description
+    });
+  });
+
+  log(`  Found ${modules.length} lib modules`, 'green');
+  return modules;
+}
+
+/**
+ * Generate markdown content
+ */
+function generateMarkdown(tables, endpoints, modules) {
+  log('\n📝 Generating markdown...', 'cyan');
+
+  const timestamp = new Date().toISOString().split('T')[0];
+
+  let md = `# System Map (Auto-Generated)
+
+**Last Updated:** ${timestamp}
+**Generated by:** \`bin/doc-sync\`
+
+⚠️ **DO NOT EDIT THIS FILE MANUALLY** - It is auto-generated from code. Edit the source files instead.
+
+---
+
+## Overview
+
+This document is automatically generated by scanning the codebase. It provides a snapshot of:
+- Database tables (from migrations)
+- API endpoints (from routes)
+- Core modules (from lib)
+
+---
+
+## 🗄️ Database Tables (${tables.length} total)
+
+| Table Name | Migration | Description |
+|------------|-----------|-------------|
+`;
+
+  tables.forEach(t => {
+    md += `| \`${t.name}\` | ${t.migration} | ${t.description} |\n`;
+  });
+
+  md += `\n---\n\n## 🛣️ API Endpoints (${endpoints.length} total)\n\n`;
+
+  // Group by file
+  const byFile = {};
+  endpoints.forEach(e => {
+    if (!byFile[e.file]) byFile[e.file] = [];
+    byFile[e.file].push(e);
+  });
+
+  Object.keys(byFile).sort().forEach(file => {
+    md += `\n### \`routes/${file}.js\`\n\n`;
+    md += `| Method | Path | Description |\n`;
+    md += `|--------|------|-------------|\n`;
+
+    byFile[file].forEach(e => {
+      md += `| ${e.method} | \`${e.path}\` | ${e.description} |\n`;
+    });
+  });
+
+  md += `\n---\n\n## 📚 Core Modules (${modules.length} total)\n\n`;
+  md += `| File | Module | Purpose |\n`;
+  md += `|------|--------|----------|\n`;
+
+  modules.forEach(m => {
+    md += `| \`lib/${m.file}\` | ${m.name} | ${m.description} |\n`;
+  });
+
+  md += `\n---\n\n## 🔄 Keeping This Doc Updated\n\n`;
+  md += `This file is regenerated by running:\n\n`;
+  md += `\`\`\`bash\n./bin/doc-sync\n\`\`\`\n\n`;
+  md += `**Recommended:** Add this to your git pre-commit hook:\n\n`;
+  md += `\`\`\`bash\n# .git/hooks/pre-commit\n./bin/doc-sync\ngit add docs/GENERATED_SYSTEM_MAP.md\n\`\`\`\n\n`;
+  md += `This ensures the docs stay in sync with code changes.\n`;
+
+  return md;
+}
+
+/**
+ * Main execution
+ */
+function main() {
+  log('\n' + '='.repeat(60), 'bright');
+  log('  Doc Sync - Automatic Documentation Generator', 'bright');
+  log('='.repeat(60), 'bright');
+
+  const tables = scanMigrations();
+  const endpoints = scanRoutes();
+  const modules = scanLibModules();
+
+  const markdown = generateMarkdown(tables, endpoints, modules);
+
+  // Ensure docs directory exists
+  const docsDir = path.join(ROOT_DIR, 'docs');
+  if (!fs.existsSync(docsDir)) {
+    fs.mkdirSync(docsDir, { recursive: true });
+  }
+
+  fs.writeFileSync(OUTPUT_FILE, markdown, 'utf-8');
+
+  log('\n✅ System map generated successfully!', 'green');
+  log(`   Output: ${path.relative(ROOT_DIR, OUTPUT_FILE)}`, 'bright');
+  log(`   Tables: ${tables.length}`, 'yellow');
+  log(`   Endpoints: ${endpoints.length}`, 'yellow');
+  log(`   Modules: ${modules.length}`, 'yellow');
+  log('');
+}
+
+main();

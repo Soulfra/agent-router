@@ -1,0 +1,37 @@
+{
+  "name": "@calos/email-sdk",
+  "version": "1.0.0",
+  "description": "Zero-dependency email SDK for CALOS hosted email API",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "email",
+    "calos",
+    "gmail",
+    "smtp",
+    "api",
+    "sdk"
+  ],
+  "author": "CALOS",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/calos/agent-router.git",
+    "directory": "sdk/email-sdk"
+  },
+  "homepage": "https://calos.ai/email",
+  "bugs": {
+    "url": "https://github.com/calos/agent-router/issues"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

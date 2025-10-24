@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Custom Tool Lab - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%;
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .code-example {
+      background: #0a0a15;
+      padding: 12px;
+      border-radius: 5px;
+      border-left: 3px solid #667eea;
+      margin: 10px 0;
+      font-size: 12px;
+      overflow-x: auto;
+    }
+
+    .tool-template {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .param-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 2fr auto;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .param-row input {
+      margin: 0;
+    }
+
+    .remove-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Build Custom MCP Tool</h1>
+  <p class="subtitle">Interactive lab for creating and testing custom MCP tools</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- Tool Builder -->
+  <div class="section">
+    <h2>Tool Configuration</h2>
+
+    <div class="input-group">
+      <label>Tool Name:</label>
+      <input type="text" id="tool-name" placeholder="e.g., weather_lookup" value="custom_calculator">
+    </div>
+
+    <div class="input-group">
+      <label>Description:</label>
+      <input type="text" id="tool-desc" placeholder="What does this tool do?" value="Performs mathematical calculations">
+    </div>
+
+    <div class="input-group">
+      <label>Tool Category:</label>
+      <select id="tool-category">
+        <option value="utility">Utility</option>
+        <option value="data">Data Processing</option>
+        <option value="api">API Integration</option>
+        <option value="filesystem">Filesystem</option>
+        <option value="network">Network</option>
+      </select>
+    </div>
+
+    <h3 style="color: #764ba2; margin-top: 20px; margin-bottom: 10px;">Input Parameters</h3>
+    <div id="params-container">
+      <div class="param-row">
+        <input type="text" placeholder="Name" value="operation">
+        <select>
+          <option value="string">String</option>
+          <option value="number">Number</option>
+          <option value="boolean">Boolean</option>
+          <option value="array">Array</option>
+          <option value="object">Object</option>
+        </select>
+        <input type="text" placeholder="Description" value="Math operation (add, subtract, multiply, divide)">
+        <button class="remove-btn" onclick="removeParam(this)">Remove</button>
+      </div>
+      <div class="param-row">
+        <input type="text" placeholder="Name" value="a">
+        <select>
+          <option value="string">String</option>
+          <option value="number" selected>Number</option>
+          <option value="boolean">Boolean</option>
+          <option value="array">Array</option>
+          <option value="object">Object</option>
+        </select>
+        <input type="text" placeholder="Description" value="First number">
+        <button class="remove-btn" onclick="removeParam(this)">Remove</button>
+      </div>
+      <div class="param-row">
+        <input type="text" placeholder="Name" value="b">
+        <select>
+          <option value="string">String</option>
+          <option value="number" selected>Number</option>
+          <option value="boolean">Boolean</option>
+          <option value="array">Array</option>
+          <option value="object">Object</option>
+        </select>
+        <input type="text" placeholder="Description" value="Second number">
+        <button class="remove-btn" onclick="removeParam(this)">Remove</button>
+      </div>
+    </div>
+    <button onclick="addParam()" style="margin-top: 10px;">Add Parameter</button>
+
+    <div class="button-grid" style="margin-top: 20px;">
+      <button onclick="generateSchema()">Generate Schema</button>
+      <button onclick="generateCode()">Generate Code</button>
+      <button onclick="saveToLocalStorage()">Save Template</button>
+      <button onclick="loadFromLocalStorage()">Load Template</button>
+    </div>
+  </div>
+
+  <!-- Test Tool -->
+  <div class="section">
+    <h2>Test Your Tool</h2>
+    <div class="input-group">
+      <label>Test Input (JSON):</label>
+      <textarea id="test-input" rows="5">{"operation": "add", "a": 10, "b": 5}</textarea>
+    </div>
+    <button onclick="testCustomTool()">Test Tool</button>
+  </div>
+
+  <!-- Generated Output -->
+  <div class="section">
+    <h2>Generated Output</h2>
+    <pre class="output" id="output">Configure your tool above and click "Generate Schema" or "Generate Code"...</pre>
+  </div>
+
+  <!-- Quick Examples -->
+  <div class="section">
+    <h2>Quick Templates</h2>
+    <div class="button-grid">
+      <button onclick="loadTemplate('weather')">Weather API</button>
+      <button onclick="loadTemplate('database')">Database Query</button>
+      <button onclick="loadTemplate('file')">File Processor</button>
+      <button onclick="loadTemplate('validator')">Data Validator</button>
+    </div>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+      }
+    }
+
+    // Add parameter row
+    function addParam() {
+      const container = document.getElementById('params-container');
+      const row = document.createElement('div');
+      row.className = 'param-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Name">
+        <select>
+          <option value="string">String</option>
+          <option value="number">Number</option>
+          <option value="boolean">Boolean</option>
+          <option value="array">Array</option>
+          <option value="object">Object</option>
+        </select>
+        <input type="text" placeholder="Description">
+        <button class="remove-btn" onclick="removeParam(this)">Remove</button>
+      `;
+      container.appendChild(row);
+    }
+
+    // Remove parameter row
+    function removeParam(btn) {
+      btn.parentElement.remove();
+    }
+
+    // Collect parameters from UI
+    function collectParams() {
+      const rows = document.querySelectorAll('.param-row');
+      const params = [];
+
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const select = row.querySelector('select');
+
+        if (inputs[0].value) {
+          params.push({
+            name: inputs[0].value,
+            type: select.value,
+            description: inputs[1].value
+          });
+        }
+      });
+
+      return params;
+    }
+
+    // Generate JSON schema
+    function generateSchema() {
+      const toolName = document.getElementById('tool-name').value;
+      const description = document.getElementById('tool-desc').value;
+      const params = collectParams();
+
+      const properties = {};
+      const required = [];
+
+      params.forEach(param => {
+        properties[param.name] = {
+          type: param.type,
+          description: param.description
+        };
+        required.push(param.name);
+      });
+
+      const schema = {
+        name: toolName,
+        description: description,
+        inputSchema: {
+          type: 'object',
+          properties: properties,
+          required: required
+        }
+      };
+
+      log(schema, 'success');
+    }
+
+    // Generate implementation code
+    function generateCode() {
+      const toolName = document.getElementById('tool-name').value;
+      const description = document.getElementById('tool-desc').value;
+      const params = collectParams();
+
+      const paramList = params.map(p => p.name).join(', ');
+      const validation = params.map(p =>
+        `  if (!input.${p.name}) throw new Error('${p.name} is required');`
+      ).join('\n');
+
+      const code = `
+// ${description}
+async function ${toolName}(input) {
+  // Validate inputs
+${validation}
+
+  // Extract parameters
+  const { ${paramList} } = input;
+
+  // TODO: Implement your tool logic here
+  const result = {
+    success: true,
+    data: {
+      // Your result data
+    }
+  };
+
+  return result;
+}
+
+// Register tool with MCP server
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === '${toolName}') {
+    const result = await ${toolName}(request.params.arguments);
+    return {
+      content: [{ type: 'text', text: JSON.stringify(result) }]
+    };
+  }
+});
+
+// Export for testing
+module.exports = { ${toolName} };
+`;
+
+      log(code, 'success');
+    }
+
+    // Test custom tool
+    async function testCustomTool() {
+      try {
+        const toolName = document.getElementById('tool-name').value;
+        const inputText = document.getElementById('test-input').value;
+
+        // Parse input
+        const input = JSON.parse(inputText);
+
+        // Call the MCP tool
+        const response = await fetch(`${MCP_URL}/mcp/call`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tool: toolName,
+            input: input
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          log(`Tool not found. This is a template generator.\n\nTo test:\n1. Copy the generated code\n2. Add it to your MCP server\n3. Restart the server\n4. Test here`, 'error');
+        } else {
+          log(data.result, 'success');
+        }
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Save to localStorage
+    function saveToLocalStorage() {
+      const template = {
+        name: document.getElementById('tool-name').value,
+        description: document.getElementById('tool-desc').value,
+        category: document.getElementById('tool-category').value,
+        params: collectParams()
+      };
+
+      localStorage.setItem('mcp-custom-tool', JSON.stringify(template));
+      log('Template saved to localStorage!', 'success');
+    }
+
+    // Load from localStorage
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('mcp-custom-tool');
+      if (!saved) {
+        log('No saved template found', 'error');
+        return;
+      }
+
+      const template = JSON.parse(saved);
+      document.getElementById('tool-name').value = template.name;
+      document.getElementById('tool-desc').value = template.description;
+      document.getElementById('tool-category').value = template.category;
+
+      // Clear existing params
+      document.getElementById('params-container').innerHTML = '';
+
+      // Add params from template
+      template.params.forEach(param => {
+        const container = document.getElementById('params-container');
+        const row = document.createElement('div');
+        row.className = 'param-row';
+        row.innerHTML = `
+          <input type="text" placeholder="Name" value="${param.name}">
+          <select>
+            <option value="string" ${param.type === 'string' ? 'selected' : ''}>String</option>
+            <option value="number" ${param.type === 'number' ? 'selected' : ''}>Number</option>
+            <option value="boolean" ${param.type === 'boolean' ? 'selected' : ''}>Boolean</option>
+            <option value="array" ${param.type === 'array' ? 'selected' : ''}>Array</option>
+            <option value="object" ${param.type === 'object' ? 'selected' : ''}>Object</option>
+          </select>
+          <input type="text" placeholder="Description" value="${param.description}">
+          <button class="remove-btn" onclick="removeParam(this)">Remove</button>
+        `;
+        container.appendChild(row);
+      });
+
+      log('Template loaded!', 'success');
+    }
+
+    // Load predefined templates
+    function loadTemplate(type) {
+      const templates = {
+        weather: {
+          name: 'weather_lookup',
+          description: 'Get current weather for a location',
+          category: 'api',
+          params: [
+            { name: 'city', type: 'string', description: 'City name' },
+            { name: 'country', type: 'string', description: 'Country code (optional)' },
+            { name: 'units', type: 'string', description: 'Temperature units (metric/imperial)' }
+          ]
+        },
+        database: {
+          name: 'database_query',
+          description: 'Execute a database query safely',
+          category: 'data',
+          params: [
+            { name: 'table', type: 'string', description: 'Table name' },
+            { name: 'query', type: 'string', description: 'SQL query' },
+            { name: 'params', type: 'array', description: 'Query parameters' }
+          ]
+        },
+        file: {
+          name: 'file_processor',
+          description: 'Process and transform file contents',
+          category: 'filesystem',
+          params: [
+            { name: 'path', type: 'string', description: 'File path' },
+            { name: 'operation', type: 'string', description: 'Operation (read/write/append)' },
+            { name: 'content', type: 'string', description: 'Content to write (optional)' }
+          ]
+        },
+        validator: {
+          name: 'data_validator',
+          description: 'Validate data against schema',
+          category: 'utility',
+          params: [
+            { name: 'data', type: 'object', description: 'Data to validate' },
+            { name: 'schema', type: 'object', description: 'Validation schema' },
+            { name: 'strict', type: 'boolean', description: 'Strict mode' }
+          ]
+        }
+      };
+
+      const template = templates[type];
+      document.getElementById('tool-name').value = template.name;
+      document.getElementById('tool-desc').value = template.description;
+      document.getElementById('tool-category').value = template.category;
+
+      // Clear and populate params
+      document.getElementById('params-container').innerHTML = '';
+      template.params.forEach(param => {
+        const container = document.getElementById('params-container');
+        const row = document.createElement('div');
+        row.className = 'param-row';
+        row.innerHTML = `
+          <input type="text" placeholder="Name" value="${param.name}">
+          <select>
+            <option value="string" ${param.type === 'string' ? 'selected' : ''}>String</option>
+            <option value="number" ${param.type === 'number' ? 'selected' : ''}>Number</option>
+            <option value="boolean" ${param.type === 'boolean' ? 'selected' : ''}>Boolean</option>
+            <option value="array" ${param.type === 'array' ? 'selected' : ''}>Array</option>
+            <option value="object" ${param.type === 'object' ? 'selected' : ''}>Object</option>
+          </select>
+          <input type="text" placeholder="Description" value="${param.description}">
+          <button class="remove-btn" onclick="removeParam(this)">Remove</button>
+        `;
+        container.appendChild(row);
+      });
+
+      log(`Loaded ${type} template!`, 'success');
+    }
+
+    // Check status on load
+    window.addEventListener('load', () => {
+      checkServerStatus();
+    });
+  </script>
+</body>
+</html>

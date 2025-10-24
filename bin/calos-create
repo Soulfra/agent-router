@@ -1,0 +1,124 @@
+#!/usr/bin/env node
+
+/**
+ * CALOS Project Creator CLI
+ *
+ * Usage:
+ *   calos create <project-name> --brand=calos --template=saas
+ *   calos create my-analytics-tool --brand=soulfra --template=cli-tool
+ *   calos create scraper-api --brand=deathtodata --template=api
+ */
+
+const { Command } = require('commander');
+const inquirer = require('inquirer');
+const GitHubProjectGenerator = require('../lib/github-project-generator');
+
+const program = new Command();
+
+program
+  .name('calos create')
+  .description('Create a new GitHub project for CALOS ecosystem brands')
+  .version('1.0.0');
+
+program
+  .argument('[project-name]', 'Name of the project to create')
+  .option('-b, --brand <brand>', 'Brand (calos, soulfra, deathtodata, publishing, drseuss)')
+  .option('-t, --template <template>', 'Template type (saas, cli-tool, content-site, api, basic)')
+  .option('-d, --description <description>', 'Project description')
+  .option('-p, --private', 'Create private repository', false)
+  .option('-o, --org <org>', 'GitHub organization (defaults to brand org)')
+  .option('--no-workflow', 'Skip CI/CD workflow creation')
+  .option('-v, --verbose', 'Verbose output')
+  .action(async (projectName, options) => {
+    try {
+      // Interactive prompts if arguments not provided
+      let { brand, template, description, private: isPrivate, org, verbose } = options;
+      let name = projectName;
+
+      if (!name || !brand || !template) {
+        console.log('🚀 CALOS Project Creator\n');
+
+        const answers = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'projectName',
+            message: 'Project name:',
+            when: !name,
+            validate: (input) => input.length > 0 || 'Project name is required'
+          },
+          {
+            type: 'list',
+            name: 'brand',
+            message: 'Select brand:',
+            when: !brand,
+            choices: [
+              { name: 'CALOS (calos.ai) - AI Business OS', value: 'calos' },
+              { name: 'Soulfra (soulfra.com) - Digital Identity', value: 'soulfra' },
+              { name: 'DeathToData (deathtodata.com) - Data Disruption', value: 'deathtodata' },
+              { name: 'Publishing.bot - Content Platform', value: 'publishing' },
+              { name: 'Dr. Seuss Consulting - Whimsical Business', value: 'drseuss' }
+            ]
+          },
+          {
+            type: 'list',
+            name: 'template',
+            message: 'Select template:',
+            when: !template,
+            choices: [
+              { name: 'SaaS App (Node.js + Express + PostgreSQL + React)', value: 'saas' },
+              { name: 'CLI Tool (Commander.js + Inquirer)', value: 'cli-tool' },
+              { name: 'Content Site (Next.js + MDX)', value: 'content-site' },
+              { name: 'REST API (Express + PostgreSQL + Swagger)', value: 'api' },
+              { name: 'Basic (Empty Node.js project)', value: 'basic' }
+            ]
+          },
+          {
+            type: 'input',
+            name: 'description',
+            message: 'Project description (optional):',
+            when: !description
+          },
+          {
+            type: 'confirm',
+            name: 'isPrivate',
+            message: 'Create as private repository?',
+            default: false,
+            when: isPrivate === undefined
+          }
+        ]);
+
+        name = name || answers.projectName;
+        brand = brand || answers.brand;
+        template = template || answers.template;
+        description = description || answers.description;
+        isPrivate = isPrivate !== undefined ? isPrivate : answers.isPrivate;
+      }
+
+      // Create project
+      console.log('\n📦 Creating project...\n');
+
+      const generator = new GitHubProjectGenerator({ verbose });
+
+      const result = await generator.createProject({
+        name,
+        brand,
+        template,
+        description,
+        isPrivate,
+        org
+      });
+
+      if (result.success) {
+        console.log('✨ Success! Your project is ready.\n');
+        process.exit(0);
+      }
+    } catch (error) {
+      console.error('\n❌ Error:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+program.parse(process.argv);

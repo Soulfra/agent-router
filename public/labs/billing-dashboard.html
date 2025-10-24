@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing Dashboard - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1400px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    .cost-header { background: linear-gradient(135deg, #667eea, #764ba2); padding: 30px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+    .cost-amount { font-size: 64px; font-weight: bold; margin: 20px 0; }
+    .cost-period { font-size: 16px; color: rgba(255,255,255,0.8); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-box { background: #0a0a15; padding: 20px; border-radius: 8px; }
+    .stat-value { font-size: 32px; font-weight: bold; color: #667eea; margin-bottom: 5px; }
+    .stat-label { font-size: 12px; color: #888; }
+    .usage-item { background: #0a0a15; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+    .usage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .usage-provider { font-weight: bold; }
+    .usage-cost { font-size: 20px; font-weight: bold; color: #4caf50; }
+    .usage-bar { width: 100%; height: 20px; background: #1a1a2e; border-radius: 10px; overflow: hidden; margin-top: 5px; }
+    .usage-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.5s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+    .provider-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+    .provider-card { background: #0a0a15; padding: 20px; border-radius: 10px; border-left: 4px solid; }
+    .provider-card.openai { border-left-color: #10a37f; }
+    .provider-card.anthropic { border-left-color: #d97757; }
+    .provider-card.google { border-left-color: #4285f4; }
+    .invoice-item { background: #0a0a15; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .invoice-date { font-size: 12px; color: #888; }
+    .invoice-status { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .invoice-status.paid { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+    .invoice-status.pending { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+    .chart { width: 100%; height: 200px; background: #0a0a15; border-radius: 8px; padding: 15px; position: relative; }
+  </style>
+</head>
+<body>
+  <h1>Billing Dashboard</h1>
+  <p class="subtitle">Track usage, costs, and manage billing across all providers</p>
+
+  <div class="cost-header">
+    <div class="cost-period">Current Month</div>
+    <div class="cost-amount" id="total-cost">$247.50</div>
+    <div style="margin-top: 10px;">
+      <button onclick="viewInvoice()" style="margin-right: 10px;">View Invoice</button>
+      <button onclick="exportData()" style="background: linear-gradient(135deg, #4caf50, #45a049);">Export Data</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-value" id="api-calls">1.2M</div>
+      <div class="stat-label">API Calls (Month)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="avg-cost">$0.21</div>
+      <div class="stat-label">Avg Cost per 1K</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="providers">3</div>
+      <div class="stat-label">Active Providers</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="savings">$52</div>
+      <div class="stat-label">Saved vs List</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Usage by Provider</h2>
+    <div class="provider-breakdown">
+      <div class="provider-card openai">
+        <h3 style="margin-bottom: 15px;">OpenAI</h3>
+        <div class="usage-cost">$142.30</div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">850K calls • GPT-4 + GPT-3.5</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 57%;">57%</div>
+        </div>
+      </div>
+
+      <div class="provider-card anthropic">
+        <h3 style="margin-bottom: 15px;">Anthropic</h3>
+        <div class="usage-cost">$89.20</div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">320K calls • Claude Opus + Sonnet</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 36%;">36%</div>
+        </div>
+      </div>
+
+      <div class="provider-card google">
+        <h3 style="margin-bottom: 15px;">Google AI</h3>
+        <div class="usage-cost">$16.00</div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">30K calls • Gemini Pro</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 7%;">7%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Daily Usage Trend</h2>
+    <div class="chart" id="usage-chart">
+      <canvas id="chart-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Recent Invoices</h2>
+    <div id="invoices-list">
+      <div class="invoice-item">
+        <div>
+          <div style="font-weight: bold; margin-bottom: 5px;">December 2024</div>
+          <div class="invoice-date">Due: Jan 1, 2025</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">$247.50</div>
+          <div class="invoice-status pending">Pending</div>
+        </div>
+      </div>
+
+      <div class="invoice-item">
+        <div>
+          <div style="font-weight: bold; margin-bottom: 5px;">November 2024</div>
+          <div class="invoice-date">Paid: Dec 1, 2024</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">$198.75</div>
+          <div class="invoice-status paid">Paid</div>
+        </div>
+      </div>
+
+      <div class="invoice-item">
+        <div>
+          <div style="font-weight: bold; margin-bottom: 5px;">October 2024</div>
+          <div class="invoice-date">Paid: Nov 1, 2024</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">$214.20</div>
+          <div class="invoice-status paid">Paid</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Cost Breakdown</h2>
+    <div id="cost-breakdown">
+      <div class="usage-item">
+        <div class="usage-header">
+          <div class="usage-provider">OpenAI GPT-4 Turbo</div>
+          <div class="usage-cost">$95.40</div>
+        </div>
+        <div style="font-size: 12px; color: #888;">420K tokens • $0.01/1K input, $0.03/1K output</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 67%;">67%</div>
+        </div>
+      </div>
+
+      <div class="usage-item">
+        <div class="usage-header">
+          <div class="usage-provider">OpenAI GPT-3.5 Turbo</div>
+          <div class="usage-cost">$46.90</div>
+        </div>
+        <div style="font-size: 12px; color: #888;">430K tokens • $0.0005/1K input, $0.0015/1K output</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 33%;">33%</div>
+        </div>
+      </div>
+
+      <div class="usage-item">
+        <div class="usage-header">
+          <div class="usage-provider">Anthropic Claude Opus</div>
+          <div class="usage-cost">$72.50</div>
+        </div>
+        <div style="font-size: 12px; color: #888;">145K tokens • $0.015/1K input, $0.075/1K output</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 81%;">81%</div>
+        </div>
+      </div>
+
+      <div class="usage-item">
+        <div class="usage-header">
+          <div class="usage-provider">Anthropic Claude Sonnet</div>
+          <div class="usage-cost">$16.70</div>
+        </div>
+        <div style="font-size: 12px; color: #888;">175K tokens • $0.003/1K input, $0.015/1K output</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 19%;">19%</div>
+        </div>
+      </div>
+
+      <div class="usage-item">
+        <div class="usage-header">
+          <div class="usage-provider">Google Gemini Pro</div>
+          <div class="usage-cost">$16.00</div>
+        </div>
+        <div style="font-size: 12px; color: #888;">30K tokens • Free tier + overage</div>
+        <div class="usage-bar">
+          <div class="usage-fill" style="width: 100%;">100%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function viewInvoice() {
+      alert('Invoice viewer would open here with full breakdown, downloadable PDF, etc.');
+    }
+
+    function exportData() {
+      const csvData = `Provider,Model,Calls,Cost
+OpenAI,GPT-4 Turbo,420K,$95.40
+OpenAI,GPT-3.5 Turbo,430K,$46.90
+Anthropic,Claude Opus,145K,$72.50
+Anthropic,Claude Sonnet,175K,$16.70
+Google,Gemini Pro,30K,$16.00`;
+
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'billing-report.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Draw simple usage chart
+    function drawChart() {
+      const canvas = document.getElementById('chart-canvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const parent = canvas.parentElement;
+
+      canvas.width = parent.offsetWidth - 30;
+      canvas.height = parent.offsetHeight - 30;
+
+      const data = [45, 52, 38, 65, 72, 85, 95, 88, 76, 90, 102, 89, 95, 110];
+      const max = Math.max(...data);
+      const barWidth = canvas.width / data.length;
+
+      ctx.fillStyle = '#667eea';
+      data.forEach((value, index) => {
+        const height = (value / max) * (canvas.height - 20);
+        const x = index * barWidth;
+        const y = canvas.height - height;
+
+        ctx.fillRect(x + 2, y, barWidth - 4, height);
+      });
+    }
+
+    window.addEventListener('load', drawChart);
+    window.addEventListener('resize', drawChart);
+  </script>
+</body>
+</html>

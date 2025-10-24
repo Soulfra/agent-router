@@ -1,0 +1,57 @@
+{
+  "name": "@calos/sdk",
+  "version": "1.0.0",
+  "description": "Official JavaScript/TypeScript SDK for the CALOS AI Platform - Multi-LLM routing with usage-based billing",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepublishOnly": "echo 'Ready to publish @calos/sdk'"
+  },
+  "keywords": [
+    "calos",
+    "ai",
+    "llm",
+    "gpt",
+    "claude",
+    "anthropic",
+    "openai",
+    "multi-llm",
+    "router",
+    "usage-based",
+    "billing",
+    "platform",
+    "sdk",
+    "api-client"
+  ],
+  "author": "Cal <support@calos.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soulfra/calos.git",
+    "directory": "sdk/platform"
+  },
+  "bugs": {
+    "url": "https://github.com/soulfra/calos/issues"
+  },
+  "homepage": "https://docs.calos.dev/sdk",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "peerDependencies": {}
+}

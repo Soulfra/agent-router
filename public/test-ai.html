@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Test - Local Ollama + Web Search</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+    }
+    .section {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .section h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      color: white;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .result {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .result.show { display: block; }
+    .loading {
+      display: none;
+      font-size: 14px;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
+    .loading.show { display: block; }
+    .meta {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 8px;
+    }
+    .result-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .result-item h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .result-item p {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    .result-item a {
+      font-size: 12px;
+      color: #00d4ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 AI Test - Local + Web</h1>
+    <p class="subtitle">Test Ollama (22 local models) + DuckDuckGo web search</p>
+
+    <!-- Ollama Section -->
+    <div class="section">
+      <h2>🦙 Local Ollama (Your 22 Models)</h2>
+
+      <label>Model:</label>
+      <select id="model">
+        <option value="llama3.2:3b">llama3.2:3b (fast, 3B params)</option>
+        <option value="llama2:latest">llama2:latest (7B params)</option>
+        <option value="mistral:latest">mistral:latest (7B params)</option>
+        <option value="calos-model:latest">calos-model:latest (custom)</option>
+        <option value="soulfra-model:latest">soulfra-model:latest (custom)</option>
+        <option value="codellama:7b">codellama:7b (code expert)</option>
+      </select>
+
+      <label>Prompt:</label>
+      <textarea id="prompt" placeholder="Ask anything... (e.g., 'What is 2+2?', 'Explain quantum computing', etc.)">What is 2+2?</textarea>
+
+      <button onclick="askOllama()">Ask Ollama</button>
+      <div class="loading" id="ollama-loading">⏳ Thinking...</div>
+
+      <div class="result" id="ollama-result"></div>
+    </div>
+
+    <!-- Web Search Section -->
+    <div class="section">
+      <h2>🌐 Web Search (2025 Data)</h2>
+
+      <label>Search Query:</label>
+      <input type="text" id="search-query" placeholder="e.g., 'latest tech news 2025', 'anthropic claude', etc." value="latest AI news 2025">
+
+      <button onclick="searchWeb()">Search Web</button>
+      <div class="loading" id="search-loading">🔍 Searching...</div>
+
+      <div class="result" id="search-result"></div>
+    </div>
+  </div>
+
+  <script>
+    // Ask Ollama with retry logic
+    async function askOllama() {
+      const model = document.getElementById('model').value;
+      const prompt = document.getElementById('prompt').value;
+      const resultDiv = document.getElementById('ollama-result');
+      const loadingDiv = document.getElementById('ollama-loading');
+
+      if (!prompt.trim()) {
+        alert('Please enter a prompt');
+        return;
+      }
+
+      resultDiv.classList.remove('show');
+      loadingDiv.classList.add('show');
+
+      try {
+        const response = await fetch('/api/ollama/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, prompt })
+        });
+
+        loadingDiv.classList.remove('show');
+
+        // Handle different HTTP status codes
+        if (response.status === 404) {
+          resultDiv.innerHTML = `
+            <strong>❌ Server Error:</strong><br>
+            The /api/ollama/chat endpoint doesn't exist.<br><br>
+            <strong>Fix:</strong> Restart the server to load latest code:<br>
+            <code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px;">npm run restart</code>
+          `;
+          resultDiv.classList.add('show');
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <strong>Response:</strong>
+            ${data.response}
+            <div class="meta">Model: ${data.model} | Tokens: ${data.eval_count || 'N/A'}</div>
+          `;
+          resultDiv.classList.add('show');
+        } else {
+          resultDiv.innerHTML = `<strong>Error:</strong> ${data.error || data.details || 'Unknown error'}`;
+          resultDiv.classList.add('show');
+        }
+      } catch (error) {
+        loadingDiv.classList.remove('show');
+
+        // Better error messages
+        let errorMsg = '<strong>❌ Connection Error:</strong><br>';
+
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMsg += 'Cannot connect to server.<br><br>';
+          errorMsg += '<strong>Possible causes:</strong><br>';
+          errorMsg += '• Server not running (run <code>npm start</code>)<br>';
+          errorMsg += '• Wrong port (should be 5001)<br>';
+          errorMsg += '• Firewall blocking connection<br><br>';
+          errorMsg += '<strong>Quick fix:</strong> <code>npm run restart</code>';
+        } else {
+          errorMsg += error.message;
+        }
+
+        resultDiv.innerHTML = errorMsg;
+        resultDiv.classList.add('show');
+      }
+    }
+
+    // Search Web with better error handling
+    async function searchWeb() {
+      const query = document.getElementById('search-query').value;
+      const resultDiv = document.getElementById('search-result');
+      const loadingDiv = document.getElementById('search-loading');
+
+      if (!query.trim()) {
+        alert('Please enter a search query');
+        return;
+      }
+
+      resultDiv.classList.remove('show');
+      loadingDiv.classList.add('show');
+
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+
+        loadingDiv.classList.remove('show');
+
+        // Handle 404 (endpoint doesn't exist)
+        if (response.status === 404) {
+          resultDiv.innerHTML = `
+            <strong>❌ Server Error:</strong><br>
+            The /api/search endpoint doesn't exist.<br><br>
+            <strong>Fix:</strong> Restart the server to load latest code:<br>
+            <code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px;">npm run restart</code>
+          `;
+          resultDiv.classList.add('show');
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          let html = `<strong>Results for: "${data.query}"</strong>
+                      <div class="meta">Found ${data.count} results | Year: <strong style="color: #00ff88;">${data.year}</strong> | ${new Date(data.timestamp).toLocaleString()}</div>`;
+
+          if (data.results.length === 0) {
+            html += '<p style="margin-top: 12px;">No results found. Try a different query.</p>';
+          } else {
+            data.results.forEach(result => {
+              html += `
+                <div class="result-item">
+                  <h4>${result.title}</h4>
+                  <p>${result.snippet}</p>
+                  ${result.url ? `<a href="${result.url}" target="_blank">→ ${result.url}</a>` : ''}
+                </div>
+              `;
+            });
+          }
+
+          resultDiv.innerHTML = html;
+          resultDiv.classList.add('show');
+        } else {
+          resultDiv.innerHTML = `<strong>Error:</strong> ${data.error || data.details || 'Unknown error'}`;
+          resultDiv.classList.add('show');
+        }
+      } catch (error) {
+        loadingDiv.classList.remove('show');
+
+        // Better error messages
+        let errorMsg = '<strong>❌ Connection Error:</strong><br>';
+
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMsg += 'Cannot connect to server.<br><br>';
+          errorMsg += '<strong>Possible causes:</strong><br>';
+          errorMsg += '• Server not running (run <code>npm start</code>)<br>';
+          errorMsg += '• Wrong port (should be 5001)<br>';
+          errorMsg += '• Network connectivity issue<br><br>';
+          errorMsg += '<strong>Quick fix:</strong> <code>npm run restart</code>';
+        } else {
+          errorMsg += error.message;
+        }
+
+        resultDiv.innerHTML = errorMsg;
+        resultDiv.classList.add('show');
+      }
+    }
+
+    // Allow Enter key to submit
+    document.getElementById('prompt').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) askOllama();
+    });
+    document.getElementById('search-query').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchWeb();
+    });
+  </script>
+</body>
+</html>

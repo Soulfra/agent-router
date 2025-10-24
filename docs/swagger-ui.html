@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS Multi-LLM Router API - Swagger UI</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.0/swagger-ui.css">
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    #swagger-ui {
+      max-width: 1460px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: none;
+    }
+
+    .swagger-ui .info {
+      margin: 50px 0;
+    }
+
+    .swagger-ui .info .title {
+      font-size: 36px;
+      color: #3b4151;
+    }
+
+    .swagger-ui .scheme-container {
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,0.15);
+      background-color: #fff;
+    }
+
+    /* Custom header */
+    .custom-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .custom-header h1 {
+      margin: 0;
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+    .custom-header p {
+      margin: 10px 0 0;
+      font-size: 18px;
+      opacity: 0.9;
+    }
+
+    .custom-header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 5px 15px;
+      border-radius: 20px;
+      margin: 5px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .custom-header .badges {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Custom Header -->
+  <div class="custom-header">
+    <h1>🚀 CalOS Multi-LLM Router API</h1>
+    <p>AI-powered routing with bot detection, multi-provider support, and reputation-based rate limiting</p>
+    <div class="badges">
+      <span class="badge">🤖 4 LLM Providers</span>
+      <span class="badge">🛡️ Bot Detection</span>
+      <span class="badge">🔐 Zero-Knowledge Identity</span>
+      <span class="badge">📊 Smart Routing</span>
+      <span class="badge">⚡ Rate Limiting</span>
+    </div>
+  </div>
+
+  <!-- Swagger UI -->
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.10.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.10.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      // Build a system
+      const ui = SwaggerUIBundle({
+        url: "./openapi.yaml",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 1,
+        docExpansion: "list",
+        filter: true,
+        tryItOutEnabled: true,
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+        validatorUrl: null,
+        onComplete: function() {
+          console.log("Swagger UI loaded successfully");
+        }
+      });
+
+      window.ui = ui;
+    }
+  </script>
+</body>
+</html>

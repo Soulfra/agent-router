@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe ELO Ranker - Find Your Perfect Recipes</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      color: #2d3436;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 80px 20px;
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 24px;
+      opacity: 0.95;
+      margin-bottom: 40px;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 18px 40px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #f5576c;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .features {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      margin: 40px 0;
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 50px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+    }
+
+    .feature {
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .feature h3 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .feature p {
+      color: #636e72;
+      line-height: 1.6;
+    }
+
+    .pricing {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 20px;
+      padding: 60px 40px;
+      color: white;
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .pricing h2 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    .pricing .price {
+      font-size: 72px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    .pricing .price span {
+      font-size: 24px;
+      opacity: 0.9;
+    }
+
+    .pricing-features {
+      max-width: 500px;
+      margin: 40px auto;
+      text-align: left;
+    }
+
+    .pricing-feature {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .pricing-feature-icon {
+      color: #00b894;
+      font-size: 24px;
+    }
+
+    .social-proof {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .social-proof h2 {
+      font-size: 36px;
+      margin-bottom: 40px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+    }
+
+    .stat {
+      padding: 20px;
+    }
+
+    .stat-number {
+      font-size: 48px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: #636e72;
+      font-size: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .hero p {
+        font-size: 18px;
+      }
+
+      .pricing .price {
+        font-size: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>🍳 Find Your Perfect Recipes</h1>
+      <p>Rank recipes like Chess.com ranks players. Discover what you really love to cook.</p>
+      <div class="cta-group">
+        <a href="/swiper-cooking-elo.html" class="btn btn-primary">Start Free Trial</a>
+        <a href="#pricing" class="btn btn-secondary">See Pricing</a>
+      </div>
+    </div>
+
+    <div class="features">
+      <h2>How It Works</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="feature-icon">👆</div>
+          <h3>Swipe & Choose</h3>
+          <p>Compare two recipes at a time. Pick your favorite in seconds.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <h3>ELO Rankings</h3>
+          <p>Every choice updates rankings. See your top-rated recipes rise.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🏆</div>
+          <h3>Personal Leaderboard</h3>
+          <p>Track your favorites over time. Export your personalized cookbook.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="social-proof">
+      <h2>Join Thousands of Home Cooks</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-number">50K+</div>
+          <div class="stat-label">Recipes Ranked</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">2.5K</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">95%</div>
+          <div class="stat-label">Accuracy Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pricing" id="pricing">
+      <h2>Simple, Transparent Pricing</h2>
+      <p>Start free. Upgrade when you're ready.</p>
+
+      <div style="max-width: 400px; margin: 40px auto;">
+        <h3 style="font-size: 28px; margin-bottom: 20px;">Free Trial</h3>
+        <p style="font-size: 18px; opacity: 0.9; margin-bottom: 20px;">20 swipes per day</p>
+        <a href="/swiper-cooking-elo.html" class="btn btn-primary" style="width: 100%;">Start Free</a>
+      </div>
+
+      <div style="max-width: 400px; margin: 40px auto; padding: 40px; background: rgba(255,255,255,0.1); border-radius: 15px;">
+        <h3 style="font-size: 28px; margin-bottom: 20px;">Premium</h3>
+        <div class="price">$4.99<span>/mo</span></div>
+
+        <div class="pricing-features">
+          <div class="pricing-feature">
+            <span class="pricing-feature-icon">✓</span>
+            <span>Unlimited recipe swipes</span>
+          </div>
+          <div class="pricing-feature">
+            <span class="pricing-feature-icon">✓</span>
+            <span>Save your top recipes</span>
+          </div>
+          <div class="pricing-feature">
+            <span class="pricing-feature-icon">✓</span>
+            <span>Export ELO rankings</span>
+          </div>
+          <div class="pricing-feature">
+            <span class="pricing-feature-icon">✓</span>
+            <span>Advanced search & filters</span>
+          </div>
+          <div class="pricing-feature">
+            <span class="pricing-feature-icon">✓</span>
+            <span>Priority recipe additions</span>
+          </div>
+        </div>
+
+        <a href="/swiper-cooking-elo.html" class="btn btn-primary" style="width: 100%;">Try Premium</a>
+        <p style="margin-top: 15px; font-size: 14px; opacity: 0.8;">Cancel anytime. No long-term commitment.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/analytics.js"></script>
+  <script>
+    // Track landing page view
+    Analytics.track('landing_page_view', {
+      page: 'recipe_elo',
+      source: new URLSearchParams(window.location.search).get('utm_source') || 'direct'
+    });
+
+    Analytics.trackFunnelStep('recipe_premium', 0, 'landing_page');
+
+    // Track CTA clicks
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Analytics.track('cta_clicked', {
+          button_text: btn.textContent,
+          button_href: btn.getAttribute('href'),
+          page: 'landing_recipe'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+#!/usr/bin/env node
+
+/**
+ * Brand Registry Sync CLI
+ *
+ * Manual CLI tool to sync brands/BRANDS_REGISTRY.json to all platforms:
+ * - GitHub (git commit and push)
+ * - Google Sheets (spreadsheet rows)
+ * - GitHub Gist (markdown table)
+ * - GoDaddy (DNS verification)
+ *
+ * Usage:
+ *   ./bin/sync-brands all              # Sync to all platforms
+ *   ./bin/sync-brands github           # Sync to GitHub only
+ *   ./bin/sync-brands sheets           # Sync to Google Sheets only
+ *   ./bin/sync-brands gist             # Sync to GitHub Gist only
+ *   ./bin/sync-brands godaddy          # Check GoDaddy DNS only
+ *   ./bin/sync-brands status           # Show sync status
+ */
+
+const path = require('path');
+const BrandRegistrySync = require('../lib/brand-registry-sync');
+
+// Parse command line args
+const command = process.argv[2] || 'all';
+
+// Initialize sync system
+const sync = new BrandRegistrySync({
+  registryPath: path.join(__dirname, '../brands/BRANDS_REGISTRY.json'),
+  verbose: true
+});
+
+// CLI colors
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m'
+};
+
+function log(message, color = 'reset') {
+  console.log(`${colors[color]}${message}${colors.reset}`);
+}
+
+function logSuccess(message) {
+  log(`✅ ${message}`, 'green');
+}
+
+function logError(message) {
+  log(`❌ ${message}`, 'red');
+}
+
+function logInfo(message) {
+  log(`ℹ️  ${message}`, 'cyan');
+}
+
+function logWarning(message) {
+  log(`⚠️  ${message}`, 'yellow');
+}
+
+// Display help
+function showHelp() {
+  log('\n🏢 Brand Registry Sync CLI\n', 'bright');
+  log('Usage:', 'cyan');
+  log('  ./bin/sync-brands <command>\n');
+  log('Commands:', 'cyan');
+  log('  all       Sync to all platforms (GitHub, Sheets, Gist, GoDaddy)');
+  log('  github    Sync to GitHub only (git commit and push)');
+  log('  sheets    Sync to Google Sheets only');
+  log('  gist      Sync to GitHub Gist only (markdown table)');
+  log('  godaddy   Check GoDaddy DNS status only');
+  log('  status    Show current sync status');
+  log('  help      Show this help message\n');
+  log('Examples:', 'cyan');
+  log('  ./bin/sync-brands all');
+  log('  ./bin/sync-brands github');
+  log('  ./bin/sync-brands status\n');
+}
+
+// Display sync results
+function displayResults(results) {
+  log('\n═══════════════════════════════════════', 'bright');
+  log('  Sync Results', 'bright');
+  log('═══════════════════════════════════════\n', 'bright');
+
+  const platforms = ['github', 'sheets', 'gist', 'godaddy'];
+
+  for (const platform of platforms) {
+    const result = results[platform];
+
+    if (!result) continue;
+
+    const icon = result.success ? '✅' : '❌';
+    const color = result.success ? 'green' : 'red';
+
+    log(`${icon} ${platform.toUpperCase()}`, color);
+
+    if (result.success) {
+      if (platform === 'github' && result.commitMessage) {
+        log(`   Commit: ${result.commitMessage}`, 'dim');
+      }
+      if (platform === 'sheets' && result.rowsWritten) {
+        log(`   Rows: ${result.rowsWritten}`, 'dim');
+        log(`   URL: ${result.sheetUrl}`, 'dim');
+      }
+      if (platform === 'gist' && result.url) {
+        log(`   Action: ${result.action}`, 'dim');
+        log(`   URL: ${result.url}`, 'dim');
+      }
+      if (platform === 'godaddy') {
+        log(`   Checked: ${result.checked} domains`, 'dim');
+        log(`   Registered: ${result.registered} | Available: ${result.available}`, 'dim');
+        if (result.errors && result.errors.length > 0) {
+          log(`   Errors: ${result.errors.length}`, 'yellow');
+        }
+      }
+    } else {
+      if (result.error) {
+        log(`   Error: ${result.error}`, 'red');
+      }
+    }
+
+    console.log('');
+  }
+
+  log('═══════════════════════════════════════\n', 'bright');
+}
+
+// Main execution
+async function main() {
+  try {
+    log('\n🚀 CALOS Brand Registry Sync\n', 'bright');
+
+    switch (command) {
+      case 'help':
+      case '--help':
+      case '-h':
+        showHelp();
+        break;
+
+      case 'all':
+        logInfo('Syncing to all platforms...\n');
+        const allResults = await sync.syncAll();
+        displayResults(allResults);
+        break;
+
+      case 'github':
+        logInfo('Syncing to GitHub...\n');
+        const githubResult = await sync.syncToGitHub();
+        if (githubResult.success) {
+          logSuccess('GitHub sync complete');
+          if (githubResult.commitMessage) {
+            log(`Commit: ${githubResult.commitMessage}`, 'dim');
+          }
+        } else {
+          logError(`GitHub sync failed: ${githubResult.error}`);
+        }
+        break;
+
+      case 'sheets':
+        logInfo('Syncing to Google Sheets...\n');
+        const sheetsResult = await sync.syncToGoogleSheets();
+        if (sheetsResult.success) {
+          logSuccess('Google Sheets sync complete');
+          log(`Rows written: ${sheetsResult.rowsWritten}`, 'dim');
+          log(`URL: ${sheetsResult.sheetUrl}`, 'dim');
+        } else {
+          logError(`Google Sheets sync failed: ${sheetsResult.error}`);
+        }
+        break;
+
+      case 'gist':
+        logInfo('Syncing to GitHub Gist...\n');
+        const gistResult = await sync.syncToGist();
+        if (gistResult.success) {
+          logSuccess(`GitHub Gist ${gistResult.action}`);
+          log(`URL: ${gistResult.url}`, 'dim');
+        } else {
+          logError(`GitHub Gist sync failed: ${gistResult.error}`);
+        }
+        break;
+
+      case 'godaddy':
+        logInfo('Checking GoDaddy DNS status...\n');
+        const godaddyResult = await sync.syncToGoDaddy();
+        if (godaddyResult.success) {
+          logSuccess('GoDaddy check complete');
+          log(`Checked: ${godaddyResult.checked} domains`, 'dim');
+          log(`Registered: ${godaddyResult.registered} | Available: ${godaddyResult.available}`, 'dim');
+          if (godaddyResult.errors && godaddyResult.errors.length > 0) {
+            logWarning(`${godaddyResult.errors.length} errors occurred`);
+          }
+        } else {
+          logError(`GoDaddy check failed: ${godaddyResult.error}`);
+        }
+        break;
+
+      case 'status':
+        logInfo('Loading registry...\n');
+        await sync.loadRegistry();
+
+        log('Registry Status:', 'bright');
+        log(`  Total Brands: ${sync.registry.totalBrands}`);
+        log(`  Last Updated: ${sync.registry.lastUpdated}`);
+        log(`  Owner: ${sync.registry.owner.name} (@${sync.registry.owner.github})`);
+        log('');
+
+        const deployed = sync.registry.brands.filter(b => b.status === 'deployed').length;
+        const planned = sync.registry.brands.filter(b => b.status === 'planned').length;
+
+        log('Brand Status:', 'bright');
+        log(`  Deployed: ${deployed}`, 'green');
+        log(`  Planned: ${planned}`, 'yellow');
+        log('');
+
+        const status = sync.getStatus();
+        log('Platform Sync Status:', 'bright');
+        log(`  Last Sync: ${status.lastSync || 'Never'}`);
+        log(`  GitHub: ${status.platforms.github}`);
+        log(`  Google Sheets: ${status.platforms.sheets}`);
+        log(`  GitHub Gist: ${status.platforms.gist}`);
+        log(`  GoDaddy: ${status.platforms.godaddy}`);
+
+        if (status.errors.length > 0) {
+          log('\nErrors:', 'red');
+          for (const err of status.errors) {
+            log(`  ${err.platform}: ${err.error}`, 'red');
+          }
+        }
+        log('');
+        break;
+
+      default:
+        logError(`Unknown command: ${command}\n`);
+        showHelp();
+        process.exit(1);
+    }
+
+  } catch (error) {
+    logError(`\nSync failed: ${error.message}\n`);
+    if (process.env.VERBOSE) {
+      console.error(error);
+    }
+    process.exit(1);
+  }
+}
+
+// Run
+main();

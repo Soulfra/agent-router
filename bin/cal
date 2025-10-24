@@ -1,0 +1,221 @@
+#!/usr/bin/env node
+
+/**
+ * Cal CLI - Natural Language Interface to Claude Code (Local)
+ *
+ * "We made a command 'cal' that opens a claude code instance"
+ *
+ * Usage:
+ *   cal what's next?
+ *   cal add buy milk to the list
+ *   cal check price of bitcoin
+ *   cal what day is it?
+ *
+ * Features:
+ * - Natural language commands via Wake Word Router
+ * - Time-aware (knows TODAY's date)
+ * - Local subscription (FREE)
+ * - Fuzzy matching for flexible input
+ */
+
+const path = require('path');
+
+// Import dependencies
+const WakeWordRouter = require('../lib/wake-word-router');
+const AIInstanceRegistry = require('../lib/ai-instance-registry');
+const TimeAwareAI = require('../lib/time-aware-ai');
+const FuzzyMatcher = require('../lib/fuzzy-matcher');
+const LocalTodoCache = require('../lib/local-todo-cache');
+const MultiLLMRouter = require('../lib/multi-llm-router');
+const DecisionTodo = require('../lib/decision-todo');
+const { Pool } = require('pg');
+
+// Colors for terminal output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  gray: '\x1b[90m'
+};
+
+async function main() {
+  // Get user input from command line
+  const args = process.argv.slice(2);
+
+  if (args.length === 0) {
+    printUsage();
+    process.exit(0);
+  }
+
+  const input = args.join(' ');
+
+  console.log(`${colors.cyan}[Cal]${colors.reset} ${input}`);
+  console.log('');
+
+  try {
+    // Initialize database connection
+    let db = null;
+    let decisionTodo = null;
+
+    try {
+      db = new Pool({
+        user: process.env.DB_USER || 'matthewmauer',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'soulfra',
+        port: process.env.DB_PORT || 5432
+      });
+
+      decisionTodo = new DecisionTodo({ db });
+    } catch (error) {
+      console.log(`${colors.gray}(Database not available, using local-only mode)${colors.reset}\n`);
+    }
+
+    // Initialize core components
+    const multiLLMRouter = new MultiLLMRouter();
+
+    const aiInstanceRegistry = new AIInstanceRegistry({
+      multiLLMRouter
+    });
+
+    const timeAwareAI = new TimeAwareAI({
+      aiInstanceRegistry
+    });
+
+    const localTodoCache = new LocalTodoCache({
+      decisionTodo
+    });
+
+    const wakeWordRouter = new WakeWordRouter({
+      decisionTodo: decisionTodo || localTodoCache, // Fallback to local cache
+      aiInstanceRegistry,
+      timeAwareAI
+    });
+
+    // Route the input
+    const result = await wakeWordRouter.route(input);
+
+    // Display result
+    displayResult(result);
+
+    // Cleanup
+    if (db) {
+      await db.end();
+    }
+
+    process.exit(result.success ? 0 : 1);
+
+  } catch (error) {
+    console.error(`${colors.red}Error:${colors.reset} ${error.message}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * Display result based on type
+ */
+function displayResult(result) {
+  if (!result.success) {
+    console.log(`${colors.red}✗${colors.reset} ${result.error || 'Unknown error'}`);
+    if (result.suggestion) {
+      console.log(`${colors.gray}Suggestion: ${result.suggestion}${colors.reset}`);
+    }
+    return;
+  }
+
+  // Handle different response types
+  switch (result.type) {
+    case 'ai_response':
+      console.log(`${colors.green}[${result.instance}]${colors.reset}`);
+      console.log(result.response.text);
+      console.log('');
+      console.log(`${colors.gray}Model: ${result.response.model}${colors.reset}`);
+      console.log(`${colors.gray}Tokens: ${result.response.usage?.total_tokens || 'N/A'}${colors.reset}`);
+      console.log(`${colors.gray}Cost: $${result.response.cost?.toFixed(4) || '0.0000'} (${result.response.source})${colors.reset}`);
+      break;
+
+    case 'todo_list':
+      console.log(`${colors.green}✓${colors.reset} Found ${result.count} pending todo(s):\n`);
+      for (const todo of result.todos) {
+        const priority = todo.priority === 'high' ? `${colors.red}HIGH${colors.reset}` :
+                        todo.priority === 'medium' ? `${colors.yellow}MED${colors.reset}` :
+                        `${colors.gray}LOW${colors.reset}`;
+        console.log(`  ${priority} ${todo.title}`);
+        if (todo.description) {
+          console.log(`       ${colors.gray}${todo.description}${colors.reset}`);
+        }
+      }
+      break;
+
+    case 'todo_created':
+      console.log(`${colors.green}✓${colors.reset} Todo created: ${result.todo.title}`);
+      console.log(`${colors.gray}Priority: ${result.todo.priority}${colors.reset}`);
+      break;
+
+    case 'todo_completed':
+      console.log(`${colors.green}✓${colors.reset} Marked complete: ${result.todo.title}`);
+      break;
+
+    case 'time_info':
+      console.log(`${colors.cyan}${result.formatted.long}${colors.reset}`);
+      console.log(`${colors.gray}Day: ${result.dayOfWeek}${colors.reset}`);
+      break;
+
+    case 'help':
+      printHelp(result);
+      break;
+
+    default:
+      console.log(JSON.stringify(result, null, 2));
+  }
+}
+
+/**
+ * Print help information
+ */
+function printHelp(result) {
+  console.log(`${colors.bright}Cal - Natural Language AI Assistant${colors.reset}\n`);
+
+  console.log(`${colors.cyan}Wake Words:${colors.reset}`);
+  for (const ww of result.wakeWords) {
+    console.log(`  ${ww.name} → ${ww.instance}`);
+    console.log(`  ${colors.gray}Example: ${ww.examples[0]}${colors.reset}\n`);
+  }
+
+  console.log(`${colors.cyan}Commands:${colors.reset}`);
+  for (const cmd of result.commands) {
+    console.log(`  ${cmd.name}`);
+    console.log(`  ${colors.gray}${cmd.description}${colors.reset}`);
+    console.log(`  ${colors.gray}Example: ${cmd.examples[0]}${colors.reset}\n`);
+  }
+}
+
+/**
+ * Print usage
+ */
+function printUsage() {
+  console.log(`${colors.bright}Cal - Natural Language AI Assistant${colors.reset}\n`);
+  console.log('Usage:');
+  console.log('  cal <natural language input>\n');
+  console.log('Examples:');
+  console.log(`  ${colors.cyan}cal what's next?${colors.reset}              # Show pending todos`);
+  console.log(`  ${colors.cyan}cal add buy milk${colors.reset}              # Create todo`);
+  console.log(`  ${colors.cyan}cal mark done first task${colors.reset}      # Complete todo`);
+  console.log(`  ${colors.cyan}cal what day is it?${colors.reset}           # Get current date`);
+  console.log(`  ${colors.cyan}cal check price of bitcoin${colors.reset}    # Fetch data`);
+  console.log(`  ${colors.cyan}cal help${colors.reset}                      # Show all commands\n`);
+  console.log('Features:');
+  console.log(`  ${colors.green}✓${colors.reset} Natural language interface`);
+  console.log(`  ${colors.green}✓${colors.reset} Time-aware (knows today's date)`);
+  console.log(`  ${colors.green}✓${colors.reset} Local Claude Code (FREE)`);
+  console.log(`  ${colors.green}✓${colors.reset} Fuzzy matching ("close enough" works)`);
+  console.log(`  ${colors.green}✓${colors.reset} Offline-capable todo system\n`);
+}
+
+// Run
+main().catch(error => {
+  console.error(`${colors.red}Fatal error:${colors.reset} ${error.message}`);
+  process.exit(1);
+});

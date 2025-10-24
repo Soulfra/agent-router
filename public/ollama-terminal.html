@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ollama Terminal - CalOS</title>
+  <!-- SOULFRA Dark Theme -->
+  <link rel="stylesheet" href="/themes/soulfra-dark.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .terminal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .terminal-header {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      padding: 20px;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .terminal-header h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .terminal-header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .qr-section {
+      padding: 30px;
+      text-align: center;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .qr-title {
+      font-size: 18px;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    #qrcode {
+      display: inline-block;
+      padding: 20px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .server-url {
+      margin-top: 16px;
+      padding: 12px 20px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      color: var(--accent-blue);
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .status-bar {
+      padding: 16px 30px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-primary);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline {
+      background: var(--accent-red);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .chat-container {
+      padding: 30px;
+      background: var(--bg-primary);
+    }
+
+    .messages {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+    }
+
+    .message {
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      max-width: 80%;
+    }
+
+    .message.user {
+      background: var(--accent-blue);
+      color: white;
+      margin-left: auto;
+    }
+
+    .message.assistant {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .message.error {
+      background: rgba(255, 68, 68, 0.1);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    .message-content {
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .message-time {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 12px;
+    }
+
+    .input-container input {
+      flex: 1;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color var(--transition-fast);
+    }
+
+    .input-container input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      background: var(--bg-tertiary);
+    }
+
+    .input-container button {
+      padding: 14px 24px;
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition-normal);
+    }
+
+    .input-container button:hover {
+      background: #0052a3;
+    }
+
+    .input-container button:disabled {
+      background: var(--text-tertiary);
+      cursor: not-allowed;
+    }
+
+    .model-selector {
+      margin-bottom: 20px;
+    }
+
+    .model-selector select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="terminal-card">
+      <!-- Header -->
+      <div class="terminal-header">
+        <h1>🤖 Ollama Terminal</h1>
+        <p>Scan QR code from mobile to connect</p>
+      </div>
+
+      <!-- QR Code Section -->
+      <div class="qr-section">
+        <div class="qr-title">Scan this QR code from your phone:</div>
+        <div id="qrcode"></div>
+        <div class="server-url" id="serverUrl">Loading...</div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <div class="status-item">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Checking Ollama...</span>
+        </div>
+        <div class="status-item">
+          <span id="modelCount">0 models</span>
+        </div>
+      </div>
+
+      <!-- Chat Container -->
+      <div class="chat-container">
+        <div class="model-selector">
+          <select id="modelSelect">
+            <option value="">Loading models...</option>
+          </select>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <div>Start a conversation with Ollama</div>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <input
+            type="text"
+            id="promptInput"
+            placeholder="Type your message..."
+            autocomplete="off"
+          />
+          <button id="sendButton">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <script>
+    // Get local IP and port
+    const hostname = window.location.hostname;
+    const port = window.location.port || '5001';
+    const protocol = window.location.protocol;
+    const serverUrl = `${protocol}//${hostname}:${port}`;
+
+    // Display server URL
+    document.getElementById('serverUrl').textContent = serverUrl;
+
+    // Generate QR code
+    new QRCode(document.getElementById('qrcode'), {
+      text: `${serverUrl}/ollama-terminal.html`,
+      width: 200,
+      height: 200,
+      colorDark: '#0066cc',
+      colorLight: '#1a1a1a',
+    });
+
+    // State
+    let messages = [];
+    let models = [];
+    let selectedModel = 'calos-model:latest';
+    let isLoading = false;
+
+    // DOM elements
+    const messagesContainer = document.getElementById('messages');
+    const promptInput = document.getElementById('promptInput');
+    const sendButton = document.getElementById('sendButton');
+    const modelSelect = document.getElementById('modelSelect');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const modelCount = document.getElementById('modelCount');
+
+    // Check Ollama status
+    async function checkOllamaStatus() {
+      try {
+        const response = await fetch('/api/ollama/models');
+        const data = await response.json();
+
+        if (data.models && data.models.length > 0) {
+          models = data.models;
+          statusDot.classList.remove('offline');
+          statusText.textContent = 'Ollama Running';
+          modelCount.textContent = `${models.length} models`;
+
+          // Populate model selector
+          modelSelect.innerHTML = models
+            .map(m => `<option value="${m.name}">${m.name}</option>`)
+            .join('');
+
+          if (models.length > 0) {
+            selectedModel = models[0].name;
+          }
+        } else {
+          throw new Error('No models found');
+        }
+      } catch (error) {
+        statusDot.classList.add('offline');
+        statusText.textContent = 'Ollama Offline';
+        modelCount.textContent = 'Not connected';
+        console.error('Ollama status error:', error);
+      }
+    }
+
+    // Render messages
+    function renderMessages() {
+      if (messages.length === 0) {
+        messagesContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <div>Start a conversation with Ollama</div>
+          </div>
+        `;
+        return;
+      }
+
+      messagesContainer.innerHTML = messages
+        .map(msg => `
+          <div class="message ${msg.role}">
+            <div class="message-content">${escapeHtml(msg.content)}</div>
+            <div class="message-time">${msg.time}</div>
+          </div>
+        `)
+        .join('');
+
+      // Scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Send message
+    async function sendMessage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt || isLoading) return;
+
+      const userMessage = {
+        role: 'user',
+        content: prompt,
+        time: new Date().toLocaleTimeString(),
+      };
+
+      messages.push(userMessage);
+      promptInput.value = '';
+      renderMessages();
+
+      isLoading = true;
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending...';
+
+      try {
+        const response = await fetch('/api/ollama/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            prompt: prompt,
+            stream: false,
+          }),
+        });
+
+        const data = await response.json();
+
+        const assistantMessage = {
+          role: 'assistant',
+          content: data.response || data.content || 'No response',
+          time: new Date().toLocaleTimeString(),
+        };
+
+        messages.push(assistantMessage);
+        renderMessages();
+      } catch (error) {
+        const errorMessage = {
+          role: 'error',
+          content: `Error: ${error.message}`,
+          time: new Date().toLocaleTimeString(),
+        };
+
+        messages.push(errorMessage);
+        renderMessages();
+      } finally {
+        isLoading = false;
+        sendButton.disabled = false;
+        sendButton.textContent = 'Send';
+      }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    promptInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+    modelSelect.addEventListener('change', (e) => {
+      selectedModel = e.target.value;
+    });
+
+    // Initialize
+    checkOllamaStatus();
+    renderMessages();
+
+    // Auto-refresh status every 30 seconds
+    setInterval(checkOllamaStatus, 30000);
+  </script>
+</body>
+</html>

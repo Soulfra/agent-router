@@ -1,0 +1,418 @@
+#!/usr/bin/env node
+
+/**
+ * Gmail Setup (Zero Cost Edition)
+ *
+ * Simplified setup wizard for the free version
+ * Uses Google Sheets + polling + free SMTP
+ *
+ * No requirements for:
+ * - PostgreSQL
+ * - Google Cloud Pub/Sub
+ * - Paid SMTP services
+ * - Complex deployment
+ *
+ * Just run: npm run gmail:setup:free
+ */
+
+const readline = require('readline');
+const { google } = require('googleapis');
+const fs = require('fs');
+const path = require('path');
+const GmailRelayZeroCost = require('../lib/gmail-relay-zero-cost');
+
+// Colors
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m'
+};
+
+// Create readline interface
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const prompt = (question) => {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
+};
+
+// OAuth2 client
+let oauth2Client;
+let relay;
+
+function displayBanner() {
+  console.log(`
+${colors.cyan}${colors.bright}
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║        Gmail Webhook Setup (Zero Cost Edition)              ║
+║        CALOS Platform                                        ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+${colors.reset}
+
+${colors.dim}Free alternative using Google Sheets + polling + free SMTP${colors.reset}
+
+${colors.green}${colors.bright}✓ No PostgreSQL required${colors.reset}
+${colors.green}${colors.bright}✓ No Google Cloud Pub/Sub setup${colors.reset}
+${colors.green}${colors.bright}✓ No paid SMTP services${colors.reset}
+${colors.green}${colors.bright}✓ Works with free tiers${colors.reset}
+`);
+}
+
+function displayMainMenu() {
+  console.log(`
+${colors.bright}What would you like to do?${colors.reset}
+
+${colors.cyan}1.${colors.reset} First Time Setup
+   ${colors.dim}Configure Google Sheets, SMTP, and Gmail OAuth${colors.reset}
+
+${colors.cyan}2.${colors.reset} Add User Configuration
+   ${colors.dim}Set up Gmail relay for a specific user/email${colors.reset}
+
+${colors.cyan}3.${colors.reset} Start Poller
+   ${colors.dim}Start polling Gmail for new messages${colors.reset}
+
+${colors.cyan}4.${colors.reset} Send Test Email
+   ${colors.dim}Test your SMTP configuration${colors.reset}
+
+${colors.cyan}5.${colors.reset} View Status
+   ${colors.dim}Check system status and stats${colors.reset}
+
+${colors.cyan}6.${colors.reset} Exit
+`);
+}
+
+async function firstTimeSetup() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}First Time Setup${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  console.log(`${colors.yellow}${colors.bright}Step 1: Google Sheets Setup${colors.reset}\n`);
+
+  console.log(`${colors.dim}1. Create a new Google Spreadsheet${colors.reset}`);
+  console.log(`${colors.dim}2. Share it with your service account email${colors.reset}`);
+  console.log(`${colors.dim}3. Copy the Spreadsheet ID from URL${colors.reset}\n`);
+
+  const spreadsheetId = await prompt('Google Sheets ID (from URL): ');
+
+  console.log(`\n${colors.yellow}${colors.bright}Step 2: Service Account Credentials${colors.reset}\n`);
+
+  console.log(`${colors.dim}1. Go to Google Cloud Console${colors.reset}`);
+  console.log(`${colors.dim}2. Create service account${colors.reset}`);
+  console.log(`${colors.dim}3. Download JSON credentials${colors.reset}\n`);
+
+  const credentialsPath = await prompt('Path to credentials JSON: ');
+
+  if (!fs.existsSync(credentialsPath)) {
+    console.log(`\n${colors.red}✗ Credentials file not found${colors.reset}\n`);
+    return;
+  }
+
+  console.log(`\n${colors.yellow}${colors.bright}Step 3: SMTP Provider${colors.reset}\n`);
+
+  console.log(`${colors.bright}Choose your free SMTP provider:${colors.reset}\n`);
+  console.log(`${colors.cyan}1.${colors.reset} Gmail (500 emails/day)`);
+  console.log(`${colors.cyan}2.${colors.reset} Brevo (300 emails/day)`);
+  console.log(`${colors.cyan}3.${colors.reset} MailerSend (3,000 emails/month)`);
+
+  const smtpChoice = await prompt('\nChoice (1-3): ');
+
+  let smtpConfig = {};
+
+  if (smtpChoice === '1') {
+    console.log(`\n${colors.bright}Gmail SMTP Setup:${colors.reset}`);
+    console.log(`${colors.dim}1. Enable 2FA on your Gmail${colors.reset}`);
+    console.log(`${colors.dim}2. Generate App Password: https://myaccount.google.com/apppasswords${colors.reset}\n`);
+
+    smtpConfig.provider = 'gmail';
+    smtpConfig.gmailUser = await prompt('Gmail address: ');
+    smtpConfig.gmailAppPassword = await prompt('App Password: ');
+  } else if (smtpChoice === '2') {
+    console.log(`\n${colors.bright}Brevo SMTP Setup:${colors.reset}`);
+    console.log(`${colors.dim}1. Sign up at https://www.brevo.com${colors.reset}`);
+    console.log(`${colors.dim}2. Get SMTP key: Settings → SMTP & API${colors.reset}\n`);
+
+    smtpConfig.provider = 'brevo';
+    smtpConfig.brevoApiKey = await prompt('Brevo API Key: ');
+  } else if (smtpChoice === '3') {
+    console.log(`\n${colors.bright}MailerSend SMTP Setup:${colors.reset}`);
+    console.log(`${colors.dim}1. Sign up at https://www.mailersend.com${colors.reset}`);
+    console.log(`${colors.dim}2. Verify your domain${colors.reset}`);
+    console.log(`${colors.dim}3. Get SMTP credentials: Settings → SMTP${colors.reset}\n`);
+
+    smtpConfig.provider = 'mailersend';
+    smtpConfig.mailersendApiKey = await prompt('MailerSend API Key: ');
+  }
+
+  console.log(`\n${colors.yellow}${colors.bright}Step 4: Encryption Key${colors.reset}\n`);
+
+  console.log(`${colors.dim}Generate a random encryption key (32+ characters)${colors.reset}\n`);
+
+  const encryptionKey = await prompt('Encryption key (press Enter to generate): ');
+
+  const finalEncryptionKey = encryptionKey || require('crypto').randomBytes(32).toString('hex');
+
+  console.log(`\n${colors.yellow}${colors.bright}Step 5: Creating .env file${colors.reset}\n`);
+
+  const envPath = path.join(__dirname, '../.env.gmail-free');
+
+  const envContent = `
+# Gmail Relay (Zero Cost) Configuration
+# Generated: ${new Date().toISOString()}
+
+# Google Sheets Database
+GOOGLE_SHEETS_DB_ID=${spreadsheetId}
+GOOGLE_SHEETS_CREDENTIALS_PATH=${credentialsPath}
+
+# Encryption
+ENCRYPTION_KEY=${finalEncryptionKey}
+
+# SMTP Provider
+FREE_SMTP_PROVIDER=${smtpConfig.provider}
+${smtpConfig.gmailUser ? `GMAIL_SMTP_USER=${smtpConfig.gmailUser}` : ''}
+${smtpConfig.gmailAppPassword ? `GMAIL_APP_PASSWORD=${smtpConfig.gmailAppPassword}` : ''}
+${smtpConfig.brevoApiKey ? `BREVO_API_KEY=${smtpConfig.brevoApiKey}` : ''}
+${smtpConfig.mailersendApiKey ? `MAILERSEND_API_KEY=${smtpConfig.mailersendApiKey}` : ''}
+
+# Gmail OAuth (you'll add these next)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/oauth/google/callback
+
+# Default From Address
+EMAIL_FROM_ADDRESS=noreply@calos.ai
+`.trim();
+
+  fs.writeFileSync(envPath, envContent);
+
+  console.log(`${colors.green}✓ Created .env.gmail-free${colors.reset}\n`);
+
+  console.log(`${colors.bright}Next steps:${colors.reset}`);
+  console.log(`${colors.dim}1. Set up Gmail OAuth (Google Cloud Console)${colors.reset}`);
+  console.log(`${colors.dim}2. Update GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.gmail-free${colors.reset}`);
+  console.log(`${colors.dim}3. Run this wizard again to add user configurations${colors.reset}\n`);
+}
+
+async function addUserConfig() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}Add User Configuration${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  // Load environment
+  require('dotenv').config({ path: path.join(__dirname, '../.env.gmail-free') });
+
+  // Check OAuth credentials
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.log(`${colors.red}✗ Gmail OAuth not configured${colors.reset}`);
+    console.log(`${colors.dim}Update GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.gmail-free${colors.reset}\n`);
+    return;
+  }
+
+  // Initialize relay
+  relay = new GmailRelayZeroCost();
+  await relay.init();
+
+  // Get user details
+  const userId = await prompt('User ID: ');
+
+  // Perform OAuth
+  oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+
+  const scopes = [
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.settings.basic'
+  ];
+
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: scopes,
+    prompt: 'consent'
+  });
+
+  console.log(`\n${colors.bright}Authorization URL:${colors.reset}\n`);
+  console.log(`${colors.blue}${authUrl}${colors.reset}\n`);
+
+  const code = await prompt('Enter authorization code: ');
+
+  const { tokens } = await oauth2Client.getToken(code);
+
+  // Get Gmail profile
+  oauth2Client.setCredentials(tokens);
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+  const profile = await gmail.users.getProfile({ userId: 'me' });
+  const emailAddress = profile.data.emailAddress;
+
+  console.log(`\n${colors.green}✓ Gmail account: ${emailAddress}${colors.reset}\n`);
+
+  // Get relay settings
+  const relayFromAddress = await prompt(`Relay From address (press Enter for noreply@calos.ai): `) || 'noreply@calos.ai';
+
+  console.log(`\n${colors.bright}Optional: Relay rules${colors.reset}`);
+  const subjectContains = await prompt('Only relay emails with subject containing (press Enter to skip): ');
+  const fromDomain = await prompt('Only relay emails from domain (press Enter to skip): ');
+
+  const relayRules = {};
+  if (subjectContains) relayRules.subject_contains = subjectContains;
+  if (fromDomain) relayRules.from_domain = fromDomain;
+
+  // Create config
+  await relay.createConfig({
+    userId,
+    emailAddress,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token,
+    relayFromAddress,
+    relayRules,
+    enabled: true
+  });
+
+  console.log(`\n${colors.green}${colors.bright}✓ Configuration created successfully!${colors.reset}\n`);
+
+  console.log(`${colors.bright}Details:${colors.reset}`);
+  console.log(`  User ID: ${colors.cyan}${userId}${colors.reset}`);
+  console.log(`  Gmail: ${colors.cyan}${emailAddress}${colors.reset}`);
+  console.log(`  Relay From: ${colors.cyan}${relayFromAddress}${colors.reset}`);
+  console.log(`  Status: ${colors.green}Enabled${colors.reset}\n`);
+}
+
+async function startPoller() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}Start Poller${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  require('dotenv').config({ path: path.join(__dirname, '../.env.gmail-free') });
+
+  relay = new GmailRelayZeroCost();
+  await relay.startAll();
+
+  console.log(`${colors.green}${colors.bright}✓ Poller started${colors.reset}`);
+  console.log(`${colors.dim}Polling Gmail every 60 seconds...${colors.reset}\n`);
+
+  console.log(`${colors.yellow}Press Ctrl+C to stop${colors.reset}\n`);
+
+  // Keep running
+  process.on('SIGINT', () => {
+    console.log(`\n${colors.yellow}Stopping poller...${colors.reset}`);
+    relay.stopAll();
+    process.exit(0);
+  });
+}
+
+async function sendTestEmail() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}Send Test Email${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  require('dotenv').config({ path: path.join(__dirname, '../.env.gmail-free') });
+
+  relay = new GmailRelayZeroCost();
+  await relay.init();
+
+  const to = await prompt('Send test email to: ');
+
+  console.log(`\n${colors.dim}Sending...${colors.reset}\n`);
+
+  const result = await relay.sendTest(to);
+
+  if (result.success) {
+    console.log(`${colors.green}${colors.bright}✓ Test email sent successfully!${colors.reset}`);
+    console.log(`  Message ID: ${colors.cyan}${result.messageId}${colors.reset}\n`);
+  } else {
+    console.log(`${colors.red}✗ Failed to send test email${colors.reset}`);
+    console.log(`  Error: ${result.error}\n`);
+  }
+}
+
+async function viewStatus() {
+  console.log(`\n${colors.bright}${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.bright}System Status${colors.reset}`);
+  console.log(`${colors.cyan}═══════════════════════════════════════════════════════════${colors.reset}\n`);
+
+  require('dotenv').config({ path: path.join(__dirname, '../.env.gmail-free') });
+
+  relay = new GmailRelayZeroCost();
+  await relay.init();
+
+  const status = relay.getStatus();
+
+  console.log(`${colors.bright}Poller:${colors.reset}`);
+  console.log(`  Active pollers: ${colors.cyan}${status.poller.active}${colors.reset}`);
+  console.log(`  Poll interval: ${colors.cyan}${status.poller.pollInterval / 1000}s${colors.reset}`);
+
+  console.log(`\n${colors.bright}SMTP:${colors.reset}`);
+  console.log(`  Provider: ${colors.cyan}${status.smtp.provider}${colors.reset}`);
+  console.log(`  Daily limit: ${colors.cyan}${status.smtp.limits.daily}${colors.reset}`);
+  console.log(`  Monthly limit: ${colors.cyan}${status.smtp.limits.monthly}${colors.reset}`);
+
+  console.log('');
+}
+
+async function main() {
+  displayBanner();
+
+  let running = true;
+
+  while (running) {
+    displayMainMenu();
+
+    const choice = await prompt(`${colors.bright}Enter your choice (1-6):${colors.reset} `);
+
+    switch (choice) {
+      case '1':
+        await firstTimeSetup();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '2':
+        await addUserConfig();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '3':
+        await startPoller();
+        break;
+
+      case '4':
+        await sendTestEmail();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '5':
+        await viewStatus();
+        await prompt('\nPress Enter to continue...');
+        break;
+
+      case '6':
+        console.log(`\n${colors.green}Thanks for using CALOS!${colors.reset}\n`);
+        running = false;
+        break;
+
+      default:
+        console.log(`\n${colors.red}Invalid choice${colors.reset}\n`);
+        break;
+    }
+  }
+
+  rl.close();
+  process.exit(0);
+}
+
+// Run
+main();

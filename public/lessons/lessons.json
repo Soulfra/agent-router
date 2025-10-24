@@ -1,0 +1,482 @@
+{
+  "version": "1.0.0",
+  "updated": "2025-10-24",
+  "tracks": [
+    {
+      "id": "mcp-development",
+      "name": "Privacy-First MCP Development",
+      "emoji": "🔧",
+      "description": "Build Model Context Protocol servers with zero telemetry and local-only execution",
+      "color": "#667eea",
+      "xp": 1070,
+      "lessons": [
+        {
+          "id": "mcp-1",
+          "number": 1,
+          "title": "Introduction to CalOS MCP Servers",
+          "xp": 100,
+          "time": "20 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-1-intro-to-mcp.md",
+          "lab": "/labs/mcp-client.html",
+          "prerequisites": []
+        },
+        {
+          "id": "mcp-2",
+          "number": 2,
+          "title": "Using MCP Client with Fetch",
+          "xp": 120,
+          "time": "30 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-2-mcp-client-fetch.md",
+          "lab": "/labs/mcp-client.html",
+          "prerequisites": [
+            "Lesson 1 (Intro to MCP)"
+          ]
+        },
+        {
+          "id": "mcp-3",
+          "number": 3,
+          "title": "Building Your First MCP Tool",
+          "xp": 130,
+          "time": "45 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-3-build-first-tool.md",
+          "lab": "/labs/mcp-custom-tool.html",
+          "prerequisites": [
+            "Lesson 1 (Intro to MCP)",
+            "Lesson 2 (MCP Client with Fetch)"
+          ]
+        },
+        {
+          "id": "mcp-4",
+          "number": 4,
+          "title": "RPG Integration - Award XP",
+          "xp": 120,
+          "time": "35 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-4-rpg-integration.md",
+          "lab": "/labs/mcp-rpg-xp.html",
+          "prerequisites": [
+            "Lesson 3 (Build First Tool)"
+          ]
+        },
+        {
+          "id": "mcp-5",
+          "number": 5,
+          "title": "File System Tools",
+          "xp": 110,
+          "time": "40 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-5-file-system-tools.md",
+          "lab": "/labs/mcp-file-manager.html",
+          "prerequisites": [
+            "Lesson 3 (Build First Tool)",
+            "Lesson 4 (RPG Integration)"
+          ]
+        },
+        {
+          "id": "mcp-6",
+          "number": 6,
+          "title": "Code Analysis Tools",
+          "xp": 120,
+          "time": "40 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-6-code-analysis.md",
+          "lab": "/labs/mcp-code-search.html",
+          "prerequisites": [
+            "Lesson 5 (File System Tools)"
+          ]
+        },
+        {
+          "id": "mcp-7",
+          "number": 7,
+          "title": "Privacy & Security",
+          "xp": 130,
+          "time": "45 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-7-privacy-security.md",
+          "lab": "/labs/mcp-privacy-audit.html",
+          "prerequisites": [
+            "Lesson 6 (Code Analysis Tools)"
+          ]
+        },
+        {
+          "id": "mcp-8",
+          "number": 8,
+          "title": "Deploy Your Own MCP Server",
+          "xp": 110,
+          "time": "35 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-8-deploy-mcp.md",
+          "lab": "/labs/mcp-deployment.html",
+          "prerequisites": [
+            "Lesson 7 (Privacy & Security)"
+          ]
+        },
+        {
+          "id": "mcp-9",
+          "number": 9,
+          "title": "Lesson 9",
+          "xp": 130,
+          "time": "25 minutes",
+          "file": "/docs/lessons/mcp-development/lesson-9-github-integration.md",
+          "lab": "/labs/mcp-test-suite.html",
+          "prerequisites": [
+            "Lesson 1-8 (MCP basics)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rpg-card-game",
+      "name": "RPG Card Game Development",
+      "emoji": "🎴",
+      "description": "Build a full-featured card collection game with XP, quests, and leaderboards",
+      "color": "#764ba2",
+      "xp": 1250,
+      "lessons": [
+        {
+          "id": "rpg-1",
+          "number": 1,
+          "title": "Understanding the Card Game System",
+          "xp": 100,
+          "time": "25 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-1-card-game-intro.md",
+          "lab": "/labs/card-opener.html",
+          "prerequisites": []
+        },
+        {
+          "id": "rpg-2",
+          "number": 2,
+          "title": "Fetch API Basics",
+          "xp": 110,
+          "time": "30 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-2-fetch-basics.md",
+          "lab": "/labs/card-opener.html",
+          "prerequisites": [
+            "Lesson 1 (Card Game Intro)"
+          ]
+        },
+        {
+          "id": "rpg-3",
+          "number": 3,
+          "title": "Opening Card Packs",
+          "xp": 120,
+          "time": "35 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-3-open-packs.md",
+          "lab": "/labs/card-opener.html",
+          "prerequisites": [
+            "Lesson 2 (Fetch Basics)"
+          ]
+        },
+        {
+          "id": "rpg-4",
+          "number": 4,
+          "title": "Card Collection UI",
+          "xp": 130,
+          "time": "45 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-4-collection-ui.md",
+          "lab": "/labs/card-collection.html",
+          "prerequisites": [
+            "Lesson 3 (Open Packs)"
+          ]
+        },
+        {
+          "id": "rpg-5",
+          "number": 5,
+          "title": "Roasting System - Vote on Code",
+          "xp": 140,
+          "time": "40 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-5-roasting-system.md",
+          "lab": "/labs/card-roasting.html",
+          "prerequisites": [
+            "Lesson 4 (Collection UI)"
+          ]
+        },
+        {
+          "id": "rpg-6",
+          "number": 6,
+          "title": "RPG Player Progression",
+          "xp": 120,
+          "time": "30 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-6-player-progression.md",
+          "lab": "/labs/rpg-dashboard.html",
+          "prerequisites": [
+            "Lesson 5 (Roasting System)"
+          ]
+        },
+        {
+          "id": "rpg-7",
+          "number": 7,
+          "title": "Quest System",
+          "xp": 130,
+          "time": "35 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-7-quest-system.md",
+          "lab": "/labs/rpg-dashboard.html",
+          "prerequisites": [
+            "Lesson 6 (Player Progression)"
+          ]
+        },
+        {
+          "id": "rpg-8",
+          "number": 8,
+          "title": "Achievements & Badges",
+          "xp": 120,
+          "time": "30 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-8-achievements.md",
+          "lab": "/labs/rpg-dashboard.html",
+          "prerequisites": [
+            "Lesson 7 (Quest System)"
+          ]
+        },
+        {
+          "id": "rpg-9",
+          "number": 9,
+          "title": "Leaderboards",
+          "xp": 130,
+          "time": "35 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-9-leaderboards.md",
+          "lab": "/labs/rpg-dashboard.html",
+          "prerequisites": [
+            "Lesson 8 (Achievements)"
+          ]
+        },
+        {
+          "id": "rpg-10",
+          "number": 10,
+          "title": "Final Project - Full Game Loop",
+          "xp": 150,
+          "time": "60 minutes",
+          "file": "/docs/lessons/rpg-card-game/lesson-10-final-game.md",
+          "lab": "/labs/rpg-complete.html",
+          "prerequisites": [
+            "All previous lessons (1-9)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zero-dependency",
+      "name": "Zero-Dependency Architecture",
+      "emoji": "🚫",
+      "description": "Build production systems with zero external dependencies and complete privacy",
+      "color": "#f093fb",
+      "xp": 870,
+      "lessons": [
+        {
+          "id": "zero-1",
+          "number": 1,
+          "title": "Understanding CalOS Schema",
+          "xp": 100,
+          "time": "25 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-1-calos-schema.md",
+          "lab": "/labs/schema-validator.html",
+          "prerequisites": []
+        },
+        {
+          "id": "zero-2",
+          "number": 2,
+          "title": "Privacy-First Data Handling",
+          "xp": 130,
+          "time": "40 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-2-privacy-data.md",
+          "lab": "/labs/privacy-checker.html",
+          "prerequisites": [
+            "Lesson 1 (CalOS Schema)"
+          ]
+        },
+        {
+          "id": "zero-3",
+          "number": 3,
+          "title": "Split Licensing Strategy",
+          "xp": 110,
+          "time": "30 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-3-licensing.md",
+          "lab": "/labs/privacy-checker.html",
+          "prerequisites": [
+            "Lesson 2 (Privacy-First Data)"
+          ]
+        },
+        {
+          "id": "zero-4",
+          "number": 4,
+          "title": "Build Without npm Dependencies",
+          "xp": 140,
+          "time": "45 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-4-no-dependencies.md",
+          "lab": "/labs/zero-dep-builder.html",
+          "prerequisites": [
+            "Lesson 3 (Licensing)"
+          ]
+        },
+        {
+          "id": "zero-5",
+          "number": 5,
+          "title": "Database Design",
+          "xp": 120,
+          "time": "35 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-5-database-design.md",
+          "lab": "/labs/zero-dep-builder.html",
+          "prerequisites": [
+            "Lesson 4 (Build Without Dependencies)"
+          ]
+        },
+        {
+          "id": "zero-6",
+          "number": 6,
+          "title": "Deployment Without Vendors",
+          "xp": 120,
+          "time": "35 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-6-self-hosted.md",
+          "lab": "/labs/zero-dep-builder.html",
+          "prerequisites": [
+            "Lesson 5 (Database Design)"
+          ]
+        },
+        {
+          "id": "zero-7",
+          "number": 7,
+          "title": "Lesson 7",
+          "xp": 150,
+          "time": "30 minutes",
+          "file": "/docs/lessons/zero-dependency/lesson-7-cal-autonomous-system.md",
+          "lab": "/labs/zero-dep-builder.html",
+          "prerequisites": [
+            "Lesson 1-6 (Zero-Dependency basics)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi-tier",
+      "name": "Multi-Tier SaaS Platform",
+      "emoji": "💳",
+      "description": "Build a production-ready SaaS with BYOK, billing, and multi-project support",
+      "color": "#4facfe",
+      "xp": 910,
+      "lessons": [
+        {
+          "id": "multi-1",
+          "number": 1,
+          "title": "Understanding the Tier System",
+          "xp": 100,
+          "time": "25 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-1-tier-system.md",
+          "lab": "/labs/tier-checker.html",
+          "prerequisites": []
+        },
+        {
+          "id": "multi-2",
+          "number": 2,
+          "title": "BYOK Implementation",
+          "xp": 140,
+          "time": "40 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-2-byok.md",
+          "lab": "/labs/byok-manager.html",
+          "prerequisites": [
+            "Lesson 1 (Tier System)"
+          ]
+        },
+        {
+          "id": "multi-3",
+          "number": 3,
+          "title": "Usage Tracking",
+          "xp": 130,
+          "time": "35 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-3-usage-tracking.md",
+          "lab": "/labs/tier-checker.html",
+          "prerequisites": [
+            "Lesson 2 (BYOK)"
+          ]
+        },
+        {
+          "id": "multi-4",
+          "number": 4,
+          "title": "Billing Dashboard",
+          "xp": 140,
+          "time": "40 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-4-billing.md",
+          "lab": "/labs/billing-dashboard.html",
+          "prerequisites": [
+            "Lesson 3 (Usage Tracking)"
+          ]
+        },
+        {
+          "id": "multi-5",
+          "number": 5,
+          "title": "Rate Limiting",
+          "xp": 120,
+          "time": "30 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-5-rate-limiting.md",
+          "lab": "/labs/tier-checker.html",
+          "prerequisites": [
+            "Lesson 4 (Billing)"
+          ]
+        },
+        {
+          "id": "multi-6",
+          "number": 6,
+          "title": "Multi-Project Management",
+          "xp": 140,
+          "time": "40 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-6-multi-project.md",
+          "lab": "/labs/multi-project.html",
+          "prerequisites": [
+            "Lesson 5 (Rate Limiting)"
+          ]
+        },
+        {
+          "id": "multi-7",
+          "number": 7,
+          "title": "Self-Service Portal",
+          "xp": 140,
+          "time": "45 minutes",
+          "file": "/docs/lessons/multi-tier/lesson-7-self-service.md",
+          "lab": "/labs/multi-project.html",
+          "prerequisites": [
+            "All previous lessons (1-6)"
+          ]
+        }
+      ]
+    }
+  ],
+  "totalLessons": 33,
+  "totalXP": 4100,
+  "achievements": [
+    {
+      "id": "first-lesson",
+      "name": "First Steps",
+      "description": "Complete your first lesson",
+      "xp": 50,
+      "icon": "🎯"
+    },
+    {
+      "id": "track-complete",
+      "name": "Track Master",
+      "description": "Complete an entire track",
+      "xp": 200,
+      "icon": "🏆"
+    },
+    {
+      "id": "all-tracks",
+      "name": "CalOS Graduate",
+      "description": "Complete all 4 tracks",
+      "xp": 500,
+      "icon": "🎓"
+    },
+    {
+      "id": "lab-master",
+      "name": "Lab Master",
+      "description": "Complete 10 labs",
+      "xp": 100,
+      "icon": "🔬"
+    },
+    {
+      "id": "speedrun",
+      "name": "Speedrunner",
+      "description": "Complete 5 lessons in one day",
+      "xp": 150,
+      "icon": "⚡"
+    },
+    {
+      "id": "perfect-score",
+      "name": "Perfect Score",
+      "description": "Get 100% on all quizzes",
+      "xp": 300,
+      "icon": "💯"
+    }
+  ]
+}

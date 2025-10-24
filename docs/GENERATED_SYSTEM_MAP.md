@@ -330,7 +330,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 
 ---
 
-## 🛣️ API Endpoints (1448 total)
+## 🛣️ API Endpoints (1455 total)
 
 
 ### `routes/account-warming-routes.js`
@@ -1374,6 +1374,18 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | POST | `/upload` |  |
 | GET | `/manifest/:imageId` |  |
 | GET | `/images` |  |
+
+### `routes/job-analysis-routes.js`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/jobs/public` |  |
+| GET | `/jobs` |  |
+| GET | `/jobs/:id` |  |
+| POST | `/jobs/:id/analyze` |  |
+| POST | `/jobs/:id/lesson-plan` |  |
+| POST | `/jobs/:id/pr` |  |
+| POST | `/jobs` |  |
 
 ### `routes/knowledge-graph-routes.js`
 
@@ -2533,7 +2545,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 
 ---
 
-## 📚 Core Modules (528 total)
+## 📚 Core Modules (539 total)
 
 | File | Module | Purpose |
 |------|--------|----------|
@@ -2582,6 +2594,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/automated-flow-builder.js` | AutomatedFlowBuilder | Automated Flow Builder  Like DocuSign but for payments, subscriptions, and workflows  Multi-step flows with: - Status tracking at each step - Automati |
 | `lib/autonomous-mode.js` | AutonomousMode | Autonomous Mode - Self-Building System Orchestrator  This is the "copilot mode" that connects all autonomous systems: - Builder Agent (generates code) |
 | `lib/autonomous-research-agent.js` | AutonomousResearchAgent | Autonomous Research Agent  Researches current events via puppeteer when Ollama lacks fresh data  Features: - Detects when Ollama data is stale (traini |
+| `lib/badge-generator.js` | BadgeGenerator | Badge Generator  Generates GitHub shields.io style badges and HTML badges for job postings. Includes time-based badges, status badges, and feature bad |
 | `lib/badge-system.js` | BadgeSystem | Verification Badge & Reputation System  Inspired by Habbo Hotel checkmarks and gaming tier systems. Users earn badges through consistent voting, email |
 | `lib/bias-detector.js` | BiasDetector | Bias Detector  Analyzes research sources for bias indicators  Features: - Detects crowdfunded sources (Patreon, Kickstarter, etc.) - Political leaning |
 | `lib/biometric-auth.js` | BiometricAuth | Biometric Authentication (FaceID/TouchID/Fingerprint)  WebAuthn-based biometric authentication: - No passwords required - FaceID on iOS/Mac - TouchID  |
@@ -2618,6 +2631,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/cal-debugger.js` | CalDebugger | Cal Debugger  Cal's autonomous debugging system. Reads error messages, understands what went wrong, generates fixes, tests them.  Workflow: 1. Receive |
 | `lib/cal-deployment-monitor.js` | CalDeploymentMonitor | Cal Deployment Monitor  Autonomous AI system that monitors GitHub Pages deployments in real-time. Detects failures, diagnoses issues, and auto-heals w |
 | `lib/cal-doc-learner.js` | CalDocLearner | CAL Doc Learner  Fetches and learns from URLs, documentation, and external resources. Builds a knowledge base of patterns, best practices, and solutio |
+| `lib/cal-doc-learning-orchestrator.js` | CalDocLearningOrchestrator | Cal Doc Learning Orchestrator  Teacher/Guardian orchestration layer that coordinates Cal's Fortune 10 learning: - Recursive documentation scraping (li |
 | `lib/cal-error-interceptor.js` | CalErrorInterceptor | CAL Global Error Interceptor  Captures ALL errors in the system and learns from them: - Uncaught exceptions - Unhandled promise rejections - Migration |
 | `lib/cal-failure-learner.js` | CalFailureLearner | CAL Failure Learning Engine  Teaches CAL to learn from his own mistakes by: - Parsing logs and extracting error patterns - Tracking which approaches h |
 | `lib/cal-knowledge-base.js` | CalKnowledgeBase | Cal Knowledge Base  Stores everything Cal knows about: - DNS (recursive vs non-recursive, loops, TTL, CNAME chains) - Token counting (API limits, esti |
@@ -2633,6 +2647,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/cal-task-delegator.js` | CalTaskDelegator | Cal Task Delegator  Breaks down complex tasks into smaller, manageable steps. Cal uses this to plan work before starting, avoiding getting stuck.  Wor |
 | `lib/cal-voice-brand-builder.js` | CalVoiceBrandBuilder | Cal Voice Brand Builder  Connects Cal's autonomous system with voice handler and Ollama to build brands. Enables "yap to AI and it builds brands" func |
 | `lib/calculator-engine.js` | CalculatorEngine | Calculator Engine  Evaluates mathematical expressions safely. Supports basic arithmetic, advanced functions, and formatting.  Examples: - "2 + 2" → 4  |
+| `lib/calos-domain-platform.js` | CALOSDomainPlatform | CALOS Domain Platform  Our own version of GoDaddy Corporate Domains + Brandsight + Hootsuite but decentralized, open-source, and autonomous.  Features |
 | `lib/calos-exporter.js` | CalosExporter | CALOS Exporter  Makes CALOS portable - export to ZIP, npm package, Docker, or bare files. Like backing up your iPhone - take everything with you.  Exp |
 | `lib/calos-registry.js` | CalosRegistry | CALOS Universal Component Registry  Like a UPC database for CALOS components. Catalogs ALL code: agents, libs, tools, commands, tests.  Use cases: - " |
 | `lib/calriven-autonomous-mode.js` | CalRivenAutonomousMode | CalRiven Autonomous Mode  Allows CalRiven to autonomously research topics, query models, and cache results. Runs in background - CalRiven appears to " |
@@ -2651,6 +2666,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/challenge-difficulty-calculator.js` | ChallengeDifficultyCalculator | Challenge Difficulty Calculator  Calculates difficulty for coding challenges by analyzing: 1. Problem requirements (what needs to be built) 2. Expecte |
 | `lib/chaos-testing-system.js` | ChaosGenerator | Chaos Testing System  Adversarial testing that intentionally tries to break things. "Thorn items" that put the system off guard.  Features: - Invalid  |
 | `lib/chart-builder.js` | ChartBuilder | Chart Builder with Candlestick Support  Generates charts from any data source using D3.js: - Candlestick (OHLC) charts - Line charts - Bar charts - Ar |
+| `lib/chat-file-explorer-bridge.js` | ChatFileExplorerBridge | Chat + File Explorer Bridge  Connects SoulFra OS chat interface with: - File Explorer (browse/edit Desktop/repos) - CALOS Domain Platform (manage 250+ |
 | `lib/clarity-engine.js` | ClarityEngine | Clarity Engine  Analyzes dependencies and provides intelligence about the codebase. Detects left-pad style vulnerabilities and calculates risk scores. |
 | `lib/clarity-init.js` | ClarityInitializer | Clarity Initialization System  Ensures proper startup order for the Clarity system: 1. PostgreSQL connectivity 2. Run database migrations 3. Initializ |
 | `lib/clip-bounty-manager.js` | ClipBountyManager | Clip Bounty Manager  Fan economy system where viewers get PAID to clip best moments from streams.  How It Works: 1. Fan watches stream, marks timestam |
@@ -2718,6 +2734,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/device-fingerprint.js` | DeviceFingerprint | Device Fingerprinting System  Creates unique, persistent identifier for browser WITHOUT cookies Privacy-first: Can't track across sites unless user ex |
 | `lib/device-pairing.js` | DevicePairingManager | Device Pairing Manager  Seamless multi-device authentication system: - QR code pairing (pair new device to account) - WiFi proximity detection (auto-p |
 | `lib/device-sync-manager.js` | DeviceSyncManager | Cross-Device Sync Manager  Handles synchronization of state across multiple devices: - Mac (primary workstation) - iPhone (mobile app) - Flip phone (S |
+| `lib/devops-lesson-generator.js` | DevOpsLessonGenerator | DevOps Lesson Generator  Generates teaching content from Cal's actual failures and debugging process. Turns real-world DevOps problems into lessons fo |
 | `lib/dialogue-tree-generator.js` | DialogueTreeGenerator | Dialogue Tree Generator  Generates MMORPG-style quest dialogue trees with pre-determined paths. NOT for player-to-player chat - this is for quest NPC  |
 | `lib/difficulty-ranker.js` | DifficultyRanker | Difficulty Ranker  Maps code complexity metrics to difficulty rankings: - Sudoku-style: Trivial/Easy/Medium/Hard/Expert/Master - Crossword-style: Mond |
 | `lib/discord-invite-rotator.js` | DiscordInviteRotator | Discord Invite Rotator  Randomly rotates Discord invites across all 12 BillionDollarGame brands for cross-promotion and network effect.  Features: - R |
@@ -2763,6 +2780,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/executive-onboarding.js` | ExecutiveOnboarding | Executive Onboarding  Manages the process of companies hiring fractional AI executive agents. Handles matching, contract negotiation, and integration  |
 | `lib/executive-product-catalog.js` | ExecutiveProductCatalog | Executive Product Catalog  Manages products and services that depend on specific AI executive agents. Enables business model where products require ce |
 | `lib/experiment-manager.js` | ExperimentManager | Experiment Manager  Comprehensive A/B testing framework for: - Model versions (soulfra v1 vs v2) - Wrappers (concise vs detailed) - System prompts - P |
+| `lib/expert-matcher.js` | ExpertMatcher | Expert Matcher System  Finds skilled developers/experts for job requirements using: - GitHub API (search users by skills, language, location) - Linked |
 | `lib/export-processor.js` | ExportProcessor | Documentation Export Processor  Background worker that processes documentation export jobs: - Watches documentation_exports table for pending jobs - R |
 | `lib/external-bug-reporter.js` | ExternalBugReporter | External Bug Reporter  Sends minimal code snippets and error logs to external AI services for diagnosis. Respects privacy by only sharing error contex |
 | `lib/external-fetcher.js` | ExternalFetcher | External Data Fetcher  Generic library for fetching data from external sources: - REST APIs (JSON, XML) - Web scraping (HTML) - RSS feeds - GraphQL en |
@@ -2805,6 +2823,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/gmail-send-as-manager.js` | GmailSendAsManager | Gmail Send-As Alias Manager  "Tier 1" Solution: Gmail "Send As" Aliases  What it does: - Lets users send emails from custom addresses via Gmail - Exam |
 | `lib/gmail-webhook-relay.js` | GmailWebhookRelay | Gmail Webhook Relay System  "Like Mailchimp but for personal Gmail accounts"  Problem: Gmail doesn't let you truly "spoof" From addresses Solution: Re |
 | `lib/go-http-client.js` | GoHTTPClient | Go HTTP Client - Node.js wrapper  Provides curl/wget/filepath.Walk functionality via Go service  Usage: const client = new GoHTTPClient('http://localh |
+| `lib/godaddy-api-client.js` | GoDaddyAPIClient | GoDaddy API Client  Automate domain management using GoDaddy's Developer API  Features: - Domain registration and availability checking - DNS record m |
 | `lib/google-drive-app-publisher.js` | GoogleDriveAppPublisher | GoogleDriveAppPublisher  Publishes web apps to Google Drive for easy distribution via: - https://drive.google.com/start/apps - Google Workspace Market |
 | `lib/google-piggyback.js` | GooglePiggyback | Google Piggyback Integration  "we can build our index while piggybacking for awhile"  Instead of rebuilding Google Drive/Sheets, USE them for: - Stora |
 | `lib/google-sheets-db-adapter.js` | GoogleSheetsDBAdapter | Google Sheets Database Adapter  Makes Google Sheets act like a database Free alternative to PostgreSQL  Why? - Free (10M cells, 100 requests/min) - No |
@@ -2826,6 +2845,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/integration-test-orchestrator.js` | IntegrationTestOrchestrator | Cross-Platform Integration Test Orchestrator  Runs REAL test transactions across all integrated platforms: - Shopify: Create/read/update/delete produc |
 | `lib/intent-classifier.js` | IntentClassifier | Intent Classifier  Infers what users are trying to achieve from their actions and interactions. Like understanding "user stories" but automatically fr |
 | `lib/intent-parser.js` | IntentParser | Intent Parser  Parses natural language voice commands into structured intents for the pipeline orchestrator.  Examples: - "Create a logo for Soulfra"  |
+| `lib/interview-scheduler.js` | InterviewScheduler | Interview Scheduler & Payment System  Schedules expert interviews and handles payment processing.  Features: - Calendar integration (Google Calendar,  |
 | `lib/invite-quest-tracker.js` | InviteQuestTracker | Invite Quest Tracker  Bridges the affiliate-tracker.js system with the quest engine. Tracks invites as quest progress and creates viral growth mechani |
 | `lib/ios-project-builder.js` | iOSProjectBuilder | iOS Project Builder  Creates REAL Xcode projects (.xcodeproj), not README examples.  Unlike the fake "iOS app" that's just documentation, this generat |
 | `lib/ipc-pipe-system.js` | IPCPipeSystem | IPC Pipe System  Standardized inter-process communication for agent mesh. Provides pipes for agents to communicate with each other, especially for par |
@@ -2913,9 +2933,11 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/pattern-learner.js` | PatternLearner | Pattern Learner Tracks command sequences and learns workflow patterns  Stores every command in local database for long-term pattern recognition Builds |
 | `lib/pattern-matcher.js` | PatternMatcher | Pattern Matcher  Finds similar patterns in domain code library before generating new code  Prevents bloat by: - Finding existing patterns that match t |
 | `lib/pipeline-orchestrator.js` | PipelineOrchestrator | Pipeline Orchestrator  Master coordinator for voice-driven automated workflows. Manages the complete pipeline: 1. Receive voice command (transcribed)  |
+| `lib/platform-content-scraper.js` | PlatformContentScraper | Platform Content Scraper  Scrapes official documentation, tutorials, and courses from major platforms: - GoDaddy docs - GitHub Learning Lab - LinkedIn |
 | `lib/platform-db-router.js` | PlatformDatabaseRouter | Platform Database Router  Routes database queries to the correct database based on: - Platform (X, Kik, web, etc.) - Device type (Gameboy, TV remote,  |
 | `lib/portfolio-hub.js` | PortfolioHub | Aggregate recent activity across all sources into timeline @param {number} userId - User ID @param {number} limit - Number of events to fetch @returns |
 | `lib/pos-terminal.js` | POSTerminal | POS Terminal System  Square competitor for processing in-person and online payments.  Features: - Card reader integration (Stripe Terminal) - QR code  |
+| `lib/pr-generator.js` | PRGenerator | PR & Hype Generation System  Auto-generates press releases, social media content, and sharing links for job postings and company announcements.  Featu |
 | `lib/price-verifier.js` | PriceVerifier | Price Verifier  Validates price data for sanity, detects anomalies, and provides confidence scores for price data quality.  Features: - Sanity checks  |
 | `lib/price-worker.js` | PriceWorker | Price Worker - Automatic Price Fetching  Fetches cryptocurrency and stock prices automatically at regular intervals and stores them in the database fo |
 | `lib/pricing-calculator.js` | PricingCalculator | CALOS Pricing Calculator  Calculate exact pricing based on usage.  Model: Stripe/AWS/Vercel style usage-based pricing  Pricing Components: 1. Transcri |
@@ -3019,6 +3041,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/unified-knowledge-interface.js` | UnifiedKnowledgeInterface | Unified Knowledge Interface  Single API for querying all of Cal's knowledge stores: - PostgreSQL knowledge_patterns (debugging patterns from knowledge |
 | `lib/unified-user-profile.js` | UnifiedUserProfile | Unified User Profile  Brings together ALL user data into a single comprehensive profile: - Identity (from Identity Resolver) - Analytics (from Session |
 | `lib/unit-converter.js` | UnitConverter | Unit Converter  Converts between units: currency, temperature, distance, time, weight, volume, etc. Supports real-time currency exchange rates (with c |
+| `lib/universal-portfolio-manager.js` | UniversalPortfolioManager | Universal Portfolio Manager  Maps complete digital infrastructure hierarchy: matthewmauer (system user) → repos → domains → packages → deployments  Hi |
 | `lib/universal-table-scraper.js` | UniversalTableScraper | Universal Table Scraper  Extracts tabular data from any source: - HTML tables (DOM or HTML strings) - JSON arrays of objects - CSV strings - API respo |
 | `lib/url-index.js` | URLIndex | URL Index & Tracker  Tracks every URL the system fetches with metadata and annotations. Provides visibility into what external resources we depend on. |
 | `lib/usage-metering.js` | UsageMetering | Usage Metering Middleware  Tracks LLM API usage per tenant for billing: - Hooks into MultiLLMRouter to record every request - Tracks tokens (in/out),  |

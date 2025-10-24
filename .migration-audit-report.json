@@ -1,0 +1,3085 @@
+{
+  "timestamp": "2025-10-14T18:23:28.045Z",
+  "totalMigrations": 71,
+  "duplicates": {
+    "5": [
+      "005_add_algo_trading_tables.sql",
+      "005_add_iiif_system.sql"
+    ],
+    "7": [
+      "007_add_domain_portfolio.sql",
+      "007_add_profile_swiper.sql"
+    ],
+    "8": [
+      "008_add_developer_system.sql",
+      "008_add_domain_challenges.sql",
+      "008_add_onboarding_system.sql"
+    ],
+    "9": [
+      "009_add_domain_voting.sql",
+      "009_add_elo_system.sql"
+    ],
+    "10": [
+      "010_add_code_index.sql",
+      "010_add_user_auth.sql"
+    ],
+    "11": [
+      "011_add_admin_roles.sql",
+      "011_add_rooms_and_credentials.sql",
+      "011_add_skills_system.sql"
+    ],
+    "13": [
+      "013_add_scheduling_verification.sql",
+      "013_oauth_providers.sql"
+    ],
+    "14": [
+      "014_add_elo_spam_prevention.sql",
+      "014_add_mailer_campaigns.sql",
+      "014_email_router.sql"
+    ],
+    "15": [
+      "015_add_game_leagues.sql",
+      "015_add_user_devices.sql"
+    ],
+    "16": [
+      "016_add_lofi_system.sql",
+      "016_oauth_provider_system.sql"
+    ],
+    "20": [
+      "020_platform_licensing.sql",
+      "020_session_blocks.sql"
+    ],
+    "25": [
+      "025_add_device_pairing_system.sql",
+      "025_model_usage_tracking.sql"
+    ],
+    "26": [
+      "026_add_training_tasks_system.sql",
+      "026_bucket_system.sql"
+    ],
+    "27": [
+      "027_add_account_warming_system.sql",
+      "027_request_lifecycle.sql"
+    ],
+    "30": [
+      "030_credits_system.sql",
+      "030_model_benchmarks.sql"
+    ],
+    "31": [
+      "031_bucket_artifacts.sql",
+      "031_documentation_registry.sql"
+    ],
+    "32": [
+      "032_domain_code_library.sql",
+      "032_vanity_handles.sql"
+    ],
+    "33": [
+      "033_context_airlock.sql",
+      "033_encryption_paths.sql"
+    ],
+    "34": [
+      "034_domain_parameters.sql",
+      "034_telegram_bot.sql"
+    ],
+    "35": [
+      "035_voucher_system.sql",
+      "035_workflows_system.sql"
+    ],
+    "36": [
+      "036_affiliate_system.sql",
+      "036_automated_flows.sql",
+      "036_feature_gates.sql"
+    ],
+    "37": [
+      "037_component_relationships.sql",
+      "037_identity_resolution.sql",
+      "037_mailbox_system.sql"
+    ],
+    "40": [
+      "040_fix_oauth_providers.sql",
+      "040_session_analytics.sql"
+    ],
+    "41": [
+      "041_add_bounce_tracking.sql",
+      "041_dependency_vendoring.sql"
+    ]
+  },
+  "tables": {
+    "price_cache": {
+      "createdBy": "002_add_pricing_tables.sql",
+      "createdAt": 2,
+      "references": [],
+      "referencedBy": []
+    },
+    "price_history": {
+      "createdBy": "002_add_pricing_tables.sql",
+      "createdAt": 2,
+      "references": [],
+      "referencedBy": []
+    },
+    "price_alerts": {
+      "createdBy": "002_add_pricing_tables.sql",
+      "createdAt": 2,
+      "references": [],
+      "referencedBy": []
+    },
+    "price_watchlist": {
+      "createdBy": "002_add_pricing_tables.sql",
+      "createdAt": 2,
+      "references": [],
+      "referencedBy": []
+    },
+    "data_replicas": {
+      "createdBy": "003_add_data_replication.sql",
+      "createdAt": 3,
+      "references": [],
+      "referencedBy": []
+    },
+    "data_source_stats": {
+      "createdBy": "003_add_data_replication.sql",
+      "createdAt": 3,
+      "references": [],
+      "referencedBy": []
+    },
+    "notes": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "document_chunks": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "knowledge_chats": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "generated_documents": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "note_relationships": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "knowledge_approvals": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "note_access_log": {
+      "createdBy": "004_add_knowledge_system.sql",
+      "createdAt": 4,
+      "references": [],
+      "referencedBy": []
+    },
+    "price_candles": {
+      "createdBy": "005_add_algo_trading_tables.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "price_indicators": {
+      "createdBy": "005_add_algo_trading_tables.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "price_events": {
+      "createdBy": "005_add_algo_trading_tables.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "backtest_results": {
+      "createdBy": "005_add_algo_trading_tables.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "data_quality_log": {
+      "createdBy": "005_add_algo_trading_tables.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "scheduler_log": {
+      "createdBy": "005_add_algo_trading_tables.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "iiif_images": {
+      "createdBy": "005_add_iiif_system.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "iiif_manifests": {
+      "createdBy": "005_add_iiif_system.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "iiif_canvas_images": {
+      "createdBy": "005_add_iiif_system.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "iiif_cache_stats": {
+      "createdBy": "005_add_iiif_system.sql",
+      "createdAt": 5,
+      "references": [],
+      "referencedBy": []
+    },
+    "guardian_log": {
+      "createdBy": "006_add_guardian_tables.sql",
+      "createdAt": 6,
+      "references": [],
+      "referencedBy": []
+    },
+    "health_metrics": {
+      "createdBy": "006_add_guardian_tables.sql",
+      "createdAt": 6,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_portfolio": {
+      "createdBy": "007_add_domain_portfolio.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "trademark_info": {
+      "createdBy": "007_add_domain_portfolio.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "partner_rotations": {
+      "createdBy": "007_add_domain_portfolio.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "partner_clicks": {
+      "createdBy": "007_add_domain_portfolio.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "keyword_tracking": {
+      "createdBy": "007_add_domain_portfolio.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "cross_domain_analytics": {
+      "createdBy": "007_add_domain_portfolio.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "first_names": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "last_names": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_names": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "phone_patterns": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "profile_matches": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "swipe_history": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "contact_exports": {
+      "createdBy": "007_add_profile_swiper.sql",
+      "createdAt": 7,
+      "references": [],
+      "referencedBy": []
+    },
+    "developers": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "api_usage": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "api_request_log": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "webhooks": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "webhook_deliveries": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "sdk_tokens": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "developer_subscriptions": {
+      "createdBy": "008_add_developer_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_challenges": {
+      "createdBy": "008_add_domain_challenges.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_implementations": {
+      "createdBy": "008_add_domain_challenges.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_judgments": {
+      "createdBy": "008_add_domain_challenges.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "archetypes": {
+      "createdBy": "008_add_onboarding_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_profiles": {
+      "createdBy": "008_add_onboarding_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "survey_questions": {
+      "createdBy": "008_add_onboarding_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "survey_responses": {
+      "createdBy": "008_add_onboarding_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "brand_ideas": {
+      "createdBy": "008_add_onboarding_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "incentive_tracker": {
+      "createdBy": "008_add_onboarding_system.sql",
+      "createdAt": 8,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_votes": {
+      "createdBy": "009_add_domain_voting.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_feedback": {
+      "createdBy": "009_add_domain_voting.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "crypto_payments": {
+      "createdBy": "009_add_domain_voting.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_claims": {
+      "createdBy": "009_add_domain_voting.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "referral_codes": {
+      "createdBy": "009_add_domain_voting.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_items": {
+      "createdBy": "009_add_elo_system.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_matches": {
+      "createdBy": "009_add_elo_system.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_rating_history": {
+      "createdBy": "009_add_elo_system.sql",
+      "createdAt": 9,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_repositories": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_snippets": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_embeddings": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_usage": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "published_content": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "content_subscribers": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "content_notifications": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "content_generation_queue": {
+      "createdBy": "010_add_code_index.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "users": {
+      "createdBy": "010_add_user_auth.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_sessions": {
+      "createdBy": "010_add_user_auth.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "trusted_devices": {
+      "createdBy": "010_add_user_auth.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "session_activity": {
+      "createdBy": "010_add_user_auth.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_access_log": {
+      "createdBy": "010_add_user_auth.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_preferences": {
+      "createdBy": "010_add_user_auth.sql",
+      "createdAt": 10,
+      "references": [],
+      "referencedBy": []
+    },
+    "admin_permissions": {
+      "createdBy": "011_add_admin_roles.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "role_permissions": {
+      "createdBy": "011_add_admin_roles.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "admin_actions": {
+      "createdBy": "011_add_admin_roles.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_rooms": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_room_repositories": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "code_room_messages": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "service_credentials": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "credential_usage_log": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "webhook_endpoints": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "webhook_events": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "ollama_training_jobs": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "scheduled_jobs": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "job_execution_log": {
+      "createdBy": "011_add_rooms_and_credentials.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "skills": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "skill_level_requirements": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_skills": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "skill_actions": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "xp_gain_log": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "xp_multipliers": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "achievements": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_achievements": {
+      "createdBy": "011_add_skills_system.sql",
+      "createdAt": 11,
+      "references": [],
+      "referencedBy": []
+    },
+    "action_definitions": {
+      "createdBy": "012_add_actions_effects.sql",
+      "createdAt": 12,
+      "references": [],
+      "referencedBy": []
+    },
+    "effect_definitions": {
+      "createdBy": "012_add_actions_effects.sql",
+      "createdAt": 12,
+      "references": [],
+      "referencedBy": []
+    },
+    "action_effects": {
+      "createdBy": "012_add_actions_effects.sql",
+      "createdAt": 12,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_action_log": {
+      "createdBy": "012_add_actions_effects.sql",
+      "createdAt": 12,
+      "references": [],
+      "referencedBy": []
+    },
+    "effect_execution_log": {
+      "createdBy": "012_add_actions_effects.sql",
+      "createdAt": 12,
+      "references": [],
+      "referencedBy": []
+    },
+    "action_triggers": {
+      "createdBy": "012_add_actions_effects.sql",
+      "createdAt": 12,
+      "references": [],
+      "referencedBy": []
+    },
+    "age_verifications": {
+      "createdBy": "013_add_scheduling_verification.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "device_spoofing_alerts": {
+      "createdBy": "013_add_scheduling_verification.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "action_schedules": {
+      "createdBy": "013_add_scheduling_verification.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "action_schedule_links": {
+      "createdBy": "013_add_scheduling_verification.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "schedule_exceptions": {
+      "createdBy": "013_add_scheduling_verification.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "rate_limit_violations": {
+      "createdBy": "013_add_scheduling_verification.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_providers": {
+      "createdBy": "013_oauth_providers.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_authorization_attempts": {
+      "createdBy": "013_oauth_providers.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_oauth_connections": {
+      "createdBy": "013_oauth_providers.sql",
+      "createdAt": 13,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_user_votes": {
+      "createdBy": "014_add_elo_spam_prevention.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_spam_patterns": {
+      "createdBy": "014_add_elo_spam_prevention.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_blocked_voters": {
+      "createdBy": "014_add_elo_spam_prevention.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "mailer_campaigns": {
+      "createdBy": "014_add_mailer_campaigns.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "coupon_codes": {
+      "createdBy": "014_add_mailer_campaigns.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "coupon_redemptions": {
+      "createdBy": "014_add_mailer_campaigns.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_mailing_addresses": {
+      "createdBy": "014_add_mailer_campaigns.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "mailer_deliveries": {
+      "createdBy": "014_add_mailer_campaigns.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "coupon_benefit_templates": {
+      "createdBy": "014_add_mailer_campaigns.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "email_accounts": {
+      "createdBy": "014_email_router.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "email_messages": {
+      "createdBy": "014_email_router.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "email_attachments": {
+      "createdBy": "014_email_router.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "email_routing_rules": {
+      "createdBy": "014_email_router.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "email_classification_history": {
+      "createdBy": "014_email_router.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "email_auto_actions": {
+      "createdBy": "014_email_router.sql",
+      "createdAt": 14,
+      "references": [],
+      "referencedBy": []
+    },
+    "game_definitions": {
+      "createdBy": "015_add_game_leagues.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "game_leagues": {
+      "createdBy": "015_add_game_leagues.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "league_participants": {
+      "createdBy": "015_add_game_leagues.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "league_matches": {
+      "createdBy": "015_add_game_leagues.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "player_elo_ratings": {
+      "createdBy": "015_add_game_leagues.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "elo_history": {
+      "createdBy": "015_add_game_leagues.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_devices": {
+      "createdBy": "015_add_user_devices.sql",
+      "createdAt": 15,
+      "references": [],
+      "referencedBy": []
+    },
+    "visit_sessions": {
+      "createdBy": "016_add_lofi_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "heatmap_data": {
+      "createdBy": "016_add_lofi_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "song_requests": {
+      "createdBy": "016_add_lofi_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "room_state": {
+      "createdBy": "016_add_lofi_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_apps": {
+      "createdBy": "016_oauth_provider_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_authorization_codes": {
+      "createdBy": "016_oauth_provider_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_tokens": {
+      "createdBy": "016_oauth_provider_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_user_grants": {
+      "createdBy": "016_oauth_provider_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_audit_log": {
+      "createdBy": "016_oauth_provider_system.sql",
+      "createdAt": 16,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_payments": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "recruiter_plans": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "recruiter_subscriptions": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "job_postings": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "job_applications": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "conversations": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "messages": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "marketplace_sdks": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "sdk_installations": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "sdk_reviews": {
+      "createdBy": "017_payments_and_recruiting.sql",
+      "createdAt": 17,
+      "references": [],
+      "referencedBy": []
+    },
+    "council_sessions": {
+      "createdBy": "018_model_council.sql",
+      "createdAt": 18,
+      "references": [],
+      "referencedBy": []
+    },
+    "council_proposals": {
+      "createdBy": "018_model_council.sql",
+      "createdAt": 18,
+      "references": [],
+      "referencedBy": []
+    },
+    "council_debates": {
+      "createdBy": "018_model_council.sql",
+      "createdAt": 18,
+      "references": [],
+      "referencedBy": []
+    },
+    "council_themes": {
+      "createdBy": "018_model_council.sql",
+      "createdAt": 18,
+      "references": [],
+      "referencedBy": []
+    },
+    "council_workflows": {
+      "createdBy": "018_model_council.sql",
+      "createdAt": 18,
+      "references": [],
+      "referencedBy": []
+    },
+    "council_model_stats": {
+      "createdBy": "018_model_council.sql",
+      "createdAt": 18,
+      "references": [],
+      "referencedBy": []
+    },
+    "autonomous_sessions": {
+      "createdBy": "019_autonomous_mode.sql",
+      "createdAt": 19,
+      "references": [],
+      "referencedBy": []
+    },
+    "autonomous_patterns": {
+      "createdBy": "019_autonomous_mode.sql",
+      "createdAt": 19,
+      "references": [],
+      "referencedBy": []
+    },
+    "autonomous_code_matches": {
+      "createdBy": "019_autonomous_mode.sql",
+      "createdAt": 19,
+      "references": [],
+      "referencedBy": []
+    },
+    "autonomous_improvements": {
+      "createdBy": "019_autonomous_mode.sql",
+      "createdAt": 19,
+      "references": [],
+      "referencedBy": []
+    },
+    "tenants": {
+      "createdBy": "020_platform_licensing.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "platform_tiers": {
+      "createdBy": "020_platform_licensing.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "tenant_licenses": {
+      "createdBy": "020_platform_licensing.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "tenant_branding": {
+      "createdBy": "020_platform_licensing.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "tenant_features": {
+      "createdBy": "020_platform_licensing.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "super_admins": {
+      "createdBy": "020_platform_licensing.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "session_blocks": {
+      "createdBy": "020_session_blocks.sql",
+      "createdAt": 20,
+      "references": [],
+      "referencedBy": []
+    },
+    "tenant_api_keys": {
+      "createdBy": "021_usage_based_pricing.sql",
+      "createdAt": 21,
+      "references": [],
+      "referencedBy": []
+    },
+    "usage_billing_events": {
+      "createdBy": "021_usage_based_pricing.sql",
+      "createdAt": 21,
+      "references": [],
+      "referencedBy": []
+    },
+    "tenant_invoices": {
+      "createdBy": "021_usage_based_pricing.sql",
+      "createdAt": 21,
+      "references": [],
+      "referencedBy": []
+    },
+    "icp_segments": {
+      "createdBy": "022_add_user_profiles_system.sql",
+      "createdAt": 22,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_profile_preferences": {
+      "createdBy": "022_add_user_profiles_system.sql",
+      "createdAt": 22,
+      "references": [],
+      "referencedBy": []
+    },
+    "profile_performance_stats": {
+      "createdBy": "022_add_user_profiles_system.sql",
+      "createdAt": 22,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_versions": {
+      "createdBy": "023_add_model_versions_system.sql",
+      "createdAt": 23,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_version_performance": {
+      "createdBy": "023_add_model_versions_system.sql",
+      "createdAt": 23,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_version_deployments": {
+      "createdBy": "023_add_model_versions_system.sql",
+      "createdAt": 23,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_wrappers": {
+      "createdBy": "024_add_model_wrappers_system.sql",
+      "createdAt": 24,
+      "references": [],
+      "referencedBy": []
+    },
+    "wrapper_performance": {
+      "createdBy": "024_add_model_wrappers_system.sql",
+      "createdAt": 24,
+      "references": [],
+      "referencedBy": []
+    },
+    "wrapper_usage_samples": {
+      "createdBy": "024_add_model_wrappers_system.sql",
+      "createdAt": 24,
+      "references": [],
+      "referencedBy": []
+    },
+    "device_pairing_sessions": {
+      "createdBy": "025_add_device_pairing_system.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "device_pairing_events": {
+      "createdBy": "025_add_device_pairing_system.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "trust_level_definitions": {
+      "createdBy": "025_add_device_pairing_system.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_usage_log": {
+      "createdBy": "025_model_usage_tracking.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_use_cases": {
+      "createdBy": "025_model_usage_tracking.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_rankings": {
+      "createdBy": "025_model_usage_tracking.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_storage": {
+      "createdBy": "025_model_usage_tracking.sql",
+      "createdAt": 25,
+      "references": [],
+      "referencedBy": []
+    },
+    "training_tasks": {
+      "createdBy": "026_add_training_tasks_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "training_task_assignments": {
+      "createdBy": "026_add_training_tasks_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "training_task_types": {
+      "createdBy": "026_add_training_tasks_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "training_task_streaks": {
+      "createdBy": "026_add_training_tasks_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "training_task_leaderboard": {
+      "createdBy": "026_add_training_tasks_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "bucket_instances": {
+      "createdBy": "026_bucket_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "bucket_reasoning_log": {
+      "createdBy": "026_bucket_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "bucket_todos": {
+      "createdBy": "026_bucket_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "bucket_comments": {
+      "createdBy": "026_bucket_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "bucket_versions": {
+      "createdBy": "026_bucket_system.sql",
+      "createdAt": 26,
+      "references": [],
+      "referencedBy": []
+    },
+    "account_warmup_campaigns": {
+      "createdBy": "027_add_account_warming_system.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "account_warmup_phases": {
+      "createdBy": "027_add_account_warming_system.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "account_warmup_progress_log": {
+      "createdBy": "027_add_account_warming_system.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "account_warmup_activities": {
+      "createdBy": "027_add_account_warming_system.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "account_warmup_authenticity": {
+      "createdBy": "027_add_account_warming_system.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "request_lifecycle": {
+      "createdBy": "027_request_lifecycle.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "request_state_transitions": {
+      "createdBy": "027_request_lifecycle.sql",
+      "createdAt": 27,
+      "references": [],
+      "referencedBy": []
+    },
+    "experiments": {
+      "createdBy": "028_add_experiments_system.sql",
+      "createdAt": 28,
+      "references": [],
+      "referencedBy": []
+    },
+    "experiment_variants": {
+      "createdBy": "028_add_experiments_system.sql",
+      "createdAt": 28,
+      "references": [],
+      "referencedBy": []
+    },
+    "experiment_assignments": {
+      "createdBy": "028_add_experiments_system.sql",
+      "createdAt": 28,
+      "references": [],
+      "referencedBy": []
+    },
+    "experiment_results": {
+      "createdBy": "028_add_experiments_system.sql",
+      "createdAt": 28,
+      "references": [],
+      "referencedBy": []
+    },
+    "experiment_statistics": {
+      "createdBy": "028_add_experiments_system.sql",
+      "createdAt": 28,
+      "references": [],
+      "referencedBy": []
+    },
+    "calos_platform_api_keys": {
+      "createdBy": "029_calos_platform_api_keys.sql",
+      "createdAt": 29,
+      "references": [],
+      "referencedBy": []
+    },
+    "calos_api_key_usage_log": {
+      "createdBy": "029_calos_platform_api_keys.sql",
+      "createdAt": 29,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_credits": {
+      "createdBy": "030_credits_system.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "credit_transactions": {
+      "createdBy": "030_credits_system.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "verified_phones": {
+      "createdBy": "030_credits_system.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "twilio_usage": {
+      "createdBy": "030_credits_system.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "credit_packages": {
+      "createdBy": "030_credits_system.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "pricing_config": {
+      "createdBy": "030_credits_system.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_benchmarks": {
+      "createdBy": "030_model_benchmarks.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "block_time_profiles": {
+      "createdBy": "030_model_benchmarks.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "benchmark_measurements": {
+      "createdBy": "030_model_benchmarks.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_comparisons": {
+      "createdBy": "030_model_benchmarks.sql",
+      "createdAt": 30,
+      "references": [],
+      "referencedBy": []
+    },
+    "bucket_artifacts": {
+      "createdBy": "031_bucket_artifacts.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "artifact_dependencies": {
+      "createdBy": "031_bucket_artifacts.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "artifact_usage_log": {
+      "createdBy": "031_bucket_artifacts.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "artifact_collections": {
+      "createdBy": "031_bucket_artifacts.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "artifact_collection_members": {
+      "createdBy": "031_bucket_artifacts.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "documentation_cache": {
+      "createdBy": "031_documentation_registry.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "documentation_fetch_queue": {
+      "createdBy": "031_documentation_registry.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "documentation_search_index": {
+      "createdBy": "031_documentation_registry.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "documentation_usage": {
+      "createdBy": "031_documentation_registry.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "package_version_timeline": {
+      "createdBy": "031_documentation_registry.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "documentation_api_endpoints": {
+      "createdBy": "031_documentation_registry.sql",
+      "createdAt": 31,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_code_examples": {
+      "createdBy": "032_domain_code_library.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_style_guides": {
+      "createdBy": "032_domain_code_library.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_pattern_usage": {
+      "createdBy": "032_domain_code_library.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_anti_patterns": {
+      "createdBy": "032_domain_code_library.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_knowledge_graph": {
+      "createdBy": "032_domain_code_library.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "handle_reservations": {
+      "createdBy": "032_vanity_handles.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "handle_history": {
+      "createdBy": "032_vanity_handles.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "blocked_handles": {
+      "createdBy": "032_vanity_handles.sql",
+      "createdAt": 32,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_context_snapshots": {
+      "createdBy": "033_context_airlock.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "snapshot_diffs": {
+      "createdBy": "033_context_airlock.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "context_lock_files": {
+      "createdBy": "033_context_airlock.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "snapshot_deployments": {
+      "createdBy": "033_context_airlock.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "snapshot_validations": {
+      "createdBy": "033_context_airlock.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "context_drift_log": {
+      "createdBy": "033_context_airlock.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "encryption_paths": {
+      "createdBy": "033_encryption_paths.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "encrypted_messages": {
+      "createdBy": "033_encryption_paths.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "challenge_chains": {
+      "createdBy": "033_encryption_paths.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "chain_challenges": {
+      "createdBy": "033_encryption_paths.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "encryption_sessions": {
+      "createdBy": "033_encryption_paths.sql",
+      "createdAt": 33,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_parameter_presets": {
+      "createdBy": "034_domain_parameters.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "parameter_performance_log": {
+      "createdBy": "034_domain_parameters.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "domain_model_parameters": {
+      "createdBy": "034_domain_parameters.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "parameter_ab_tests": {
+      "createdBy": "034_domain_parameters.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "telegram_accounts": {
+      "createdBy": "034_telegram_bot.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "telegram_linking_codes": {
+      "createdBy": "034_telegram_bot.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "telegram_verification_sessions": {
+      "createdBy": "034_telegram_bot.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "telegram_encryption_sessions": {
+      "createdBy": "034_telegram_bot.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "telegram_messages": {
+      "createdBy": "034_telegram_bot.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "telegram_notifications": {
+      "createdBy": "034_telegram_bot.sql",
+      "createdAt": 34,
+      "references": [],
+      "referencedBy": []
+    },
+    "vouchers": {
+      "createdBy": "035_voucher_system.sql",
+      "createdAt": 35,
+      "references": [],
+      "referencedBy": []
+    },
+    "voucher_redemptions": {
+      "createdBy": "035_voucher_system.sql",
+      "createdAt": 35,
+      "references": [],
+      "referencedBy": []
+    },
+    "workflows": {
+      "createdBy": "035_workflows_system.sql",
+      "createdAt": 35,
+      "references": [],
+      "referencedBy": []
+    },
+    "workflow_executions": {
+      "createdBy": "035_workflows_system.sql",
+      "createdAt": 35,
+      "references": [],
+      "referencedBy": []
+    },
+    "workflow_templates": {
+      "createdBy": "035_workflows_system.sql",
+      "createdAt": 35,
+      "references": [],
+      "referencedBy": []
+    },
+    "affiliates": {
+      "createdBy": "036_affiliate_system.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "affiliate_referrals": {
+      "createdBy": "036_affiliate_system.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "affiliate_commissions": {
+      "createdBy": "036_affiliate_system.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "affiliate_payouts": {
+      "createdBy": "036_affiliate_system.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "automated_flows": {
+      "createdBy": "036_automated_flows.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "flow_executions": {
+      "createdBy": "036_automated_flows.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "feature_definitions": {
+      "createdBy": "036_feature_gates.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "feature_access_overrides": {
+      "createdBy": "036_feature_gates.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "feature_beta_access": {
+      "createdBy": "036_feature_gates.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "feature_usage_analytics": {
+      "createdBy": "036_feature_gates.sql",
+      "createdAt": 36,
+      "references": [],
+      "referencedBy": []
+    },
+    "component_relationships": {
+      "createdBy": "037_component_relationships.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "component_usage_stats": {
+      "createdBy": "037_component_relationships.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "identity_graph": {
+      "createdBy": "037_identity_resolution.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "attribution_events": {
+      "createdBy": "037_identity_resolution.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "receipt_data": {
+      "createdBy": "037_identity_resolution.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "geo_locations": {
+      "createdBy": "037_identity_resolution.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "tracking_cookies": {
+      "createdBy": "037_identity_resolution.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "mailbox_messages": {
+      "createdBy": "037_mailbox_system.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "mailbox_attachments": {
+      "createdBy": "037_mailbox_system.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "npc_registry": {
+      "createdBy": "037_mailbox_system.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "generational_influences": {
+      "createdBy": "037_mailbox_system.sql",
+      "createdAt": 37,
+      "references": [],
+      "referencedBy": []
+    },
+    "app_templates": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_installed_apps": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "app_instances": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "api_keys": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "qr_sessions": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "biometric_credentials": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "biometric_challenges": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "launcher_folders": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "launcher_apps": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "app_launch_log": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "app_ratings": {
+      "createdBy": "038_app_store.sql",
+      "createdAt": 38,
+      "references": [],
+      "referencedBy": []
+    },
+    "resource_manifests": {
+      "createdBy": "039_asset_system.sql",
+      "createdAt": 39,
+      "references": [],
+      "referencedBy": []
+    },
+    "resource_states": {
+      "createdBy": "039_asset_system.sql",
+      "createdAt": 39,
+      "references": [],
+      "referencedBy": []
+    },
+    "game_assets": {
+      "createdBy": "039_asset_system.sql",
+      "createdAt": 39,
+      "references": [],
+      "referencedBy": []
+    },
+    "player_inventories": {
+      "createdBy": "039_asset_system.sql",
+      "createdAt": 39,
+      "references": [],
+      "referencedBy": [
+        {
+          "table": "unknown",
+          "migration": "039_asset_system.sql"
+        },
+        {
+          "table": "unknown",
+          "migration": "039_asset_system.sql"
+        }
+      ]
+    },
+    "inventory_items": {
+      "createdBy": "039_asset_system.sql",
+      "createdAt": 39,
+      "references": [],
+      "referencedBy": []
+    },
+    "equipped_items": {
+      "createdBy": "039_asset_system.sql",
+      "createdAt": 39,
+      "references": [],
+      "referencedBy": []
+    },
+    "oauth_user_connections": {
+      "createdBy": "040_fix_oauth_providers.sql",
+      "createdAt": 40,
+      "references": [],
+      "referencedBy": []
+    },
+    "analytics_page_views": {
+      "createdBy": "040_session_analytics.sql",
+      "createdAt": 40,
+      "references": [],
+      "referencedBy": []
+    },
+    "analytics_feature_usage": {
+      "createdBy": "040_session_analytics.sql",
+      "createdAt": 40,
+      "references": [],
+      "referencedBy": []
+    },
+    "analytics_conversions": {
+      "createdBy": "040_session_analytics.sql",
+      "createdAt": 40,
+      "references": [],
+      "referencedBy": []
+    },
+    "analytics_attribution": {
+      "createdBy": "040_session_analytics.sql",
+      "createdAt": 40,
+      "references": [],
+      "referencedBy": []
+    },
+    "vendored_packages": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "package_dependencies": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "url_index": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "package_usage_log": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "funding_registry": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "package_intelligence": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "dependency_snapshots": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "url_fetch_queue": {
+      "createdBy": "041_dependency_vendoring.sql",
+      "createdAt": 41,
+      "references": [],
+      "referencedBy": []
+    },
+    "discovered_models": {
+      "createdBy": "042_model_discovery_system.sql",
+      "createdAt": 42,
+      "references": [],
+      "referencedBy": []
+    },
+    "model_discovery_events": {
+      "createdBy": "042_model_discovery_system.sql",
+      "createdAt": 42,
+      "references": [],
+      "referencedBy": []
+    },
+    "user_model_preferences": {
+      "createdBy": "042_model_discovery_system.sql",
+      "createdAt": 42,
+      "references": [],
+      "referencedBy": []
+    }
+  },
+  "errors": [],
+  "migrations": [
+    {
+      "file": "001_add_time_differentials.sql",
+      "number": 1,
+      "name": "add_time_differentials",
+      "tables": [],
+      "foreignKeys": 0,
+      "indexes": 9,
+      "triggers": 0
+    },
+    {
+      "file": "002_add_pricing_tables.sql",
+      "number": 2,
+      "name": "add_pricing_tables",
+      "tables": [
+        "price_cache",
+        "price_history",
+        "price_alerts",
+        "price_watchlist"
+      ],
+      "foreignKeys": 0,
+      "indexes": 8,
+      "triggers": 1
+    },
+    {
+      "file": "003_add_data_replication.sql",
+      "number": 3,
+      "name": "add_data_replication",
+      "tables": [
+        "data_replicas",
+        "data_source_stats"
+      ],
+      "foreignKeys": 0,
+      "indexes": 2,
+      "triggers": 0
+    },
+    {
+      "file": "004_add_knowledge_system.sql",
+      "number": 4,
+      "name": "add_knowledge_system",
+      "tables": [
+        "notes",
+        "document_chunks",
+        "knowledge_chats",
+        "generated_documents",
+        "note_relationships",
+        "knowledge_approvals",
+        "note_access_log"
+      ],
+      "foreignKeys": 0,
+      "indexes": 29,
+      "triggers": 1
+    },
+    {
+      "file": "005_add_algo_trading_tables.sql",
+      "number": 5,
+      "name": "add_algo_trading_tables",
+      "tables": [
+        "price_candles",
+        "price_indicators",
+        "price_events",
+        "backtest_results",
+        "data_quality_log",
+        "scheduler_log"
+      ],
+      "foreignKeys": 0,
+      "indexes": 19,
+      "triggers": 0
+    },
+    {
+      "file": "005_add_iiif_system.sql",
+      "number": 5,
+      "name": "add_iiif_system",
+      "tables": [
+        "iiif_images",
+        "iiif_manifests",
+        "iiif_canvas_images",
+        "iiif_cache_stats"
+      ],
+      "foreignKeys": 0,
+      "indexes": 10,
+      "triggers": 2
+    },
+    {
+      "file": "006_add_guardian_tables.sql",
+      "number": 6,
+      "name": "add_guardian_tables",
+      "tables": [
+        "guardian_log",
+        "health_metrics"
+      ],
+      "foreignKeys": 0,
+      "indexes": 5,
+      "triggers": 0
+    },
+    {
+      "file": "007_add_domain_portfolio.sql",
+      "number": 7,
+      "name": "add_domain_portfolio",
+      "tables": [
+        "domain_portfolio",
+        "trademark_info",
+        "partner_rotations",
+        "partner_clicks",
+        "keyword_tracking",
+        "cross_domain_analytics"
+      ],
+      "foreignKeys": 0,
+      "indexes": 10,
+      "triggers": 1
+    },
+    {
+      "file": "007_add_profile_swiper.sql",
+      "number": 7,
+      "name": "add_profile_swiper",
+      "tables": [
+        "first_names",
+        "last_names",
+        "domain_names",
+        "phone_patterns",
+        "profile_matches",
+        "swipe_history",
+        "contact_exports"
+      ],
+      "foreignKeys": 0,
+      "indexes": 24,
+      "triggers": 1
+    },
+    {
+      "file": "008_add_developer_system.sql",
+      "number": 8,
+      "name": "add_developer_system",
+      "tables": [
+        "developers",
+        "api_usage",
+        "api_request_log",
+        "webhooks",
+        "webhook_deliveries",
+        "sdk_tokens",
+        "developer_subscriptions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 21,
+      "triggers": 2
+    },
+    {
+      "file": "008_add_domain_challenges.sql",
+      "number": 8,
+      "name": "add_domain_challenges",
+      "tables": [
+        "domain_challenges",
+        "domain_implementations",
+        "domain_judgments"
+      ],
+      "foreignKeys": 0,
+      "indexes": 8,
+      "triggers": 1
+    },
+    {
+      "file": "008_add_onboarding_system.sql",
+      "number": 8,
+      "name": "add_onboarding_system",
+      "tables": [
+        "archetypes",
+        "user_profiles",
+        "survey_questions",
+        "survey_responses",
+        "brand_ideas",
+        "incentive_tracker"
+      ],
+      "foreignKeys": 0,
+      "indexes": 13,
+      "triggers": 2
+    },
+    {
+      "file": "009_add_domain_voting.sql",
+      "number": 9,
+      "name": "add_domain_voting",
+      "tables": [
+        "domain_votes",
+        "domain_feedback",
+        "crypto_payments",
+        "domain_claims",
+        "referral_codes"
+      ],
+      "foreignKeys": 0,
+      "indexes": 19,
+      "triggers": 1
+    },
+    {
+      "file": "009_add_elo_system.sql",
+      "number": 9,
+      "name": "add_elo_system",
+      "tables": [
+        "elo_items",
+        "elo_matches",
+        "elo_rating_history"
+      ],
+      "foreignKeys": 0,
+      "indexes": 11,
+      "triggers": 2
+    },
+    {
+      "file": "010_add_code_index.sql",
+      "number": 10,
+      "name": "add_code_index",
+      "tables": [
+        "code_repositories",
+        "code_snippets",
+        "code_embeddings",
+        "code_usage",
+        "published_content",
+        "content_subscribers",
+        "content_notifications",
+        "content_generation_queue"
+      ],
+      "foreignKeys": 0,
+      "indexes": 21,
+      "triggers": 6
+    },
+    {
+      "file": "010_add_user_auth.sql",
+      "number": 10,
+      "name": "add_user_auth",
+      "tables": [
+        "users",
+        "user_sessions",
+        "trusted_devices",
+        "session_activity",
+        "domain_access_log",
+        "user_preferences"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 1
+    },
+    {
+      "file": "011_add_admin_roles.sql",
+      "number": 11,
+      "name": "add_admin_roles",
+      "tables": [
+        "admin_permissions",
+        "role_permissions",
+        "admin_actions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 5,
+      "triggers": 0
+    },
+    {
+      "file": "011_add_rooms_and_credentials.sql",
+      "number": 11,
+      "name": "add_rooms_and_credentials",
+      "tables": [
+        "code_rooms",
+        "code_room_repositories",
+        "code_room_messages",
+        "service_credentials",
+        "credential_usage_log",
+        "webhook_endpoints",
+        "webhook_events",
+        "ollama_training_jobs",
+        "scheduled_jobs",
+        "job_execution_log"
+      ],
+      "foreignKeys": 0,
+      "indexes": 17,
+      "triggers": 7
+    },
+    {
+      "file": "011_add_skills_system.sql",
+      "number": 11,
+      "name": "add_skills_system",
+      "tables": [
+        "skills",
+        "skill_level_requirements",
+        "user_skills",
+        "skill_actions",
+        "xp_gain_log",
+        "xp_multipliers",
+        "achievements",
+        "user_achievements"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 1
+    },
+    {
+      "file": "012_add_actions_effects.sql",
+      "number": 12,
+      "name": "add_actions_effects",
+      "tables": [
+        "action_definitions",
+        "effect_definitions",
+        "action_effects",
+        "user_action_log",
+        "effect_execution_log",
+        "action_triggers"
+      ],
+      "foreignKeys": 0,
+      "indexes": 12,
+      "triggers": 0
+    },
+    {
+      "file": "013_add_scheduling_verification.sql",
+      "number": 13,
+      "name": "add_scheduling_verification",
+      "tables": [
+        "age_verifications",
+        "device_spoofing_alerts",
+        "action_schedules",
+        "action_schedule_links",
+        "schedule_exceptions",
+        "rate_limit_violations"
+      ],
+      "foreignKeys": 0,
+      "indexes": 14,
+      "triggers": 0
+    },
+    {
+      "file": "013_oauth_providers.sql",
+      "number": 13,
+      "name": "oauth_providers",
+      "tables": [
+        "oauth_providers",
+        "oauth_authorization_attempts",
+        "user_oauth_connections"
+      ],
+      "foreignKeys": 0,
+      "indexes": 8,
+      "triggers": 2
+    },
+    {
+      "file": "014_add_elo_spam_prevention.sql",
+      "number": 14,
+      "name": "add_elo_spam_prevention",
+      "tables": [
+        "elo_user_votes",
+        "elo_spam_patterns",
+        "elo_blocked_voters"
+      ],
+      "foreignKeys": 0,
+      "indexes": 11,
+      "triggers": 0
+    },
+    {
+      "file": "014_add_mailer_campaigns.sql",
+      "number": 14,
+      "name": "add_mailer_campaigns",
+      "tables": [
+        "mailer_campaigns",
+        "coupon_codes",
+        "coupon_redemptions",
+        "user_mailing_addresses",
+        "mailer_deliveries",
+        "coupon_benefit_templates"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 0
+    },
+    {
+      "file": "014_email_router.sql",
+      "number": 14,
+      "name": "email_router",
+      "tables": [
+        "email_accounts",
+        "email_messages",
+        "email_attachments",
+        "email_routing_rules",
+        "email_classification_history",
+        "email_auto_actions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 4
+    },
+    {
+      "file": "015_add_game_leagues.sql",
+      "number": 15,
+      "name": "add_game_leagues",
+      "tables": [
+        "game_definitions",
+        "game_leagues",
+        "league_participants",
+        "league_matches",
+        "player_elo_ratings",
+        "elo_history"
+      ],
+      "foreignKeys": 0,
+      "indexes": 19,
+      "triggers": 0
+    },
+    {
+      "file": "015_add_user_devices.sql",
+      "number": 15,
+      "name": "add_user_devices",
+      "tables": [
+        "user_devices"
+      ],
+      "foreignKeys": 0,
+      "indexes": 5,
+      "triggers": 0
+    },
+    {
+      "file": "016_add_lofi_system.sql",
+      "number": 16,
+      "name": "add_lofi_system",
+      "tables": [
+        "visit_sessions",
+        "heatmap_data",
+        "song_requests",
+        "room_state"
+      ],
+      "foreignKeys": 0,
+      "indexes": 15,
+      "triggers": 0
+    },
+    {
+      "file": "016_oauth_provider_system.sql",
+      "number": 16,
+      "name": "oauth_provider_system",
+      "tables": [
+        "oauth_apps",
+        "oauth_authorization_codes",
+        "oauth_tokens",
+        "oauth_user_grants",
+        "oauth_audit_log"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 0
+    },
+    {
+      "file": "017_payments_and_recruiting.sql",
+      "number": 17,
+      "name": "payments_and_recruiting",
+      "tables": [
+        "user_payments",
+        "recruiter_plans",
+        "recruiter_subscriptions",
+        "job_postings",
+        "job_applications",
+        "conversations",
+        "messages",
+        "marketplace_sdks",
+        "sdk_installations",
+        "sdk_reviews"
+      ],
+      "foreignKeys": 0,
+      "indexes": 30,
+      "triggers": 0
+    },
+    {
+      "file": "018_model_council.sql",
+      "number": 18,
+      "name": "model_council",
+      "tables": [
+        "council_sessions",
+        "council_proposals",
+        "council_debates",
+        "council_themes",
+        "council_workflows",
+        "council_model_stats"
+      ],
+      "foreignKeys": 0,
+      "indexes": 14,
+      "triggers": 1
+    },
+    {
+      "file": "019_autonomous_mode.sql",
+      "number": 19,
+      "name": "autonomous_mode",
+      "tables": [
+        "autonomous_sessions",
+        "autonomous_patterns",
+        "autonomous_code_matches",
+        "autonomous_improvements"
+      ],
+      "foreignKeys": 0,
+      "indexes": 13,
+      "triggers": 1
+    },
+    {
+      "file": "020_platform_licensing.sql",
+      "number": 20,
+      "name": "platform_licensing",
+      "tables": [
+        "tenants",
+        "platform_tiers",
+        "tenant_licenses",
+        "tenant_branding",
+        "tenant_features",
+        "super_admins"
+      ],
+      "foreignKeys": 0,
+      "indexes": 17,
+      "triggers": 0
+    },
+    {
+      "file": "020_session_blocks.sql",
+      "number": 20,
+      "name": "session_blocks",
+      "tables": [
+        "session_blocks"
+      ],
+      "foreignKeys": 0,
+      "indexes": 9,
+      "triggers": 1
+    },
+    {
+      "file": "021_usage_based_pricing.sql",
+      "number": 21,
+      "name": "usage_based_pricing",
+      "tables": [
+        "tenant_api_keys",
+        "usage_billing_events",
+        "tenant_invoices"
+      ],
+      "foreignKeys": 0,
+      "indexes": 9,
+      "triggers": 0
+    },
+    {
+      "file": "022_add_user_profiles_system.sql",
+      "number": 22,
+      "name": "add_user_profiles_system",
+      "tables": [
+        "user_profiles",
+        "icp_segments",
+        "user_profile_preferences",
+        "profile_performance_stats"
+      ],
+      "foreignKeys": 0,
+      "indexes": 5,
+      "triggers": 2
+    },
+    {
+      "file": "023_add_model_versions_system.sql",
+      "number": 23,
+      "name": "add_model_versions_system",
+      "tables": [
+        "model_versions",
+        "model_version_performance",
+        "model_version_deployments"
+      ],
+      "foreignKeys": 0,
+      "indexes": 9,
+      "triggers": 1
+    },
+    {
+      "file": "024_add_model_wrappers_system.sql",
+      "number": 24,
+      "name": "add_model_wrappers_system",
+      "tables": [
+        "model_wrappers",
+        "wrapper_performance",
+        "wrapper_usage_samples"
+      ],
+      "foreignKeys": 0,
+      "indexes": 8,
+      "triggers": 1
+    },
+    {
+      "file": "025_add_device_pairing_system.sql",
+      "number": 25,
+      "name": "add_device_pairing_system",
+      "tables": [
+        "device_pairing_sessions",
+        "device_pairing_events",
+        "trust_level_definitions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 10,
+      "triggers": 0
+    },
+    {
+      "file": "025_model_usage_tracking.sql",
+      "number": 25,
+      "name": "model_usage_tracking",
+      "tables": [
+        "model_usage_log",
+        "model_use_cases",
+        "model_rankings",
+        "model_storage"
+      ],
+      "foreignKeys": 0,
+      "indexes": 11,
+      "triggers": 0
+    },
+    {
+      "file": "026_add_training_tasks_system.sql",
+      "number": 26,
+      "name": "add_training_tasks_system",
+      "tables": [
+        "training_tasks",
+        "training_task_assignments",
+        "training_task_types",
+        "training_task_streaks",
+        "training_task_leaderboard"
+      ],
+      "foreignKeys": 0,
+      "indexes": 16,
+      "triggers": 1
+    },
+    {
+      "file": "026_bucket_system.sql",
+      "number": 26,
+      "name": "bucket_system",
+      "tables": [
+        "bucket_instances",
+        "bucket_reasoning_log",
+        "bucket_todos",
+        "bucket_comments",
+        "bucket_versions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 0
+    },
+    {
+      "file": "027_add_account_warming_system.sql",
+      "number": 27,
+      "name": "add_account_warming_system",
+      "tables": [
+        "account_warmup_campaigns",
+        "account_warmup_phases",
+        "account_warmup_progress_log",
+        "account_warmup_activities",
+        "account_warmup_authenticity"
+      ],
+      "foreignKeys": 0,
+      "indexes": 14,
+      "triggers": 0
+    },
+    {
+      "file": "027_request_lifecycle.sql",
+      "number": 27,
+      "name": "request_lifecycle",
+      "tables": [
+        "request_lifecycle",
+        "request_state_transitions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 10,
+      "triggers": 0
+    },
+    {
+      "file": "028_add_experiments_system.sql",
+      "number": 28,
+      "name": "add_experiments_system",
+      "tables": [
+        "experiments",
+        "experiment_variants",
+        "experiment_assignments",
+        "experiment_results",
+        "experiment_statistics"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 1
+    },
+    {
+      "file": "029_calos_platform_api_keys.sql",
+      "number": 29,
+      "name": "calos_platform_api_keys",
+      "tables": [
+        "calos_platform_api_keys",
+        "calos_api_key_usage_log"
+      ],
+      "foreignKeys": 0,
+      "indexes": 9,
+      "triggers": 0
+    },
+    {
+      "file": "030_credits_system.sql",
+      "number": 30,
+      "name": "credits_system",
+      "tables": [
+        "user_credits",
+        "credit_transactions",
+        "verified_phones",
+        "twilio_usage",
+        "credit_packages",
+        "pricing_config"
+      ],
+      "foreignKeys": 0,
+      "indexes": 14,
+      "triggers": 3
+    },
+    {
+      "file": "030_model_benchmarks.sql",
+      "number": 30,
+      "name": "model_benchmarks",
+      "tables": [
+        "model_benchmarks",
+        "block_time_profiles",
+        "benchmark_measurements",
+        "model_comparisons"
+      ],
+      "foreignKeys": 0,
+      "indexes": 10,
+      "triggers": 0
+    },
+    {
+      "file": "031_bucket_artifacts.sql",
+      "number": 31,
+      "name": "bucket_artifacts",
+      "tables": [
+        "bucket_artifacts",
+        "artifact_dependencies",
+        "artifact_usage_log",
+        "artifact_collections",
+        "artifact_collection_members"
+      ],
+      "foreignKeys": 0,
+      "indexes": 20,
+      "triggers": 3
+    },
+    {
+      "file": "031_documentation_registry.sql",
+      "number": 31,
+      "name": "documentation_registry",
+      "tables": [
+        "documentation_cache",
+        "documentation_fetch_queue",
+        "documentation_search_index",
+        "documentation_usage",
+        "package_version_timeline",
+        "documentation_api_endpoints"
+      ],
+      "foreignKeys": 0,
+      "indexes": 17,
+      "triggers": 1
+    },
+    {
+      "file": "032_domain_code_library.sql",
+      "number": 32,
+      "name": "domain_code_library",
+      "tables": [
+        "domain_code_examples",
+        "domain_style_guides",
+        "domain_pattern_usage",
+        "domain_anti_patterns",
+        "domain_knowledge_graph"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 4
+    },
+    {
+      "file": "032_vanity_handles.sql",
+      "number": 32,
+      "name": "vanity_handles",
+      "tables": [
+        "handle_reservations",
+        "handle_history",
+        "blocked_handles"
+      ],
+      "foreignKeys": 0,
+      "indexes": 7,
+      "triggers": 0
+    },
+    {
+      "file": "033_context_airlock.sql",
+      "number": 33,
+      "name": "context_airlock",
+      "tables": [
+        "domain_context_snapshots",
+        "snapshot_diffs",
+        "context_lock_files",
+        "snapshot_deployments",
+        "snapshot_validations",
+        "context_drift_log"
+      ],
+      "foreignKeys": 0,
+      "indexes": 24,
+      "triggers": 1
+    },
+    {
+      "file": "033_encryption_paths.sql",
+      "number": 33,
+      "name": "encryption_paths",
+      "tables": [
+        "encryption_paths",
+        "encrypted_messages",
+        "challenge_chains",
+        "chain_challenges",
+        "encryption_sessions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 13,
+      "triggers": 0
+    },
+    {
+      "file": "034_domain_parameters.sql",
+      "number": 34,
+      "name": "domain_parameters",
+      "tables": [
+        "domain_parameter_presets",
+        "parameter_performance_log",
+        "domain_model_parameters",
+        "parameter_ab_tests"
+      ],
+      "foreignKeys": 0,
+      "indexes": 15,
+      "triggers": 4
+    },
+    {
+      "file": "034_telegram_bot.sql",
+      "number": 34,
+      "name": "telegram_bot",
+      "tables": [
+        "telegram_accounts",
+        "telegram_linking_codes",
+        "telegram_verification_sessions",
+        "telegram_encryption_sessions",
+        "telegram_messages",
+        "telegram_notifications"
+      ],
+      "foreignKeys": 0,
+      "indexes": 11,
+      "triggers": 0
+    },
+    {
+      "file": "035_voucher_system.sql",
+      "number": 35,
+      "name": "voucher_system",
+      "tables": [
+        "vouchers",
+        "voucher_redemptions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 8,
+      "triggers": 0
+    },
+    {
+      "file": "035_workflows_system.sql",
+      "number": 35,
+      "name": "workflows_system",
+      "tables": [
+        "workflows",
+        "workflow_executions",
+        "workflow_templates"
+      ],
+      "foreignKeys": 0,
+      "indexes": 8,
+      "triggers": 1
+    },
+    {
+      "file": "036_affiliate_system.sql",
+      "number": 36,
+      "name": "affiliate_system",
+      "tables": [
+        "affiliates",
+        "affiliate_referrals",
+        "affiliate_commissions",
+        "affiliate_payouts"
+      ],
+      "foreignKeys": 0,
+      "indexes": 15,
+      "triggers": 0
+    },
+    {
+      "file": "036_automated_flows.sql",
+      "number": 36,
+      "name": "automated_flows",
+      "tables": [
+        "automated_flows",
+        "flow_executions"
+      ],
+      "foreignKeys": 0,
+      "indexes": 7,
+      "triggers": 0
+    },
+    {
+      "file": "036_feature_gates.sql",
+      "number": 36,
+      "name": "feature_gates",
+      "tables": [
+        "feature_definitions",
+        "feature_access_overrides",
+        "feature_beta_access",
+        "feature_usage_analytics"
+      ],
+      "foreignKeys": 0,
+      "indexes": 10,
+      "triggers": 0
+    },
+    {
+      "file": "037_component_relationships.sql",
+      "number": 37,
+      "name": "component_relationships",
+      "tables": [
+        "component_relationships",
+        "component_usage_stats"
+      ],
+      "foreignKeys": 0,
+      "indexes": 11,
+      "triggers": 1
+    },
+    {
+      "file": "037_identity_resolution.sql",
+      "number": 37,
+      "name": "identity_resolution",
+      "tables": [
+        "identity_graph",
+        "attribution_events",
+        "receipt_data",
+        "geo_locations",
+        "tracking_cookies"
+      ],
+      "foreignKeys": 0,
+      "indexes": 22,
+      "triggers": 1
+    },
+    {
+      "file": "037_mailbox_system.sql",
+      "number": 37,
+      "name": "mailbox_system",
+      "tables": [
+        "mailbox_messages",
+        "mailbox_attachments",
+        "npc_registry",
+        "generational_influences"
+      ],
+      "foreignKeys": 0,
+      "indexes": 18,
+      "triggers": 0
+    },
+    {
+      "file": "038_app_store.sql",
+      "number": 38,
+      "name": "app_store",
+      "tables": [
+        "app_templates",
+        "user_installed_apps",
+        "app_instances",
+        "api_keys",
+        "qr_sessions",
+        "biometric_credentials",
+        "biometric_challenges",
+        "launcher_folders",
+        "launcher_apps",
+        "app_launch_log",
+        "app_ratings"
+      ],
+      "foreignKeys": 0,
+      "indexes": 29,
+      "triggers": 1
+    },
+    {
+      "file": "039_asset_system.sql",
+      "number": 39,
+      "name": "asset_system",
+      "tables": [
+        "resource_manifests",
+        "resource_states",
+        "game_assets",
+        "player_inventories",
+        "inventory_items",
+        "equipped_items"
+      ],
+      "foreignKeys": 2,
+      "indexes": 16,
+      "triggers": 3
+    },
+    {
+      "file": "040_fix_oauth_providers.sql",
+      "number": 40,
+      "name": "fix_oauth_providers",
+      "tables": [
+        "oauth_providers",
+        "oauth_user_connections"
+      ],
+      "foreignKeys": 0,
+      "indexes": 4,
+      "triggers": 1
+    },
+    {
+      "file": "040_session_analytics.sql",
+      "number": 40,
+      "name": "session_analytics",
+      "tables": [
+        "analytics_page_views",
+        "analytics_feature_usage",
+        "analytics_conversions",
+        "analytics_attribution"
+      ],
+      "foreignKeys": 0,
+      "indexes": 22,
+      "triggers": 0
+    },
+    {
+      "file": "041_add_bounce_tracking.sql",
+      "number": 41,
+      "name": "add_bounce_tracking",
+      "tables": [],
+      "foreignKeys": 0,
+      "indexes": 5,
+      "triggers": 0
+    },
+    {
+      "file": "041_dependency_vendoring.sql",
+      "number": 41,
+      "name": "dependency_vendoring",
+      "tables": [
+        "vendored_packages",
+        "package_dependencies",
+        "url_index",
+        "package_usage_log",
+        "funding_registry",
+        "package_intelligence",
+        "dependency_snapshots",
+        "url_fetch_queue"
+      ],
+      "foreignKeys": 0,
+      "indexes": 23,
+      "triggers": 0
+    },
+    {
+      "file": "042_model_discovery_system.sql",
+      "number": 42,
+      "name": "model_discovery_system",
+      "tables": [
+        "discovered_models",
+        "model_discovery_events",
+        "user_model_preferences"
+      ],
+      "foreignKeys": 0,
+      "indexes": 7,
+      "triggers": 0
+    }
+  ]
+}

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Deployment Wizard - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .input-group input,
+    .input-group select,
+    .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus,
+    .input-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .wizard-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .wizard-steps::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #2a2a3e;
+      z-index: 0;
+    }
+
+    .wizard-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wizard-step-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #2a2a3e;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .wizard-step.active .wizard-step-circle {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .wizard-step.completed .wizard-step-circle {
+      background: #4caf50;
+    }
+
+    .wizard-step-label {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .wizard-step.active .wizard-step-label {
+      color: #667eea;
+    }
+
+    .wizard-content {
+      display: none;
+    }
+
+    .wizard-content.active {
+      display: block;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+
+    .deployment-summary {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+
+    .summary-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #2a2a3e;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      color: #888;
+    }
+
+    .summary-value {
+      color: #4caf50;
+      font-weight: bold;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MCP Deployment Wizard</h1>
+  <p class="subtitle">Interactive deployment configuration and execution tool</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- Wizard Steps -->
+  <div class="section">
+    <div class="wizard-steps">
+      <div class="wizard-step active" id="step-indicator-1">
+        <div class="wizard-step-circle">1</div>
+        <div class="wizard-step-label">Basic Info</div>
+      </div>
+      <div class="wizard-step" id="step-indicator-2">
+        <div class="wizard-step-circle">2</div>
+        <div class="wizard-step-label">Environment</div>
+      </div>
+      <div class="wizard-step" id="step-indicator-3">
+        <div class="wizard-step-circle">3</div>
+        <div class="wizard-step-label">Database</div>
+      </div>
+      <div class="wizard-step" id="step-indicator-4">
+        <div class="wizard-step-circle">4</div>
+        <div class="wizard-step-label">Features</div>
+      </div>
+      <div class="wizard-step" id="step-indicator-5">
+        <div class="wizard-step-circle">5</div>
+        <div class="wizard-step-label">Review & Deploy</div>
+      </div>
+    </div>
+
+    <!-- Step 1: Basic Info -->
+    <div class="wizard-content active" id="step-1">
+      <h2>Step 1: Basic Information</h2>
+
+      <div class="input-group">
+        <label>Application Name:</label>
+        <input type="text" id="app-name" placeholder="my-calos-app" value="calos-mcp-server">
+      </div>
+
+      <div class="input-group">
+        <label>Port:</label>
+        <input type="number" id="app-port" value="3100" min="1024" max="65535">
+      </div>
+
+      <div class="input-group">
+        <label>Deployment Target:</label>
+        <select id="deploy-target">
+          <option value="docker">Docker Container</option>
+          <option value="kubernetes">Kubernetes</option>
+          <option value="aws">AWS (ECS/Lambda)</option>
+          <option value="vercel">Vercel</option>
+          <option value="railway">Railway</option>
+          <option value="render">Render</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Step 2: Environment -->
+    <div class="wizard-content" id="step-2">
+      <h2>Step 2: Environment Configuration</h2>
+
+      <div class="input-group">
+        <label>Environment:</label>
+        <select id="env-type">
+          <option value="development">Development</option>
+          <option value="staging">Staging</option>
+          <option value="production">Production</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Node.js Version:</label>
+        <select id="node-version">
+          <option value="18">Node 18 LTS</option>
+          <option value="20" selected>Node 20 LTS</option>
+          <option value="21">Node 21</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Environment Variables:</label>
+        <textarea id="env-vars" rows="6" placeholder="KEY=value (one per line)">MCP_SERVER_PORT=3100
+NODE_ENV=production
+LOG_LEVEL=info</textarea>
+      </div>
+    </div>
+
+    <!-- Step 3: Database -->
+    <div class="wizard-content" id="step-3">
+      <h2>Step 3: Database Configuration</h2>
+
+      <div class="input-group">
+        <label>Database Type:</label>
+        <select id="db-type">
+          <option value="none">None</option>
+          <option value="postgresql">PostgreSQL</option>
+          <option value="mysql">MySQL</option>
+          <option value="mongodb">MongoDB</option>
+          <option value="redis">Redis</option>
+          <option value="sqlite">SQLite</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Database URL:</label>
+        <input type="text" id="db-url" placeholder="postgresql://user:pass@host:5432/db">
+      </div>
+
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="db-ssl" checked>
+          Enable SSL/TLS
+        </label>
+        <label>
+          <input type="checkbox" id="db-pool">
+          Use Connection Pooling
+        </label>
+        <label>
+          <input type="checkbox" id="db-migrate" checked>
+          Run Migrations on Deploy
+        </label>
+      </div>
+    </div>
+
+    <!-- Step 4: Features -->
+    <div class="wizard-content" id="step-4">
+      <h2>Step 4: Feature Selection</h2>
+
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="feature-auth" checked>
+          Authentication & Authorization
+        </label>
+        <label>
+          <input type="checkbox" id="feature-logging" checked>
+          Structured Logging
+        </label>
+        <label>
+          <input type="checkbox" id="feature-metrics" checked>
+          Metrics & Monitoring
+        </label>
+        <label>
+          <input type="checkbox" id="feature-rate-limit">
+          Rate Limiting
+        </label>
+        <label>
+          <input type="checkbox" id="feature-cors" checked>
+          CORS Support
+        </label>
+        <label>
+          <input type="checkbox" id="feature-compression">
+          Response Compression
+        </label>
+        <label>
+          <input type="checkbox" id="feature-cache">
+          Redis Caching
+        </label>
+        <label>
+          <input type="checkbox" id="feature-websocket">
+          WebSocket Support
+        </label>
+      </div>
+
+      <div class="input-group">
+        <label>Health Check Endpoint:</label>
+        <input type="text" id="health-endpoint" value="/health" placeholder="/health">
+      </div>
+    </div>
+
+    <!-- Step 5: Review & Deploy -->
+    <div class="wizard-content" id="step-5">
+      <h2>Step 5: Review & Deploy</h2>
+
+      <div class="deployment-summary" id="deployment-summary">
+        <!-- Summary will be populated here -->
+      </div>
+
+      <div class="button-grid">
+        <button onclick="generateDockerfile()">Generate Dockerfile</button>
+        <button onclick="generateK8sConfig()">Generate K8s Config</button>
+        <button onclick="generateEnvFile()">Generate .env File</button>
+        <button onclick="deployNow()" style="background: linear-gradient(135deg, #4caf50, #45a049);">Deploy Now</button>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+      <button onclick="previousStep()" id="prev-btn" disabled>Previous</button>
+      <button onclick="nextStep()" id="next-btn">Next</button>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="section">
+    <h2>Deployment Output</h2>
+    <pre class="output" id="output">Complete the wizard to generate deployment configuration...</pre>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+      }
+    }
+
+    // Navigate steps
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        document.getElementById(`step-indicator-${currentStep}`).classList.remove('active');
+        document.getElementById(`step-indicator-${currentStep}`).classList.add('completed');
+
+        currentStep++;
+
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+        document.getElementById(`step-indicator-${currentStep}`).classList.add('active');
+
+        updateNavButtons();
+
+        if (currentStep === totalSteps) {
+          updateSummary();
+        }
+      }
+    }
+
+    function previousStep() {
+      if (currentStep > 1) {
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        document.getElementById(`step-indicator-${currentStep}`).classList.remove('active');
+
+        currentStep--;
+
+        document.getElementById(`step-${currentStep}`).classList.remove('completed');
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+        document.getElementById(`step-indicator-${currentStep}`).classList.remove('completed');
+
+        updateNavButtons();
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById('prev-btn').disabled = currentStep === 1;
+      document.getElementById('next-btn').disabled = currentStep === totalSteps;
+    }
+
+    // Update deployment summary
+    function updateSummary() {
+      const config = collectConfig();
+      const summary = document.getElementById('deployment-summary');
+
+      const features = collectFeatures().join(', ') || 'None';
+
+      summary.innerHTML = `
+        <div class="summary-item">
+          <span class="summary-label">Application:</span>
+          <span class="summary-value">${config.appName}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Port:</span>
+          <span class="summary-value">${config.port}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Target:</span>
+          <span class="summary-value">${config.target}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Environment:</span>
+          <span class="summary-value">${config.environment}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Node.js:</span>
+          <span class="summary-value">v${config.nodeVersion}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Database:</span>
+          <span class="summary-value">${config.database || 'None'}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Features:</span>
+          <span class="summary-value">${features}</span>
+        </div>
+      `;
+    }
+
+    // Collect configuration
+    function collectConfig() {
+      return {
+        appName: document.getElementById('app-name').value,
+        port: document.getElementById('app-port').value,
+        target: document.getElementById('deploy-target').value,
+        environment: document.getElementById('env-type').value,
+        nodeVersion: document.getElementById('node-version').value,
+        envVars: document.getElementById('env-vars').value,
+        database: document.getElementById('db-type').value,
+        dbUrl: document.getElementById('db-url').value,
+        healthEndpoint: document.getElementById('health-endpoint').value
+      };
+    }
+
+    // Collect features
+    function collectFeatures() {
+      const features = [];
+      if (document.getElementById('feature-auth').checked) features.push('Auth');
+      if (document.getElementById('feature-logging').checked) features.push('Logging');
+      if (document.getElementById('feature-metrics').checked) features.push('Metrics');
+      if (document.getElementById('feature-rate-limit').checked) features.push('Rate Limiting');
+      if (document.getElementById('feature-cors').checked) features.push('CORS');
+      if (document.getElementById('feature-compression').checked) features.push('Compression');
+      if (document.getElementById('feature-cache').checked) features.push('Cache');
+      if (document.getElementById('feature-websocket').checked) features.push('WebSocket');
+      return features;
+    }
+
+    // Generate Dockerfile
+    function generateDockerfile() {
+      const config = collectConfig();
+
+      const dockerfile = `# Generated by CalOS MCP Deployment Wizard
+FROM node:${config.nodeVersion}-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE ${config.port}
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \\
+  CMD node healthcheck.js
+
+# Run application
+CMD ["node", "index.js"]
+`;
+
+      log(dockerfile, 'success');
+    }
+
+    // Generate Kubernetes config
+    function generateK8sConfig() {
+      const config = collectConfig();
+
+      const k8sConfig = `# Generated by CalOS MCP Deployment Wizard
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${config.appName}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ${config.appName}
+  template:
+    metadata:
+      labels:
+        app: ${config.appName}
+    spec:
+      containers:
+      - name: ${config.appName}
+        image: ${config.appName}:latest
+        ports:
+        - containerPort: ${config.port}
+        env:
+        - name: NODE_ENV
+          value: "${config.environment}"
+        livenessProbe:
+          httpGet:
+            path: ${config.healthEndpoint}
+            port: ${config.port}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${config.appName}
+spec:
+  selector:
+    app: ${config.appName}
+  ports:
+  - port: 80
+    targetPort: ${config.port}
+  type: LoadBalancer
+`;
+
+      log(k8sConfig, 'success');
+    }
+
+    // Generate .env file
+    function generateEnvFile() {
+      const config = collectConfig();
+
+      let envFile = config.envVars + '\n\n';
+      envFile += `# Database Configuration\n`;
+      if (config.database !== 'none') {
+        envFile += `DATABASE_URL=${config.dbUrl}\n`;
+        envFile += `DB_SSL=${document.getElementById('db-ssl').checked}\n`;
+        envFile += `DB_POOL=${document.getElementById('db-pool').checked}\n`;
+      }
+
+      log(envFile, 'success');
+    }
+
+    // Deploy now
+    async function deployNow() {
+      const config = collectConfig();
+
+      log(`Deploying ${config.appName} to ${config.target}...\n\nThis is a demo. In production, this would:\n1. Build Docker image\n2. Push to registry\n3. Deploy to ${config.target}\n4. Run health checks\n5. Update DNS/load balancer\n\nDeployment configuration:\n${JSON.stringify(config, null, 2)}`, 'success');
+    }
+
+    // Check status on load
+    window.addEventListener('load', () => {
+      checkServerStatus();
+    });
+  </script>
+</body>
+</html>

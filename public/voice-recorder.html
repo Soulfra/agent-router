@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Voice Yap - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2em;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .record-btn {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      font-size: 1.2em;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 20px auto;
+      display: block;
+      box-shadow: 0 10px 30px rgba(245, 87, 108, 0.5);
+      transition: all 0.3s ease;
+    }
+    .record-btn:hover {
+      transform: scale(1.05);
+    }
+    .record-btn:active {
+      transform: scale(0.95);
+    }
+    .record-btn.recording {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 10px 30px rgba(250, 112, 154, 0.5); }
+      50% { box-shadow: 0 10px 50px rgba(250, 112, 154, 0.8); }
+    }
+    .status {
+      text-align: center;
+      margin: 15px 0;
+      font-size: 1.1em;
+      min-height: 30px;
+    }
+    .transcript {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      min-height: 100px;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .stat-item {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.8em;
+      opacity: 0.8;
+      margin-bottom: 5px;
+    }
+    .stat-value {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .project-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.3);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      margin-top: 10px;
+    }
+    .error {
+      background: rgba(255, 82, 82, 0.3);
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    .auth-section {
+      margin-bottom: 15px;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1em;
+      margin-top: 8px;
+    }
+    .auth-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: transform 0.2s;
+    }
+    .login-btn:hover {
+      transform: scale(1.02);
+    }
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+    .logged-in-as {
+      text-align: center;
+      opacity: 0.9;
+      font-size: 0.95em;
+      margin-bottom: 15px;
+    }
+    .logout-link {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 0.85em;
+      margin-left: 8px;
+    }
+    .logout-link:hover {
+      color: white;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9em;
+      margin-top: 10px;
+      opacity: 0.9;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎤 Voice Yap</h1>
+
+    <div class="card" id="loginCard">
+      <div class="auth-section">
+        <h3 style="margin-bottom: 15px; text-align: center;">Login to CalOS</h3>
+        <input type="email" class="auth-input" id="emailInput"
+               placeholder="your@email.com">
+        <input type="password" class="auth-input" id="passwordInput"
+               placeholder="Password">
+        <label class="checkbox-label">
+          <input type="checkbox" id="trustDeviceCheck" checked>
+          <span>Trust this device</span>
+        </label>
+        <button class="login-btn" id="loginBtn">Login</button>
+        <div id="loginError" style="margin-top: 10px;"></div>
+      </div>
+    </div>
+
+    <div class="card" id="recorderCard" style="display: none;">
+      <div class="logged-in-as" id="loggedInAs"></div>
+
+      <button class="record-btn" id="recordBtn">
+        TAP TO YAP
+      </button>
+
+      <div class="status" id="status">Ready to record</div>
+
+      <div class="transcript" id="transcript">
+        Your transcript will appear here...
+      </div>
+
+      <div id="projectInfo"></div>
+      <div id="errorMsg"></div>
+    </div>
+
+    <div class="card" id="statsCard" style="display: none;">
+      <h3 style="margin-bottom: 15px; text-align: center;">Your Usage Stats</h3>
+      <div class="stats" id="stats">
+        <div class="stat-item">
+          <div class="stat-label">Total Yaps</div>
+          <div class="stat-value" id="totalCalls">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Tokens Used</div>
+          <div class="stat-value" id="totalTokens">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Total Cost</div>
+          <div class="stat-value" id="totalCost">-</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Minutes</div>
+          <div class="stat-value" id="totalMinutes">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let currentUser = null;
+
+    const loginCard = document.getElementById('loginCard');
+    const recorderCard = document.getElementById('recorderCard');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const trustDeviceCheck = document.getElementById('trustDeviceCheck');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const recordBtn = document.getElementById('recordBtn');
+    const statusEl = document.getElementById('status');
+    const transcriptEl = document.getElementById('transcript');
+    const projectInfoEl = document.getElementById('projectInfo');
+    const errorMsgEl = document.getElementById('errorMsg');
+    const loggedInAs = document.getElementById('loggedInAs');
+
+    // Check if already logged in
+    const savedUser = localStorage.getItem('calos_user');
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      showRecorder();
+    }
+
+    // Login button
+    loginBtn.addEventListener('click', handleLogin);
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    async function handleLogin() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const trustDevice = trustDeviceCheck.checked;
+
+      if (!email || !password) {
+        showLoginError('Please enter email and password');
+        return;
+      }
+
+      loginBtn.textContent = 'Logging in...';
+      loginBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            trustDevice
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          currentUser = {
+            userId: result.user.userId,
+            email: result.user.email,
+            username: result.user.username,
+            displayName: result.user.displayName
+          };
+
+          localStorage.setItem('calos_user', JSON.stringify(currentUser));
+          localStorage.setItem('calos_user_id', currentUser.userId);
+
+          showRecorder();
+        } else {
+          showLoginError(result.error || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showLoginError('Connection error. Please try again.');
+      } finally {
+        loginBtn.textContent = 'Login';
+        loginBtn.disabled = false;
+      }
+    }
+
+    function showRecorder() {
+      loginCard.style.display = 'none';
+      recorderCard.style.display = 'block';
+      document.getElementById('statsCard').style.display = 'block';
+
+      const displayName = currentUser.displayName || currentUser.username || currentUser.email;
+      loggedInAs.innerHTML = `
+        Logged in as <strong>${displayName}</strong>
+        <span class="logout-link" onclick="logout()">Logout</span>
+      `;
+
+      loadStats();
+    }
+
+    function logout() {
+      localStorage.removeItem('calos_user');
+      localStorage.removeItem('calos_user_id');
+      currentUser = null;
+      loginCard.style.display = 'block';
+      recorderCard.style.display = 'none';
+      document.getElementById('statsCard').style.display = 'none';
+    }
+
+    function showLoginError(message) {
+      loginError.innerHTML = `<div class="error">❌ ${message}</div>`;
+    }
+
+    recordBtn.addEventListener('click', async () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        await startRecording();
+      }
+    });
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          // Small delay to ensure all data is flushed
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          if (audioChunks.length === 0) {
+            showError('No audio data recorded');
+            statusEl.textContent = 'Ready to record';
+            return;
+          }
+
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          console.log('Audio blob size:', audioBlob.size, 'bytes');
+          await uploadAudio(audioBlob);
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        recordBtn.classList.add('recording');
+        recordBtn.textContent = 'STOP';
+        statusEl.textContent = '🔴 Recording...';
+        transcriptEl.textContent = 'Listening...';
+        errorMsgEl.innerHTML = '';
+        projectInfoEl.innerHTML = '';
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        showError('Microphone access denied. Please allow microphone permissions.');
+      }
+    }
+
+    function stopRecording() {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      isRecording = false;
+      recordBtn.classList.remove('recording');
+      recordBtn.textContent = 'TAP TO YAP';
+      statusEl.textContent = 'Processing...';
+    }
+
+    async function uploadAudio(audioBlob) {
+      if (!currentUser) {
+        showError('Please log in first');
+        statusEl.textContent = 'Ready to record';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+
+      try {
+        const response = await fetch('/api/voice/yap', {
+          method: 'POST',
+          headers: {
+            'X-User-Id': currentUser.userId
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server error:', response.status, errorText);
+          throw new Error(`Server returned ${response.status}: ${errorText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          transcriptEl.textContent = result.data.transcript || 'No speech detected';
+
+          if (result.data.project) {
+            projectInfoEl.innerHTML = `
+              <div class="project-badge">
+                📁 ${result.data.project.project_name} (${Math.round(result.data.project.confidence * 100)}% confidence)
+              </div>
+            `;
+          }
+
+          statusEl.textContent = '✅ Transcription complete!';
+          loadStats(); // Refresh stats
+
+          setTimeout(() => {
+            statusEl.textContent = 'Ready to record';
+          }, 3000);
+        } else {
+          const errorMsg = result.error || 'Transcription failed';
+          console.error('Transcription error:', errorMsg, result);
+          showError(errorMsg);
+          statusEl.textContent = 'Ready to record';
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        showError('Failed to upload: ' + error.message);
+        statusEl.textContent = 'Ready to record';
+      }
+    }
+
+    async function loadStats() {
+      if (!currentUser) return;
+
+      try {
+        const response = await fetch('/api/voice/stats/cumulative', {
+          headers: {
+            'X-User-Id': currentUser.userId
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data) {
+          const data = result.data;
+          document.getElementById('totalCalls').textContent = data.total_api_calls || 0;
+          document.getElementById('totalTokens').textContent = (data.total_tokens_used || 0).toLocaleString();
+          document.getElementById('totalCost').textContent = '$' + (parseFloat(data.total_cost_usd) || 0).toFixed(3);
+          document.getElementById('totalMinutes').textContent = (parseFloat(data.total_voice_minutes) || 0).toFixed(1);
+        }
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    function showError(message) {
+      errorMsgEl.innerHTML = `<div class="error">❌ ${message}</div>`;
+    }
+
+    // Auto-refresh stats every 30 seconds
+    setInterval(() => {
+      if (currentUser) {
+        loadStats();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+#!/usr/bin/env node
+
+/**
+ * Bot Creation CLI Wizard
+ *
+ * Interactive command-line tool for creating messaging bots with ZERO cloud dependencies.
+ *
+ * Features:
+ * - Fully self-hosted (no API keys needed)
+ * - Uses local Ollama for AI features (optional)
+ * - Auto-opens @BotFather for Telegram token
+ * - Configures everything locally
+ * - Deploy to own VPS (optional)
+ *
+ * Usage:
+ *   npm run bot:create
+ *   # OR
+ *   ./bin/bot-create
+ *
+ *   # Advanced:
+ *   ./bin/bot-create --platform telegram --personality meme
+ *   ./bin/bot-create --ollama --model llama2
+ */
+
+const inquirer = require('inquirer');
+const chalk = require('chalk');
+const ora = require('ora');
+const open = require('open');
+const { exec } = require('child_process');
+const util = require('util');
+const fs = require('fs').promises;
+const path = require('path');
+
+const execPromise = util.promisify(exec);
+
+// ASCII Art Header
+const HEADER = `
+${chalk.cyan('╔════════════════════════════════════════════════════════════════╗')}
+${chalk.cyan('║')}            ${chalk.bold.white('🤖 CALOS BOT CREATION WIZARD 🤖')}               ${chalk.cyan('║')}
+${chalk.cyan('╚════════════════════════════════════════════════════════════════╝')}
+
+${chalk.gray('  100% Self-Hosted • No Cloud Dependencies • FREE Forever')}
+`;
+
+// Command line args
+const args = process.argv.slice(2);
+const flags = {
+  platform: args.includes('--platform') ? args[args.indexOf('--platform') + 1] : null,
+  personality: args.includes('--personality') ? args[args.indexOf('--personality') + 1] : null,
+  ollama: args.includes('--ollama'),
+  model: args.includes('--model') ? args[args.indexOf('--model') + 1] : 'llama2',
+  autoStart: !args.includes('--no-start')
+};
+
+/**
+ * Main entry point
+ */
+async function main() {
+  console.clear();
+  console.log(HEADER);
+
+  try {
+    // Check prerequisites
+    await checkPrerequisites();
+
+    // Collect bot configuration
+    const config = await collectBotConfig();
+
+    // Create bot
+    await createBot(config);
+
+    // Post-creation steps
+    await postCreationSteps(config);
+
+    console.log('');
+    console.log(chalk.green.bold('✅ Bot creation complete!'));
+    console.log('');
+    console.log(chalk.cyan('Next steps:'));
+    console.log(chalk.gray('  • Test your bot in Telegram'));
+    console.log(chalk.gray('  • Customize bot responses'));
+    console.log(chalk.gray('  • Deploy to production (optional)'));
+    console.log('');
+
+  } catch (error) {
+    console.error(chalk.red('\n❌ Error:'), error.message);
+    process.exit(1);
+  }
+}
+
+/**
+ * Check prerequisites (database, Ollama if needed)
+ */
+async function checkPrerequisites() {
+  const spinner = ora('Checking prerequisites...').start();
+
+  try {
+    // Check if database is accessible
+    const dbCheck = await checkDatabase();
+    if (!dbCheck) {
+      spinner.fail('Database not accessible');
+      throw new Error('Database connection failed. Run: npm start');
+    }
+
+    // Check Ollama if requested
+    if (flags.ollama) {
+      const ollamaCheck = await checkOllama();
+      if (!ollamaCheck) {
+        spinner.warn('Ollama not running. Starting Ollama...');
+        await execPromise('npm run ollama:start');
+      }
+    }
+
+    spinner.succeed('Prerequisites checked');
+  } catch (error) {
+    spinner.fail('Prerequisites check failed');
+    throw error;
+  }
+}
+
+/**
+ * Check database connection
+ */
+async function checkDatabase() {
+  try {
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME || 'calos',
+      user: process.env.DB_USER || process.env.USER,
+      password: process.env.DB_PASSWORD || ''
+    });
+
+    await pool.query('SELECT 1');
+    await pool.end();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Check Ollama status
+ */
+async function checkOllama() {
+  try {
+    const response = await fetch('http://localhost:11434/api/tags');
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Collect bot configuration via prompts
+ */
+async function collectBotConfig() {
+  const questions = [];
+
+  // Platform selection
+  if (!flags.platform) {
+    questions.push({
+      type: 'list',
+      name: 'platform',
+      message: 'Select bot platform:',
+      choices: [
+        { name: 'Telegram (Recommended)', value: 'telegram' },
+        { name: 'Discord (Coming Soon)', value: 'discord', disabled: true },
+        { name: 'Matrix (Coming Soon)', value: 'matrix', disabled: true }
+      ]
+    });
+  }
+
+  // Bot name
+  questions.push({
+    type: 'input',
+    name: 'name',
+    message: 'Bot name:',
+    default: 'CALOS Bot'
+  });
+
+  // Username
+  questions.push({
+    type: 'input',
+    name: 'username',
+    message: 'Bot username (optional):',
+    default: ''
+  });
+
+  // Personality selection
+  if (!flags.personality) {
+    questions.push({
+      type: 'list',
+      name: 'personality',
+      message: 'Select bot personality:',
+      choices: [
+        { name: 'Professional (Clear, direct, formal)', value: 'professional' },
+        { name: 'Meme Bot (Funny but serious underneath)', value: 'meme' },
+        { name: 'Custom (Train with Ollama)', value: 'ollama', disabled: !flags.ollama }
+      ]
+    });
+  }
+
+  // Ollama model selection (if custom personality)
+  if (flags.ollama || flags.personality === 'ollama') {
+    questions.push({
+      type: 'list',
+      name: 'ollamaModel',
+      message: 'Select Ollama model:',
+      choices: ['llama2', 'codellama', 'mistral', 'neural-chat']
+    });
+  }
+
+  const answers = await inquirer.prompt(questions);
+
+  // Now get bot token
+  const platform = flags.platform || answers.platform;
+  const token = await getBotToken(platform);
+
+  return {
+    platform,
+    name: answers.name,
+    username: answers.username || null,
+    personality: flags.personality || answers.personality,
+    ollamaModel: flags.model || answers.ollamaModel || null,
+    token,
+    autoStart: flags.autoStart
+  };
+}
+
+/**
+ * Get bot token (opens BotFather for Telegram)
+ */
+async function getBotToken(platform) {
+  if (platform === 'telegram') {
+    console.log('');
+    console.log(chalk.cyan('📱 Opening @BotFather in Telegram...'));
+    console.log('');
+    console.log(chalk.yellow('Follow these steps:'));
+    console.log(chalk.gray('  1. Send: /newbot'));
+    console.log(chalk.gray('  2. Enter bot name'));
+    console.log(chalk.gray('  3. Enter username (must end with "bot")'));
+    console.log(chalk.gray('  4. Copy the token'));
+    console.log('');
+
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Open Telegram
+    try {
+      await open('https://t.me/BotFather');
+    } catch (error) {
+      console.log(chalk.gray('  (Could not auto-open browser)'));
+    }
+
+    // Prompt for token
+    const { token } = await inquirer.prompt([{
+      type: 'password',
+      name: 'token',
+      message: 'Paste bot token:',
+      validate: (input) => {
+        if (!input) return 'Token is required';
+        if (!input.includes(':')) return 'Invalid token format';
+        return true;
+      }
+    }]);
+
+    return token;
+  }
+
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
+/**
+ * Create bot using API or directly
+ */
+async function createBot(config) {
+  const spinner = ora('Creating bot...').start();
+
+  try {
+    // Check if server is running for API approach
+    const serverRunning = await checkServer();
+
+    if (serverRunning) {
+      // Use API
+      await createBotViaAPI(config);
+    } else {
+      // Direct database approach
+      await createBotDirectly(config);
+    }
+
+    spinner.succeed(`Bot created: ${config.name}`);
+  } catch (error) {
+    spinner.fail('Bot creation failed');
+    throw error;
+  }
+}
+
+/**
+ * Check if server is running
+ */
+async function checkServer() {
+  try {
+    const response = await fetch('http://localhost:5001/api/health');
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Create bot via API (if server is running)
+ */
+async function createBotViaAPI(config) {
+  const response = await fetch('http://localhost:5001/api/bots/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      platform: config.platform,
+      name: config.name,
+      username: config.username,
+      token: config.token,
+      personality: config.personality
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'API request failed');
+  }
+
+  const data = await response.json();
+  config.botId = data.bot.id;
+
+  // Start bot if requested
+  if (config.autoStart) {
+    await fetch(`http://localhost:5001/api/bots/${config.botId}/start`, {
+      method: 'POST'
+    });
+  }
+}
+
+/**
+ * Create bot directly in database (if server not running)
+ */
+async function createBotDirectly(config) {
+  const { Pool } = require('pg');
+  const { v4: uuidv4 } = require('uuid');
+
+  const pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'calos',
+    user: process.env.DB_USER || process.env.USER,
+    password: process.env.DB_PASSWORD || ''
+  });
+
+  const botId = uuidv4();
+
+  await pool.query(
+    `INSERT INTO bots (bot_id, platform, name, username, token, personality, status)
+     VALUES ($1, $2, $3, $4, $5, $6, 'created')`,
+    [botId, config.platform, config.name, config.username, config.token, config.personality]
+  );
+
+  config.botId = botId;
+
+  await pool.end();
+
+  console.log(chalk.yellow('\n⚠️  Server not running. Bot created but not started.'));
+  console.log(chalk.gray('   Run: npm start'));
+}
+
+/**
+ * Post-creation steps
+ */
+async function postCreationSteps(config) {
+  console.log('');
+  console.log(chalk.cyan('📋 Configuration Summary:'));
+  console.log(chalk.gray(`  Platform: ${config.platform}`));
+  console.log(chalk.gray(`  Name: ${config.name}`));
+  console.log(chalk.gray(`  Personality: ${config.personality}`));
+  if (config.ollamaModel) {
+    console.log(chalk.gray(`  Ollama Model: ${config.ollamaModel}`));
+  }
+  console.log('');
+
+  // Ask about next steps
+  const { nextSteps } = await inquirer.prompt([{
+    type: 'checkbox',
+    name: 'nextSteps',
+    message: 'What would you like to do?',
+    choices: [
+      { name: 'View bot dashboard', value: 'dashboard' },
+      { name: 'Generate tutorial/blog post', value: 'tutorial' },
+      { name: 'Deploy to production VPS', value: 'deploy', disabled: 'Coming soon' },
+      { name: 'Train custom personality with Ollama', value: 'train', disabled: !config.ollamaModel }
+    ]
+  }]);
+
+  if (nextSteps.includes('dashboard')) {
+    await open('http://localhost:5001/bot-builder-dashboard.html');
+  }
+
+  if (nextSteps.includes('tutorial')) {
+    console.log(chalk.gray('\n  Generating tutorial... (coming soon)'));
+  }
+}
+
+// Run if called directly
+if (require.main === module) {
+  main().catch(error => {
+    console.error(chalk.red('Fatal error:'), error);
+    process.exit(1);
+  });
+}
+
+module.exports = { main };

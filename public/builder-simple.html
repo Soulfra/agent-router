@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;">
+  <title>CalOS - AI Builder</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f6fa;
+      color: #2d3436;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+      color: white;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .status.building {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Main Content */
+    .container {
+      flex: 1;
+      padding: 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 1rem 1.5rem;
+      background: #2d3436;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-content {
+      padding: 1.5rem;
+    }
+
+    /* Task List */
+    #task-panel {
+      flex: 1;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #dfe6e9;
+      font-size: 1rem;
+    }
+
+    .task-item.pending {
+      border-left-color: #74b9ff;
+      background: #e3f2fd;
+    }
+
+    .task-item.in_progress {
+      border-left-color: #fdcb6e;
+      background: #fff8e1;
+      animation: pulse 2s infinite;
+    }
+
+    .task-item.completed {
+      border-left-color: #00b894;
+      background: #e8f5e9;
+    }
+
+    .task-item.failed {
+      border-left-color: #d63031;
+      background: #ffebee;
+    }
+
+    .task-icon {
+      font-size: 1.5rem;
+      min-width: 2rem;
+      text-align: center;
+    }
+
+    .task-details {
+      flex: 1;
+    }
+
+    .task-type {
+      font-size: 0.75rem;
+      color: #636e72;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+
+    .task-description {
+      font-weight: 500;
+      color: #2d3436;
+    }
+
+    /* Whiteboard */
+    #whiteboard-panel {
+      max-height: 400px;
+    }
+
+    #whiteboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    #whiteboard-table thead {
+      position: sticky;
+      top: 0;
+      background: #2d3436;
+      color: white;
+      z-index: 10;
+    }
+
+    #whiteboard-table th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #whiteboard-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #dfe6e9;
+    }
+
+    #whiteboard-table tbody tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    .timestamp {
+      color: #636e72;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .event-type {
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    .event-type.INIT { color: #95a5a6; }
+    .event-type.INFO { color: #3498db; }
+    .event-type.API { color: #27ae60; }
+    .event-type.SUCCESS { color: #00b894; }
+    .event-type.ERROR { color: #e74c3c; }
+    .event-type.WARNING { color: #f39c12; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-start {
+      background: #00b894;
+      color: white;
+    }
+
+    .btn-pause {
+      background: #fdcb6e;
+      color: #2d3436;
+    }
+
+    .btn-resume {
+      background: #74b9ff;
+      color: white;
+    }
+
+    .btn-clear {
+      background: #dfe6e9;
+      color: #2d3436;
+      flex: 0 1 auto;
+      min-width: 100px;
+    }
+
+    /* Progress */
+    .progress-bar {
+      height: 6px;
+      background: #dfe6e9;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00b894 0%, #00d2b4 100%);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.25rem;
+      }
+
+      .container {
+        padding: 0.75rem;
+      }
+
+      .task-item {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .btn {
+        min-width: 100px;
+        padding: 0.875rem 1.5rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <h1>🏗️ AI Builder Workshop</h1>
+    <div class="status" id="status">
+      <span id="status-icon">⏸</span>
+      <span id="status-text">Idle</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Task List -->
+    <div class="panel" id="task-panel">
+      <div class="panel-header">
+        <span>📋 Build Tasks</span>
+        <span id="task-count">0 / 0</span>
+      </div>
+      <div class="panel-content" id="task-list">
+        <p style="color: #636e72; text-align: center; padding: 2rem;">
+          Click "Start Build" to load tasks
+        </p>
+      </div>
+    </div>
+
+    <!-- Debug Whiteboard -->
+    <div class="panel" id="whiteboard-panel">
+      <div class="panel-header">
+        <span>📝 Debug Log</span>
+        <button class="btn-clear" onclick="clearWhiteboard()">Clear</button>
+      </div>
+      <div class="panel-content" style="padding: 0; max-height: 350px; overflow-y: auto;">
+        <table id="whiteboard-table">
+          <thead>
+            <tr>
+              <th style="width: 100px;">Time</th>
+              <th style="width: 100px;">Type</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="whiteboard-body">
+            <tr>
+              <td class="timestamp">--:--:--</td>
+              <td><span class="event-type INIT">INIT</span></td>
+              <td>Waiting for build to start...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-start" id="btn-start" onclick="startBuild()">
+        <span>▶</span> Start Build
+      </button>
+      <button class="btn btn-pause" id="btn-pause" onclick="pauseBuild()" disabled>
+        <span>⏸</span> Pause
+      </button>
+      <button class="btn btn-resume" id="btn-resume" onclick="resumeBuild()" disabled>
+        <span>🔄</span> Resume
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let state = {
+      status: 'idle',
+      tasks: [],
+      currentTask: null,
+      progress: 0
+    };
+
+    // Log to whiteboard
+    function logToWhiteboard(msg, type = 'INFO') {
+      const tbody = document.getElementById('whiteboard-body');
+      const row = tbody.insertRow(0); // Insert at top for latest first
+
+      const timestamp = new Date().toLocaleTimeString();
+
+      row.innerHTML = `
+        <td class="timestamp">${timestamp}</td>
+        <td><span class="event-type ${type}">${type}</span></td>
+        <td>${msg}</td>
+      `;
+
+      console.log(`[${type}] ${msg}`);
+    }
+
+    function clearWhiteboard() {
+      document.getElementById('whiteboard-body').innerHTML = `
+        <tr>
+          <td class="timestamp">--:--:--</td>
+          <td><span class="event-type INIT">INIT</span></td>
+          <td>Whiteboard cleared</td>
+        </tr>
+      `;
+    }
+
+    // Update status
+    function updateStatus(status, icon, text) {
+      state.status = status;
+      document.getElementById('status').className = `status ${status}`;
+      document.getElementById('status-icon').textContent = icon;
+      document.getElementById('status-text').textContent = text;
+    }
+
+    // Render tasks
+    function renderTasks() {
+      const taskList = document.getElementById('task-list');
+      const taskCount = document.getElementById('task-count');
+
+      const completed = state.tasks.filter(t => t.status === 'completed').length;
+      taskCount.textContent = `${completed} / ${state.tasks.length}`;
+
+      const icons = {
+        pending: '⏳',
+        in_progress: '🔄',
+        completed: '✅',
+        failed: '❌'
+      };
+
+      taskList.innerHTML = state.tasks.map(task => `
+        <div class="task-item ${task.status}">
+          <div class="task-icon">${icons[task.status]}</div>
+          <div class="task-details">
+            <div class="task-type">${task.type || 'task'}</div>
+            <div class="task-description">${task.description}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Update progress
+    function updateProgress(percent) {
+      state.progress = percent;
+      document.getElementById('progress-fill').style.width = `${percent}%`;
+    }
+
+    // Start build
+    async function startBuild() {
+      try {
+        logToWhiteboard('Starting build process', 'INFO');
+        updateStatus('building', '🔨', 'Building...');
+
+        logToWhiteboard('Calling /api/builder/start', 'API');
+        const response = await fetch('/api/builder/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'llama3.2:3b' })
+        });
+
+        const data = await response.json();
+        logToWhiteboard(`Loaded ${data.tasks.length} tasks`, 'SUCCESS');
+
+        state.tasks = data.tasks;
+        renderTasks();
+
+        document.getElementById('btn-start').disabled = true;
+        document.getElementById('btn-pause').disabled = false;
+
+        // Start implementing tasks
+        await implementNextTask();
+
+      } catch (error) {
+        logToWhiteboard(`Error: ${error.message}`, 'ERROR');
+        updateStatus('failed', '❌', 'Failed');
+      }
+    }
+
+    // Implement next task
+    async function implementNextTask() {
+      if (state.status === 'paused') return;
+
+      const nextTask = state.tasks.find(t => t.status === 'pending');
+      if (!nextTask) {
+        updateStatus('complete', '✅', 'Complete!');
+        logToWhiteboard('All tasks completed!', 'SUCCESS');
+        document.getElementById('btn-pause').disabled = true;
+        return;
+      }
+
+      state.currentTask = nextTask;
+      nextTask.status = 'in_progress';
+      renderTasks();
+
+      logToWhiteboard(`Implementing: ${nextTask.description}`, 'INFO');
+
+      try {
+        const taskId = state.tasks.indexOf(nextTask);
+        const response = await fetch(`/api/builder/implement/${taskId}`, {
+          method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          nextTask.status = 'completed';
+          logToWhiteboard(`Completed: ${nextTask.description}`, 'SUCCESS');
+
+          const completed = state.tasks.filter(t => t.status === 'completed').length;
+          updateProgress(Math.round((completed / state.tasks.length) * 100));
+          renderTasks();
+
+          // Continue to next task
+          setTimeout(() => implementNextTask(), 500);
+        } else {
+          throw new Error(data.error || 'Implementation failed');
+        }
+      } catch (error) {
+        nextTask.status = 'failed';
+        renderTasks();
+        logToWhiteboard(`Error: ${error.message}`, 'ERROR');
+        updateStatus('paused', '⏸', 'Paused (Error)');
+        document.getElementById('btn-pause').disabled = true;
+        document.getElementById('btn-resume').disabled = false;
+      }
+    }
+
+    // Pause build
+    function pauseBuild() {
+      state.status = 'paused';
+      updateStatus('paused', '⏸', 'Paused');
+      logToWhiteboard('Build paused by user', 'WARNING');
+      document.getElementById('btn-pause').disabled = true;
+      document.getElementById('btn-resume').disabled = false;
+    }
+
+    // Resume build
+    function resumeBuild() {
+      state.status = 'building';
+      updateStatus('building', '🔨', 'Building...');
+      logToWhiteboard('Build resumed', 'INFO');
+      document.getElementById('btn-resume').disabled = true;
+      document.getElementById('btn-pause').disabled = false;
+      implementNextTask();
+    }
+
+    // Initialize
+    logToWhiteboard('Builder initialized', 'SUCCESS');
+  </script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      line-height: 1.8;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 60px 80px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: #667eea;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    h1::before {
+      content: "🔒";
+      font-size: 3.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 40px;
+      font-style: italic;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      color: #764ba2;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+    }
+
+    h3 {
+      font-size: 1.4rem;
+      color: #667eea;
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+
+    ul {
+      margin: 20px 0;
+      padding-left: 30px;
+    }
+
+    li {
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .highlight {
+      background: #fff3cd;
+      padding: 20px;
+      border-left: 4px solid #ffc107;
+      margin: 30px 0;
+      border-radius: 4px;
+    }
+
+    .highlight strong {
+      color: #764ba2;
+      font-size: 1.2rem;
+    }
+
+    .good {
+      color: #28a745;
+      font-weight: 700;
+    }
+
+    .bad {
+      color: #dc3545;
+      font-weight: 700;
+      text-decoration: line-through;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 30px 0;
+    }
+
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #667eea;
+      color: white;
+      font-weight: 700;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 30px;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 30px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      h3 {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="/" class="back-link">← Back to Home</a>
+
+  <h1>Privacy Policy</h1>
+  <p class="subtitle">Effective Date: October 13, 2025</p>
+
+  <div class="highlight">
+    <strong>TL;DR: We DON'T Track Cookies</strong>
+    <p style="margin-top: 10px;">
+      Unlike 99% of websites, we don't use tracking cookies, Google Analytics, Facebook Pixel, or any third-party analytics. We respect your privacy.
+    </p>
+  </div>
+
+  <h2>What We Do vs. What We DON'T Do</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>What We DON'T Do ❌</th>
+        <th>What We DO ✅</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="bad">Google Analytics</td>
+        <td class="good">Server-side analytics only</td>
+      </tr>
+      <tr>
+        <td class="bad">Facebook Pixel</td>
+        <td class="good">No social media tracking</td>
+      </tr>
+      <tr>
+        <td class="bad">Third-party cookies</td>
+        <td class="good">Session IDs only (first-party)</td>
+      </tr>
+      <tr>
+        <td class="bad">Cross-site tracking</td>
+        <td class="good">Isolated per-site data</td>
+      </tr>
+      <tr>
+        <td class="bad">Sell your data</td>
+        <td class="good">Your data stays with us</td>
+      </tr>
+      <tr>
+        <td class="bad">Ad retargeting</td>
+        <td class="good">No ads follow you around</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What Data We Collect</h2>
+
+  <h3>1. Account Information (When You Sign Up)</h3>
+  <ul>
+    <li><strong>Email address</strong> - For login and account recovery</li>
+    <li><strong>Username/handle</strong> - Your chosen display name</li>
+    <li><strong>Password</strong> - Encrypted with bcrypt (we can't see it)</li>
+  </ul>
+
+  <h3>2. Session Data (Temporary)</h3>
+  <ul>
+    <li><strong>Session ID</strong> - Random token to keep you logged in</li>
+    <li><strong>Device fingerprint</strong> - SHA-256 hash for security (not tracking)</li>
+    <li><strong>IP address</strong> - For location-based features and security</li>
+    <li><strong>User agent</strong> - Browser/device info for compatibility</li>
+  </ul>
+  <p>
+    <em>Note: Session data is deleted when you log out or after 30 days of inactivity.</em>
+  </p>
+
+  <h3>3. Usage Data (Anonymous)</h3>
+  <ul>
+    <li><strong>Page views</strong> - Which pages are popular (no individual tracking)</li>
+    <li><strong>Feature usage</strong> - Which features get used (aggregated)</li>
+    <li><strong>Error logs</strong> - To fix bugs (no personal info)</li>
+  </ul>
+
+  <h3>4. Payment Data (If You Purchase)</h3>
+  <ul>
+    <li><strong>Stripe handles payment</strong> - We never see your card number</li>
+    <li><strong>We store</strong> - Order ID, amount, timestamp</li>
+    <li><strong>We don't store</strong> - Credit card numbers, CVV, billing address</li>
+  </ul>
+
+  <h2>How We Track Attribution (Without Cookies)</h2>
+
+  <p>Instead of cookies, we use privacy-friendly methods:</p>
+
+  <ul>
+    <li><strong>QR Codes</strong> - Scan a QR code with a unique session token</li>
+    <li><strong>Referral Links</strong> - URLs with affiliate codes (e.g., ?ref=PARTNER-CODE)</li>
+    <li><strong>Device Fingerprinting</strong> - Anonymous hash of device characteristics (for security, not tracking)</li>
+    <li><strong>Server-side Sessions</strong> - Session ID stored on our server (not in browser cookies)</li>
+  </ul>
+
+  <p>
+    <strong>Example:</strong> If an affiliate shares a referral link (<code>https://calos.ai?ref=PARTNER123</code>), we track conversions by that code, not by following you around with cookies.
+  </p>
+
+  <h2>Your Rights</h2>
+
+  <h3>1. Access Your Data</h3>
+  <p>Email us at <strong>privacy@calos.ai</strong> to request a copy of your data.</p>
+
+  <h3>2. Delete Your Data</h3>
+  <p>Go to Account Settings → Delete Account. All your data will be permanently deleted within 30 days.</p>
+
+  <h3>3. Opt Out of Analytics</h3>
+  <p>Analytics are already minimal and anonymous. If you want complete privacy, use a VPN or Tor Browser.</p>
+
+  <h3>4. Portability</h3>
+  <p>Export your data anytime from Account Settings → Export Data (JSON format).</p>
+
+  <h2>Data Retention</h2>
+
+  <ul>
+    <li><strong>Active accounts</strong> - Data kept indefinitely</li>
+    <li><strong>Inactive accounts (1 year+)</strong> - Reminder email, then deletion after 90 days</li>
+    <li><strong>Deleted accounts</strong> - 30-day grace period, then permanent deletion</li>
+    <li><strong>Session data</strong> - Deleted after 30 days</li>
+    <li><strong>Logs</strong> - Deleted after 90 days</li>
+  </ul>
+
+  <h2>Security</h2>
+
+  <ul>
+    <li><strong>Encryption</strong> - All data encrypted at rest (AES-256) and in transit (TLS 1.3)</li>
+    <li><strong>Passwords</strong> - Hashed with bcrypt (can't be reversed)</li>
+    <li><strong>API keys</strong> - Stored with SHA-256 hashes</li>
+    <li><strong>Two-factor authentication</strong> - Optional, recommended</li>
+  </ul>
+
+  <h2>Third-Party Services</h2>
+
+  <p>We use these services, but they don't track you:</p>
+
+  <ul>
+    <li><strong>Stripe</strong> - Payment processing (PCI-DSS compliant)</li>
+    <li><strong>AWS/Cloudflare</strong> - Hosting and CDN (no tracking)</li>
+    <li><strong>PostgreSQL</strong> - Database (self-hosted)</li>
+  </ul>
+
+  <p><strong>We do NOT use:</strong></p>
+  <ul>
+    <li class="bad">Google Analytics</li>
+    <li class="bad">Facebook Pixel</li>
+    <li class="bad">Google Ads</li>
+    <li class="bad">Any ad network</li>
+    <li class="bad">Any data brokers</li>
+  </ul>
+
+  <h2>Children's Privacy</h2>
+
+  <p>
+    CALOS is not intended for children under 13. We don't knowingly collect data from children. If you're a parent and believe your child has created an account, contact us at <strong>privacy@calos.ai</strong>.
+  </p>
+
+  <h2>Changes to This Policy</h2>
+
+  <p>
+    If we update this policy, we'll notify you via email and display a banner on the site. Continued use after changes means you accept the new policy.
+  </p>
+
+  <h2>Contact Us</h2>
+
+  <p>
+    Questions about privacy? Email us at <strong>privacy@calos.ai</strong>.
+  </p>
+
+  <p style="margin-top: 60px; text-align: center; color: #666;">
+    <em>Last updated: October 13, 2025</em>
+  </p>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+{
+  "migrations": {
+    "summary": {
+      "total": 0,
+      "working": 0,
+      "failing": 0,
+      "broken": 0,
+      "unknown": 0,
+      "skipList": [],
+      "topErrors": []
+    },
+    "brokenMigrations": []
+  },
+  "skills": {
+    "summary": {
+      "totalSkills": 2,
+      "masteredSkills": 0,
+      "skillsNeedingWork": 2,
+      "totalAttempts": 10,
+      "totalSuccesses": 5,
+      "overallSuccessRate": "50.0%",
+      "levelDistribution": {
+        "novice": 0,
+        "beginner": 1,
+        "intermediate": 1,
+        "advanced": 0,
+        "expert": 0,
+        "master": 0
+      },
+      "nextTaskToLearn": {
+        "skillId": "file-processing",
+        "level": 2,
+        "attempts": [
+          {
+            "success": true,
+            "context": {
+              "file": "file1.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "file": "file2.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "file": "file4.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "file": "file5.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": false,
+            "context": {
+              "file": "file3.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.498Z"
+          },
+          {
+            "success": false,
+            "context": {
+              "file": "file3.txt"
+            },
+            "timestamp": "2025-10-22T19:27:08.501Z"
+          }
+        ],
+        "consecutiveSuccesses": 0,
+        "consecutiveFailures": 2,
+        "mastered": false,
+        "masteredAt": "2025-10-22T19:27:07.497Z",
+        "successfulApproaches": [],
+        "lastPracticed": "2025-10-22T19:27:08.501Z",
+        "totalSuccesses": 4,
+        "totalFailures": 2,
+        "exists": true,
+        "levelName": "Intermediate",
+        "successRate": "66.7%"
+      }
+    },
+    "mastered": [],
+    "needingWork": [
+      {
+        "skillId": "css-loading",
+        "level": 1,
+        "attempts": [
+          {
+            "success": false,
+            "context": {
+              "approach": "css-variables"
+            },
+            "timestamp": "2025-10-22T19:27:07.495Z"
+          },
+          {
+            "success": false,
+            "context": {
+              "approach": "css-variables"
+            },
+            "timestamp": "2025-10-22T19:27:07.495Z"
+          },
+          {
+            "success": false,
+            "context": {
+              "approach": "css-variables"
+            },
+            "timestamp": "2025-10-22T19:27:07.496Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "approach": "inline-styles"
+            },
+            "timestamp": "2025-10-22T19:27:07.496Z"
+          }
+        ],
+        "consecutiveSuccesses": 1,
+        "consecutiveFailures": 0,
+        "mastered": false,
+        "masteredAt": null,
+        "successfulApproaches": [
+          "inline-styles"
+        ],
+        "lastPracticed": "2025-10-22T19:27:07.496Z",
+        "totalSuccesses": 1,
+        "totalFailures": 3,
+        "exists": true,
+        "levelName": "Beginner",
+        "successRate": "25.0%"
+      },
+      {
+        "skillId": "file-processing",
+        "level": 2,
+        "attempts": [
+          {
+            "success": true,
+            "context": {
+              "file": "file1.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "file": "file2.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "file": "file4.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": true,
+            "context": {
+              "file": "file5.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.497Z"
+          },
+          {
+            "success": false,
+            "context": {
+              "file": "file3.txt"
+            },
+            "timestamp": "2025-10-22T19:27:07.498Z"
+          },
+          {
+            "success": false,
+            "context": {
+              "file": "file3.txt"
+            },
+            "timestamp": "2025-10-22T19:27:08.501Z"
+          }
+        ],
+        "consecutiveSuccesses": 0,
+        "consecutiveFailures": 2,
+        "mastered": false,
+        "masteredAt": "2025-10-22T19:27:07.497Z",
+        "successfulApproaches": [],
+        "lastPracticed": "2025-10-22T19:27:08.501Z",
+        "totalSuccesses": 4,
+        "totalFailures": 2,
+        "exists": true,
+        "levelName": "Intermediate",
+        "successRate": "66.7%"
+      }
+    ]
+  },
+  "failures": {
+    "count": 2
+  },
+  "docs": {
+    "summary": {
+      "totalSources": 0,
+      "totalPatterns": 0,
+      "totalTopics": 0,
+      "totalBestPractices": 0,
+      "totalErrorSolutions": 0,
+      "topTopics": [],
+      "recentSources": []
+    },
+    "bestPractices": []
+  },
+  "generatedAt": "2025-10-22T20:04:24.602Z",
+  "version": "1.0.0"
+}

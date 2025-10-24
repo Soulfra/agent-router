@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "name": "soulfra-network",
+  "description": "Multi-provider OAuth system with auto-subdomain creation (ColdStartKit Template)",
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "build": {
+    "env": {
+      "TWITTER_CLIENT_ID": "@twitter_client_id",
+      "TWITTER_CLIENT_SECRET": "@twitter_client_secret",
+      "GITHUB_CLIENT_ID": "@github_client_id",
+      "GITHUB_CLIENT_SECRET": "@github_client_secret",
+      "DISCORD_CLIENT_ID": "@discord_client_id",
+      "DISCORD_CLIENT_SECRET": "@discord_client_secret",
+      "LINKEDIN_CLIENT_ID": "@linkedin_client_id",
+      "LINKEDIN_CLIENT_SECRET": "@linkedin_client_secret",
+      "PARENT_DOMAIN": "@parent_domain"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/auth/twitter",
+      "dest": "/api/auth/twitter.js"
+    },
+    {
+      "src": "/api/auth/github",
+      "dest": "/api/auth/github.js"
+    },
+    {
+      "src": "/api/auth/discord",
+      "dest": "/api/auth/discord.js"
+    },
+    {
+      "src": "/api/auth/linkedin",
+      "dest": "/api/auth/linkedin.js"
+    },
+    {
+      "src": "/api/auth/callback",
+      "dest": "/api/auth/callback.js"
+    },
+    {
+      "src": "/api/auth/me",
+      "dest": "/api/auth/me.js"
+    },
+    {
+      "src": "/api/auth/logout",
+      "dest": "/api/auth/logout.js",
+      "methods": ["POST", "GET"]
+    },
+    {
+      "src": "/login.html",
+      "dest": "/public/login.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Games - UNO, CAH, Apples to Apples</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    header h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    header p {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+
+    .game-modes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .mode-card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      text-align: center;
+    }
+
+    .mode-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .mode-card.selected {
+      border: 3px solid #667eea;
+      transform: scale(1.05);
+    }
+
+    .mode-card h2 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 1.8em;
+    }
+
+    .mode-card p {
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .mode-card .players {
+      font-size: 0.9em;
+      color: #999;
+    }
+
+    .game-area {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      display: none;
+    }
+
+    .game-area.active {
+      display: block;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .game-info {
+      font-size: 1.1em;
+      color: #666;
+    }
+
+    .game-status {
+      background: #667eea;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+    }
+
+    .players-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .player-card {
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-card.current-turn {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+    }
+
+    .player-card.bot {
+      background: #e7f3ff;
+    }
+
+    .player-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #667eea;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .player-name {
+      font-weight: 600;
+    }
+
+    .player-cards {
+      background: #ffc107;
+      color: #333;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+
+    .card-display {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .top-card {
+      display: inline-block;
+      width: 150px;
+      height: 200px;
+      background: white;
+      border: 3px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      font-size: 2em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .top-card.red { border-color: #dc3545; color: #dc3545; }
+    .top-card.blue { border-color: #007bff; color: #007bff; }
+    .top-card.green { border-color: #28a745; color: #28a745; }
+    .top-card.yellow { border-color: #ffc107; color: #ffc107; }
+
+    .hand {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      width: 100px;
+      height: 140px;
+      background: white;
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .card.selected {
+      transform: translateY(-15px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .card.red { border-color: #dc3545; color: #dc3545; }
+    .card.blue { border-color: #007bff; color: #007bff; }
+    .card.green { border-color: #28a745; color: #28a745; }
+    .card.yellow { border-color: #ffc107; color: #ffc107; }
+    .card.wild { border-color: #333; background: linear-gradient(135deg, #dc3545, #007bff, #28a745, #ffc107); color: white; }
+
+    .card.prompt {
+      border-color: #333;
+      background: #333;
+      color: white;
+      font-size: 0.9em;
+      text-align: center;
+    }
+
+    .card.response {
+      border-color: #fff;
+      background: #fff;
+      color: #333;
+      font-size: 0.9em;
+      text-align: center;
+      border: 2px solid #333;
+    }
+
+    .actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .color-selector {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .color-btn {
+      width: 60px;
+      height: 60px;
+      border: 3px solid transparent;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .color-btn.red { background: #dc3545; }
+    .color-btn.blue { background: #007bff; }
+    .color-btn.green { background: #28a745; }
+    .color-btn.yellow { background: #ffc107; }
+
+    .message {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 1.2em;
+    }
+
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2em;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .websocket-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #dc3545;
+    }
+
+    .status-dot.connected {
+      background: #28a745;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-content h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: slideIn 0.3s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎴 Card Games</h1>
+      <p>Play UNO, Cards Against Humanity, Apples to Apples with AI bots</p>
+    </header>
+
+    <!-- Game Mode Selection -->
+    <div id="mode-selection">
+      <div class="game-modes">
+        <div class="mode-card" data-mode="speed">
+          <h2>🏃 Speed Mode</h2>
+          <p>UNO-style race to empty your hand</p>
+          <div class="players">2-10 players</div>
+        </div>
+
+        <div class="mode-card" data-mode="judge">
+          <h2>😂 Judge Mode</h2>
+          <p>Cards Against Humanity / Apples to Apples</p>
+          <div class="players">3-10 players</div>
+        </div>
+
+        <div class="mode-card" data-mode="build">
+          <h2>🏰 Build Mode</h2>
+          <p>Settlers-style resource collection</p>
+          <div class="players">2-6 players</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="create-game-btn">Create Game</button>
+        <button class="btn btn-secondary" id="spawn-bots-btn">Add AI Bots</button>
+      </div>
+    </div>
+
+    <!-- Game Area -->
+    <div id="game-area" class="game-area">
+      <div class="game-header">
+        <div class="game-info">
+          <strong id="game-mode-display">Speed Mode</strong> - Game ID: <span id="game-id-display">-</span>
+        </div>
+        <div class="game-status" id="game-status">Waiting</div>
+      </div>
+
+      <div id="message-area"></div>
+
+      <div class="players-list" id="players-list"></div>
+
+      <div class="card-display">
+        <h3>Top Card</h3>
+        <div class="top-card" id="top-card">?</div>
+      </div>
+
+      <div>
+        <h3>Your Hand</h3>
+        <div class="hand" id="hand"></div>
+      </div>
+
+      <div id="color-selector" class="color-selector" style="display: none;">
+        <div class="color-btn red" data-color="red"></div>
+        <div class="color-btn blue" data-color="blue"></div>
+        <div class="color-btn green" data-color="green"></div>
+        <div class="color-btn yellow" data-color="yellow"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="start-game-btn">Start Game</button>
+        <button class="btn btn-success" id="play-card-btn" disabled>Play Card</button>
+        <button class="btn btn-secondary" id="draw-card-btn" disabled>Draw Card</button>
+        <button class="btn btn-danger" id="leave-game-btn">Leave Game</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="cards-left">0</div>
+          <div class="stat-label">Cards Left</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="turns-played">0</div>
+          <div class="stat-label">Turns</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="players-count">0</div>
+          <div class="stat-label">Players</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WebSocket Status -->
+  <div class="websocket-status">
+    <div class="status-dot" id="ws-status"></div>
+    <span id="ws-text">Disconnected</span>
+  </div>
+
+  <!-- Winner Modal -->
+  <div class="modal" id="winner-modal">
+    <div class="modal-content">
+      <h2>🎉 Game Over!</h2>
+      <p id="winner-text"></p>
+      <button class="btn btn-primary" id="new-game-btn">New Game</button>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let ws = null;
+    let gameId = null;
+    let playerId = 'user-' + Math.random().toString(36).substr(2, 9);
+    let selectedMode = 'speed';
+    let selectedCardIndex = null;
+    let selectedColor = null;
+    let playerHand = [];
+    let currentGame = null;
+
+    // Initialize
+    function init() {
+      connectWebSocket();
+      setupEventListeners();
+    }
+
+    // WebSocket connection
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      ws = new WebSocket(`${protocol}//${host}`);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        updateWSStatus(true);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        updateWSStatus(false);
+        setTimeout(connectWebSocket, 3000); // Reconnect
+      };
+
+      ws.onmessage = (event) => {
+        handleWSMessage(JSON.parse(event.data));
+      };
+    }
+
+    function updateWSStatus(connected) {
+      const dot = document.getElementById('ws-status');
+      const text = document.getElementById('ws-text');
+      if (connected) {
+        dot.classList.add('connected');
+        text.textContent = 'Connected';
+      } else {
+        dot.classList.remove('connected');
+        text.textContent = 'Disconnected';
+      }
+    }
+
+    // WebSocket message handler
+    function handleWSMessage(message) {
+      console.log('WS Message:', message);
+
+      switch (message.type) {
+        case 'game_created':
+          gameId = message.game.gameId;
+          showMessage('Game created! Game ID: ' + gameId, 'success');
+          joinGame(gameId);
+          break;
+
+        case 'game_joined':
+          currentGame = message.game;
+          updateGameDisplay();
+          showGameArea();
+          break;
+
+        case 'game_started':
+          currentGame = message.game;
+          updateGameDisplay();
+          showMessage('Game started!', 'success');
+          break;
+
+        case 'card_played':
+          currentGame = message.game;
+          updateGameDisplay();
+          break;
+
+        case 'game_ended':
+          showWinner(message.winner);
+          break;
+
+        case 'player_joined':
+          showMessage(`${message.player.username} joined!`, 'info');
+          break;
+
+        case 'bot_thinking':
+          showMessage(`${message.username} is thinking...`, 'info');
+          break;
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Mode selection
+      document.querySelectorAll('.mode-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          selectedMode = card.dataset.mode;
+        });
+      });
+
+      // Create game
+      document.getElementById('create-game-btn').addEventListener('click', createGame);
+
+      // Start game
+      document.getElementById('start-game-btn').addEventListener('click', startGame);
+
+      // Play card
+      document.getElementById('play-card-btn').addEventListener('click', playCard);
+
+      // Draw card
+      document.getElementById('draw-card-btn').addEventListener('click', drawCard);
+
+      // Leave game
+      document.getElementById('leave-game-btn').addEventListener('click', leaveGame);
+
+      // Spawn bots
+      document.getElementById('spawn-bots-btn').addEventListener('click', spawnBots);
+
+      // Color selector
+      document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedColor = btn.dataset.color;
+          playCard();
+        });
+      });
+
+      // New game
+      document.getElementById('new-game-btn').addEventListener('click', () => {
+        document.getElementById('winner-modal').classList.remove('active');
+        location.reload();
+      });
+    }
+
+    // Create game
+    function createGame() {
+      ws.send(JSON.stringify({
+        type: 'game_create',
+        groupId: 'demo-group',
+        createdBy: playerId,
+        gameMode: selectedMode
+      }));
+    }
+
+    // Join game
+    function joinGame(gid) {
+      ws.send(JSON.stringify({
+        type: 'game_join',
+        gameId: gid,
+        playerId: playerId,
+        playerType: 'human',
+        playerData: {
+          username: 'Player ' + playerId.slice(-4)
+        }
+      }));
+    }
+
+    // Start game
+    function startGame() {
+      ws.send(JSON.stringify({
+        type: 'game_start',
+        gameId: gameId
+      }));
+    }
+
+    // Play card
+    function playCard() {
+      if (selectedCardIndex === null) return;
+
+      const options = {};
+      if (selectedColor) {
+        options.color = selectedColor;
+      }
+
+      ws.send(JSON.stringify({
+        type: 'game_play_card',
+        gameId: gameId,
+        playerId: playerId,
+        cardIndex: selectedCardIndex,
+        options: options
+      }));
+
+      selectedCardIndex = null;
+      selectedColor = null;
+      document.getElementById('color-selector').style.display = 'none';
+    }
+
+    // Draw card
+    function drawCard() {
+      ws.send(JSON.stringify({
+        type: 'game_draw_card',
+        gameId: gameId,
+        playerId: playerId
+      }));
+    }
+
+    // Leave game
+    function leaveGame() {
+      ws.send(JSON.stringify({
+        type: 'game_leave',
+        gameId: gameId,
+        playerId: playerId
+      }));
+      location.reload();
+    }
+
+    // Spawn bots
+    function spawnBots() {
+      if (!gameId) {
+        showMessage('Create a game first!', 'error');
+        return;
+      }
+
+      ws.send(JSON.stringify({
+        type: 'bot_spawn',
+        gameId: gameId,
+        groupId: 'demo-group',
+        count: 2
+      }));
+
+      showMessage('Spawning AI bots...', 'info');
+    }
+
+    // Update game display
+    function updateGameDisplay() {
+      if (!currentGame) return;
+
+      // Update game info
+      document.getElementById('game-id-display').textContent = gameId.slice(0, 8);
+      document.getElementById('game-mode-display').textContent = selectedMode + ' Mode';
+      document.getElementById('game-status').textContent = currentGame.status;
+
+      // Update players list
+      const playersList = document.getElementById('players-list');
+      playersList.innerHTML = '';
+      currentGame.players.forEach((player, index) => {
+        const isCurrentTurn = index === currentGame.currentPlayerIndex;
+        const playerDiv = document.createElement('div');
+        playerDiv.className = `player-card ${isCurrentTurn ? 'current-turn' : ''} ${player.playerType === 'bot' ? 'bot' : ''}`;
+        playerDiv.innerHTML = `
+          <div class="player-avatar">${player.username.charAt(0).toUpperCase()}</div>
+          <div class="player-name">${player.username}</div>
+          <div class="player-cards">${player.hand?.length || 0} cards</div>
+        `;
+        playersList.appendChild(playerDiv);
+      });
+
+      // Update top card
+      const topCard = currentGame.discardPile?.[currentGame.discardPile.length - 1];
+      if (topCard) {
+        const topCardEl = document.getElementById('top-card');
+        topCardEl.textContent = topCard.number !== undefined ? topCard.number : topCard.action || topCard.text;
+        topCardEl.className = 'top-card ' + (topCard.color || '');
+      }
+
+      // Update player's hand
+      const player = currentGame.players.find(p => p.playerId === playerId);
+      if (player && player.hand) {
+        playerHand = player.hand;
+        renderHand();
+      }
+
+      // Update stats
+      document.getElementById('cards-left').textContent = player?.hand?.length || 0;
+      document.getElementById('turns-played').textContent = currentGame.stats?.totalTurns || 0;
+      document.getElementById('players-count').textContent = currentGame.players.length;
+    }
+
+    // Render player's hand
+    function renderHand() {
+      const handEl = document.getElementById('hand');
+      handEl.innerHTML = '';
+      playerHand.forEach((card, index) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card ${card.color || ''} ${card.type || ''}`;
+        cardDiv.textContent = card.number !== undefined ? card.number : card.action || card.text?.slice(0, 20) || '?';
+        cardDiv.addEventListener('click', () => selectCard(index));
+        handEl.appendChild(cardDiv);
+      });
+    }
+
+    // Select card
+    function selectCard(index) {
+      selectedCardIndex = index;
+
+      // Highlight selected
+      document.querySelectorAll('.card').forEach((c, i) => {
+        c.classList.toggle('selected', i === index);
+      });
+
+      const card = playerHand[index];
+
+      // Show color selector for wild cards
+      if (card.type === 'wild') {
+        document.getElementById('color-selector').style.display = 'flex';
+      } else {
+        document.getElementById('color-selector').style.display = 'none';
+        document.getElementById('play-card-btn').disabled = false;
+      }
+    }
+
+    // Show game area
+    function showGameArea() {
+      document.getElementById('mode-selection').style.display = 'none';
+      document.getElementById('game-area').classList.add('active');
+    }
+
+    // Show message
+    function showMessage(text, type = 'info') {
+      const messageArea = document.getElementById('message-area');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${type} fade-in`;
+      msgDiv.textContent = text;
+      messageArea.innerHTML = '';
+      messageArea.appendChild(msgDiv);
+
+      setTimeout(() => {
+        msgDiv.remove();
+      }, 5000);
+    }
+
+    // Show winner
+    function showWinner(winner) {
+      document.getElementById('winner-text').textContent = `${winner.username} wins!`;
+      document.getElementById('winner-modal').classList.add('active');
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>

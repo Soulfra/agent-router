@@ -1,5 +1,5 @@
 /**
- * LLM API Routes with Bot Detection
+ * LLM API Routes with Bot Detection & User Context
  *
  * Provides REST API for multi-LLM router with bot detection:
  * - POST /api/llm/request-access - Request access (get challenge)
@@ -16,12 +16,19 @@
  * 2. Client: Create Soulfra identity, solve challenge, generate proof
  * 3. Client: POST /api/llm/verify-personhood → Get access token
  * 4. Client: Use access token in Authorization header for all requests
+ *
+ * User Context Integration:
+ * - If SSO authenticated (req.user exists), loads user preferences
+ * - Enriches prompts with accessibility context (high contrast, screen reader, etc.)
+ * - Formats responses based on user settings
  */
 
 const express = require('express');
 const MultiLLMRouter = require('../lib/multi-llm-router');
 const BotDetector = require('../lib/bot-detector');
 const RateLimiter = require('../lib/rate-limiter');
+const UserContextTransformer = require('../lib/user-context-transformer');
+const { optionalAuth } = require('../middleware/sso-auth');
 
 class LLMRoutes {
   constructor(options = {}) {
@@ -40,6 +47,12 @@ class LLMRoutes {
     });
 
     this.rateLimiter = new RateLimiter();
+
+    // User context transformer (for SSO-authenticated users)
+    this.contextTransformer = options.contextTransformer || null;
+    if (options.db && !this.contextTransformer) {
+      this.contextTransformer = new UserContextTransformer({ db: options.db });
+    }
 
     // Setup routes
     this._setupRoutes();
@@ -62,8 +75,9 @@ class LLMRoutes {
     this.router.get('/models', this._getModels.bind(this));
 
     // Protected routes (require access token)
-    this.router.post('/complete', this._authenticate.bind(this), this._complete.bind(this));
-    this.router.post('/stream', this._authenticate.bind(this), this._stream.bind(this));
+    // optionalAuth attempts SSO first (for user context), then falls back to bot detector
+    this.router.post('/complete', optionalAuth, this._authenticate.bind(this), this._complete.bind(this));
+    this.router.post('/stream', optionalAuth, this._authenticate.bind(this), this._stream.bind(this));
     this.router.get('/session', this._authenticate.bind(this), this._getSession.bind(this));
     this.router.get('/rate-limit', this._authenticate.bind(this), this._getRateLimit.bind(this));
     this.router.delete('/session', this._authenticate.bind(this), this._revokeSession.bind(this));
@@ -270,12 +284,13 @@ class LLMRoutes {
    *   maxTokens?: number,
    *   temperature?: number,
    *   preferredProvider?: 'openai' | 'anthropic' | 'deepseek' | 'ollama',
-   *   model?: string
+   *   model?: string,
+   *   enrichWithUserContext?: boolean  // If false, skips user context enrichment
    * }
    */
   async _complete(req, res) {
     try {
-      const { prompt, ...options } = req.body;
+      let { prompt, systemPrompt, enrichWithUserContext = true, ...options } = req.body;
 
       if (!prompt) {
         return res.status(400).json({
@@ -284,16 +299,51 @@ class LLMRoutes {
         });
       }
 
+      // Check if SSO authenticated user (req.user from optionalAuth middleware)
+      // Enrich prompt with user context if available
+      if (enrichWithUserContext && req.user && req.user.userId && this.contextTransformer) {
+        try {
+          const enriched = await this.contextTransformer.enrichPrompt(
+            req.user.userId,
+            prompt,
+            systemPrompt
+          );
+
+          prompt = enriched.prompt;
+          systemPrompt = enriched.systemPrompt;
+
+          console.log('[LLM] Enriched prompt with user context for user:', req.user.userId);
+        } catch (error) {
+          console.error('[LLM] Error enriching with user context:', error);
+          // Continue without enrichment
+        }
+      }
+
       // Complete request
       const response = await this.llmRouter.complete({
         prompt: prompt,
+        systemPrompt: systemPrompt,
         ...options
       });
+
+      // Format response based on user preferences if available
+      let formattedText = response.text;
+      if (enrichWithUserContext && req.user && req.user.userId && this.contextTransformer) {
+        try {
+          formattedText = await this.contextTransformer.formatResponseForUser(
+            req.user.userId,
+            response.text
+          );
+        } catch (error) {
+          console.error('[LLM] Error formatting response:', error);
+          // Use unformatted text
+        }
+      }
 
       res.json({
         success: true,
         response: {
-          text: response.text,
+          text: formattedText,
           provider: response.provider,
           model: response.model,
           usage: response.usage,

@@ -89,12 +89,14 @@ class VoiceTranscriber {
 
       // Transcribe with whisper.cpp
       console.log('🎤 Transcribing with Whisper...');
-      const whisperExec = path.join(WHISPER_PATH, 'main');
+      const whisperExec = path.join(WHISPER_PATH, 'build/bin/whisper-cli');
       const modelPath = path.join(WHISPER_PATH, 'models', `ggml-${WHISPER_MODEL}.bin`);
 
       const { stdout, stderr } = await execPromise(
         `"${whisperExec}" -m "${modelPath}" -f "${wavFile}" -otxt -of "${TEMP_DIR}/${transcriptId}"`
       );
+
+      if (stderr) console.log('Whisper stderr:', stderr);
 
       // Read transcription
       const transcription = fs.readFileSync(outputFile, 'utf8').trim();
@@ -108,6 +110,9 @@ class VoiceTranscriber {
 
     } catch (error) {
       console.error('❌ Transcription error:', error.message);
+      if (error.stderr) console.error('   Stderr:', error.stderr);
+      if (error.stdout) console.error('   Stdout:', error.stdout);
+      console.error('   Command failed at step:', error.cmd || 'unknown');
 
       // Cleanup on error
       this.cleanup(inputFile, wavFile, outputFile);

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Login - CALOS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-align: center;
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            opacity: 0.95;
+            margin-bottom: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 999px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4ade80 0%, #3b82f6 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 999px;
+        }
+
+        .progress-label {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .question-level {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .question-reward {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1f2937;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .question-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .question-guidance {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .voice-recorder {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            animation: pulse 2s infinite;
+        }
+
+        .record-button.processing {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 60px rgba(34, 197, 94, 0.8);
+            }
+        }
+
+        .record-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .record-button.recording .record-icon {
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+        }
+
+        .record-status {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .record-timer {
+            font-size: 32px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .record-hint {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 60px;
+            margin-bottom: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .waveform.active {
+            opacity: 1;
+        }
+
+        .waveform-bar {
+            width: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 999px;
+            height: 20%;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+        .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+        .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+        .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+        .waveform-bar:nth-child(6) { animation-delay: 0.3s; }
+        .waveform-bar:nth-child(7) { animation-delay: 0.2s; }
+        .waveform-bar:nth-child(8) { animation-delay: 0.1s; }
+
+        @keyframes wave {
+            0%, 100% { height: 20%; }
+            50% { height: 80%; }
+        }
+
+        .transcript-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            min-height: 100px;
+            display: none;
+        }
+
+        .transcript-box.visible {
+            display: block;
+        }
+
+        .transcript-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        .transcript-text {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .completion-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .completion-screen.visible {
+            display: block;
+        }
+
+        .completion-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        .completion-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .completion-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 32px;
+        }
+
+        .archetype-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .question-text {
+                font-size: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Login</h1>
+        <p class="subtitle">Answer 10 questions with your voice. Build your brand strategy while you login. Earn $175.</p>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Question 0 of 10</div>
+
+        <div id="questionScreen">
+            <div class="question-card" id="questionCard">
+                <div class="question-header">
+                    <span class="question-level" id="questionLevel">Level 1</span>
+                    <span class="question-reward" id="questionReward">$5.00</span>
+                </div>
+                <h2 class="question-text" id="questionText">Loading...</h2>
+                <p class="question-guidance" id="questionGuidance">Please wait...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="voice-recorder">
+                <div class="waveform" id="waveform">
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                </div>
+
+                <button class="record-button" id="recordButton">
+                    <div class="record-icon"></div>
+                </button>
+
+                <div class="record-status" id="recordStatus">Click to Start Recording</div>
+                <div class="record-timer" id="recordTimer">0:00</div>
+                <div class="record-hint" id="recordHint">5-60 seconds recommended</div>
+            </div>
+
+            <div class="transcript-box" id="transcriptBox">
+                <div class="transcript-label">Your Answer:</div>
+                <div class="transcript-text" id="transcriptText"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="reRecordButton" disabled>Re-record</button>
+                <button class="btn btn-primary" id="submitButton" disabled>Submit Answer</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statQuestions">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statReward">$0</div>
+                    <div class="stat-label">Earned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statProgress">0%</div>
+                    <div class="stat-label">Progress</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="completion-screen" id="completionScreen">
+            <div class="completion-icon">🎉</div>
+            <h2 class="completion-title">Congratulations!</h2>
+            <p class="completion-subtitle">You've completed the voice onboarding</p>
+
+            <div class="archetype-badge" id="archetypeBadge">The Creator</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">Questions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="finalReward">$175</div>
+                    <div class="stat-label">Earned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="finalDomain">calos.ai</div>
+                    <div class="stat-label">Domain</div>
+                </div>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 32px;">
+                <button class="btn btn-primary" onclick="window.location.href='/dashboard'">Go to Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let currentQuestion = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = null;
+        let timerInterval = null;
+        let totalEarned = 0;
+
+        // Initialize session
+        async function initSession() {
+            try {
+                const response = await fetch('/api/voice-onboarding/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'anonymous@voice-login.calos.ai' })
+                });
+                const data = await response.json();
+                sessionId = data.sessionId;
+                currentQuestion = data.currentQuestion;
+                updateUI();
+            } catch (error) {
+                showError('Failed to start session. Please refresh and try again.');
+            }
+        }
+
+        // Update UI with current question
+        function updateUI() {
+            if (!currentQuestion) return;
+
+            document.getElementById('questionLevel').textContent = `Level ${currentQuestion.level} (${currentQuestion.ageLevel})`;
+            document.getElementById('questionReward').textContent = `$${currentQuestion.reward.toFixed(2)}`;
+            document.getElementById('questionText').textContent = currentQuestion.text;
+            document.getElementById('questionGuidance').textContent = currentQuestion.guidance;
+            document.getElementById('recordHint').textContent = `${currentQuestion.minDuration}-${currentQuestion.maxDuration} seconds recommended`;
+
+            const progress = ((currentQuestion.id - 1) / 10) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            document.getElementById('progressLabel').textContent = `Question ${currentQuestion.id} of 10`;
+            document.getElementById('statQuestions').textContent = currentQuestion.id - 1;
+            document.getElementById('statReward').textContent = `$${totalEarned.toFixed(0)}`;
+            document.getElementById('statProgress').textContent = `${Math.round(progress)}%`;
+        }
+
+        // Start/stop recording
+        document.getElementById('recordButton').addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await submitAnswer(audioBlob);
+                };
+
+                mediaRecorder.start();
+                recordingStartTime = Date.now();
+
+                document.getElementById('recordButton').classList.add('recording');
+                document.getElementById('recordStatus').textContent = 'Recording...';
+                document.getElementById('waveform').classList.add('active');
+
+                timerInterval = setInterval(updateTimer, 100);
+
+            } catch (error) {
+                showError('Microphone access denied. Please allow microphone access and try again.');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                clearInterval(timerInterval);
+
+                document.getElementById('recordButton').classList.remove('recording');
+                document.getElementById('recordButton').classList.add('processing');
+                document.getElementById('recordStatus').textContent = 'Processing...';
+                document.getElementById('waveform').classList.remove('active');
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = (Date.now() - recordingStartTime) / 1000;
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = Math.floor(elapsed % 60);
+            document.getElementById('recordTimer').textContent =
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // Auto-stop at max duration
+            if (elapsed >= currentQuestion.maxDuration) {
+                stopRecording();
+            }
+        }
+
+        async function submitAnswer(audioBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob);
+                formData.append('sessionId', sessionId);
+                formData.append('questionId', currentQuestion.id);
+
+                const response = await fetch('/api/voice-onboarding/answer', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    resetRecording();
+                    return;
+                }
+
+                // Show transcript
+                document.getElementById('transcriptText').textContent = data.transcript;
+                document.getElementById('transcriptBox').classList.add('visible');
+
+                // Update stats
+                totalEarned += data.reward;
+
+                // Move to next question or complete
+                setTimeout(() => {
+                    if (data.nextQuestion) {
+                        currentQuestion = data.nextQuestion;
+                        resetForNextQuestion();
+                        updateUI();
+                    } else {
+                        showCompletion(data);
+                    }
+                }, 2000);
+
+            } catch (error) {
+                showError('Failed to submit answer. Please try again.');
+                resetRecording();
+            }
+        }
+
+        function resetRecording() {
+            document.getElementById('recordButton').classList.remove('recording', 'processing');
+            document.getElementById('recordStatus').textContent = 'Click to Start Recording';
+            document.getElementById('recordTimer').textContent = '0:00';
+        }
+
+        function resetForNextQuestion() {
+            resetRecording();
+            document.getElementById('transcriptBox').classList.remove('visible');
+            document.getElementById('errorMessage').classList.remove('visible');
+        }
+
+        function showCompletion(data) {
+            document.getElementById('questionScreen').style.display = 'none';
+            document.getElementById('completionScreen').classList.add('visible');
+            document.getElementById('archetypeBadge').textContent = `The ${capitalizeFirst(data.session.detectedArchetype || 'Creator')}`;
+            document.getElementById('finalReward').textContent = `$${data.session.totalReward.toFixed(0)}`;
+            document.getElementById('finalDomain').textContent = data.session.detectedBrandDomain || 'calos.ai';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').classList.add('visible');
+        }
+
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Re-record button
+        document.getElementById('reRecordButton').addEventListener('click', () => {
+            resetRecording();
+            document.getElementById('transcriptBox').classList.remove('visible');
+        });
+
+        // Initialize on load
+        initSession();
+    </script>
+</body>
+</html>

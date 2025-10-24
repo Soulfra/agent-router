@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAL Knowledge Browser | What CAL Has Learned</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #00ff00;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 2px solid #00ff00;
+      background: rgba(0, 255, 0, 0.05);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00ff00;
+    }
+
+    .subtitle {
+      color: #00cc00;
+      font-size: 1.1em;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1em;
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      background: rgba(0, 255, 0, 0.2);
+    }
+
+    .tab.active {
+      background: #00ff00;
+      color: #0a0a0a;
+      box-shadow: 0 0 20px #00ff00;
+    }
+
+    .content-section {
+      display: none;
+      padding: 20px;
+      border: 2px solid #00ff00;
+      background: rgba(0, 255, 0, 0.05);
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    .stat-card {
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid #00ff00;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card h3 {
+      color: #00ff00;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .stat-item {
+      padding: 10px;
+      background: rgba(0, 255, 0, 0.05);
+      border-left: 3px solid #00ff00;
+    }
+
+    .stat-label {
+      color: #00cc00;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .list-item {
+      padding: 15px;
+      margin-bottom: 10px;
+      background: rgba(0, 255, 0, 0.05);
+      border-left: 3px solid #00ff00;
+    }
+
+    .list-item:hover {
+      background: rgba(0, 255, 0, 0.1);
+    }
+
+    .list-item-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #00ff00;
+    }
+
+    .list-item-meta {
+      color: #00cc00;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 255, 0, 0.2);
+      border: 1px solid #00ff00;
+      margin-right: 8px;
+      margin-top: 5px;
+      font-size: 0.85em;
+    }
+
+    .badge.success {
+      background: rgba(0, 255, 0, 0.3);
+    }
+
+    .badge.warning {
+      background: rgba(255, 165, 0, 0.3);
+      border-color: #ffa500;
+      color: #ffa500;
+    }
+
+    .badge.error {
+      background: rgba(255, 0, 0, 0.3);
+      border-color: #ff0000;
+      color: #ff0000;
+    }
+
+    .error-solution {
+      background: rgba(255, 165, 0, 0.1);
+      border: 1px solid #ffa500;
+      padding: 15px;
+      margin-top: 10px;
+      color: #ffa500;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 20px;
+      background: rgba(0, 255, 0, 0.05);
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      font-family: inherit;
+      font-size: 1em;
+    }
+
+    .search-box::placeholder {
+      color: #00cc00;
+    }
+
+    pre {
+      background: rgba(0, 255, 0, 0.05);
+      padding: 15px;
+      overflow-x: auto;
+      border-left: 3px solid #00ff00;
+      margin-top: 10px;
+    }
+
+    code {
+      color: #00ff00;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+
+    .timestamp {
+      color: #007700;
+      font-size: 0.85em;
+    }
+
+    a {
+      color: #00ff00;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <!-- Keyboard Shortcuts -->
+  <script src="/lib/keyboard-shortcut-manager.js"></script>
+  <script src="/lib/keyboard-shortcuts.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 CAL Knowledge Browser</h1>
+      <p class="subtitle">Everything CAL has learned from migrations, errors, docs, and experience</p>
+      <p class="timestamp" id="last-updated">Loading...</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="summary">📊 Summary</button>
+      <button class="tab" data-tab="migrations">🗄️ Migrations</button>
+      <button class="tab" data-tab="skills">🎯 Skills</button>
+      <button class="tab" data-tab="failures">❌ Failures</button>
+      <button class="tab" data-tab="docs">📖 Documentation</button>
+      <button class="tab" data-tab="best-practices">💡 Best Practices</button>
+    </div>
+
+    <div id="summary" class="content-section active">
+      <div class="loading">Loading summary...</div>
+    </div>
+
+    <div id="migrations" class="content-section">
+      <div class="loading">Loading migration knowledge...</div>
+    </div>
+
+    <div id="skills" class="content-section">
+      <div class="loading">Loading skill tracker...</div>
+    </div>
+
+    <div id="failures" class="content-section">
+      <div class="loading">Loading failure patterns...</div>
+    </div>
+
+    <div id="docs" class="content-section">
+      <input type="text" class="search-box" placeholder="Search documentation knowledge..." id="doc-search">
+      <div id="docs-content">
+        <div class="loading">Loading documentation knowledge...</div>
+      </div>
+    </div>
+
+    <div id="best-practices" class="content-section">
+      <div class="loading">Loading best practices...</div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+
+        tab.classList.add('active');
+        const tabName = tab.dataset.tab;
+        document.getElementById(tabName).classList.add('active');
+      });
+    });
+
+    // Fetch and display data
+    async function loadSummary() {
+      const res = await fetch('/api/cal-knowledge/summary');
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      document.getElementById('last-updated').textContent =
+        `Last updated: ${new Date(data.summary.generatedAt).toLocaleString()}`;
+
+      const { migrations, skills, docs } = data.summary;
+
+      document.getElementById('summary').innerHTML = `
+        <div class="stat-card">
+          <h3>🗄️ Migration Learning</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Total Tracked</div>
+              <div class="stat-value">${migrations?.total || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Working</div>
+              <div class="stat-value">${migrations?.working || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Broken</div>
+              <div class="stat-value">${migrations?.broken || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Skip List</div>
+              <div class="stat-value">${migrations?.skipList?.length || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <h3>🎯 Skill Mastery</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Total Skills</div>
+              <div class="stat-value">${skills?.totalSkills || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Mastered</div>
+              <div class="stat-value">${skills?.masteredSkills || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Needs Work</div>
+              <div class="stat-value">${skills?.skillsNeedingWork || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Success Rate</div>
+              <div class="stat-value">${skills?.overallSuccessRate || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <h3>📖 Documentation Knowledge</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Sources</div>
+              <div class="stat-value">${docs?.totalSources || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Topics</div>
+              <div class="stat-value">${docs?.totalTopics || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Best Practices</div>
+              <div class="stat-value">${docs?.totalBestPractices || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Error Solutions</div>
+              <div class="stat-value">${docs?.totalErrorSolutions || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        ${migrations?.topErrors?.length > 0 ? `
+          <div class="stat-card">
+            <h3>🔥 Top Error Patterns</h3>
+            ${migrations.topErrors.map(err => `
+              <div class="list-item">
+                <div class="list-item-title">${err.pattern}</div>
+                <div class="list-item-meta">
+                  ${err.count} occurrences across ${err.affectedMigrations} migrations
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    async function loadMigrations() {
+      const res = await fetch('/api/cal-knowledge/migrations');
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      const { summary, brokenMigrations } = data;
+
+      document.getElementById('migrations').innerHTML = `
+        <div class="stat-card">
+          <h3>Migration Statistics</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Working</div>
+              <div class="stat-value">${summary?.working || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Failing</div>
+              <div class="stat-value">${summary?.failing || 0}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Broken</div>
+              <div class="stat-value">${summary?.broken || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        ${brokenMigrations.length > 0 ? `
+          <div class="stat-card">
+            <h3>🛑 Broken Migrations (Auto-Skipped)</h3>
+            ${brokenMigrations.map(m => `
+              <div class="list-item">
+                <div class="list-item-title">${m.file}</div>
+                <div class="list-item-meta">Failed ${m.consecutiveFailures} times</div>
+                <div class="error-solution">
+                  ${m.lastError?.error || 'No error details'}
+                </div>
+                ${m.suggestedFix ? `
+                  <div style="margin-top: 10px; color: #00ff00;">
+                    💡 ${m.suggestedFix.description}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p style="color: #00cc00; padding: 20px;">No broken migrations! 🎉</p>'}
+      `;
+    }
+
+    async function loadSkills() {
+      const res = await fetch('/api/cal-knowledge/skills');
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      const { summary, masteredSkills, skillsNeedingWork } = data;
+
+      document.getElementById('skills').innerHTML = `
+        <div class="stat-card">
+          <h3>Overall Progress</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Total Skills</div>
+              <div class="stat-value">${summary.totalSkills}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Mastered</div>
+              <div class="stat-value">${summary.masteredSkills}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Needs Work</div>
+              <div class="stat-value">${summary.skillsNeedingWork}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Success Rate</div>
+              <div class="stat-value">${summary.overallSuccessRate}</div>
+            </div>
+          </div>
+        </div>
+
+        ${masteredSkills.length > 0 ? `
+          <div class="stat-card">
+            <h3>✅ Mastered Skills</h3>
+            ${masteredSkills.map(skill => `
+              <div class="list-item">
+                <div class="list-item-title">${skill.skillId}</div>
+                <div class="list-item-meta">
+                  <span class="badge success">Level: ${skill.levelName}</span>
+                  <span class="badge success">Success Rate: ${skill.successRate}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${skillsNeedingWork.length > 0 ? `
+          <div class="stat-card">
+            <h3>⚠️ Skills Needing Work</h3>
+            ${skillsNeedingWork.slice(0, 10).map(skill => `
+              <div class="list-item">
+                <div class="list-item-title">${skill.skillId}</div>
+                <div class="list-item-meta">
+                  <span class="badge warning">Level: ${skill.levelName}</span>
+                  <span class="badge warning">Success Rate: ${skill.successRate}</span>
+                  <span class="badge">${skill.totalFailures} failures</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    async function loadFailures() {
+      const res = await fetch('/api/cal-knowledge/failures');
+      const data = await res.json();
+
+      if (!data.success || !data.failures) return;
+
+      document.getElementById('failures').innerHTML = `
+        <div class="stat-card">
+          <h3>Failure Patterns (${data.totalTasks} tasks tracked)</h3>
+          ${data.failures.slice(0, 20).map(({ taskId, summary }) => {
+            if (!summary) return '';
+
+            return `
+              <div class="list-item">
+                <div class="list-item-title">${taskId}</div>
+                <div class="list-item-meta">
+                  <span class="badge error">${summary.totalFailures} failures</span>
+                  <span class="badge success">${summary.totalSuccesses} successes</span>
+                </div>
+                ${summary.mostFailedApproach ? `
+                  <div style="margin-top: 10px; color: #ff6666;">
+                    ❌ Most failed: ${summary.mostFailedApproach.approach} (${summary.mostFailedApproach.count} times)
+                  </div>
+                ` : ''}
+                ${summary.recommendation ? `
+                  <div style="margin-top: 10px; color: #00ff00;">
+                    💡 Recommended: ${summary.recommendation.approach} (${(summary.recommendation.confidence * 100).toFixed(0)}% confidence)
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    async function loadDocs() {
+      const res = await fetch('/api/cal-knowledge/docs');
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      const { summary } = data;
+
+      document.getElementById('docs-content').innerHTML = `
+        <div class="stat-card">
+          <h3>Documentation Statistics</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Sources</div>
+              <div class="stat-value">${summary.totalSources}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Topics</div>
+              <div class="stat-value">${summary.totalTopics}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Best Practices</div>
+              <div class="stat-value">${summary.totalBestPractices}</div>
+            </div>
+          </div>
+        </div>
+
+        ${summary.topTopics?.length > 0 ? `
+          <div class="stat-card">
+            <h3>Top Topics</h3>
+            ${summary.topTopics.map(t => `
+              <div class="list-item">
+                <div class="list-item-title">${t.topic}</div>
+                <div class="list-item-meta">${t.sources} sources</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${summary.recentSources?.length > 0 ? `
+          <div class="stat-card">
+            <h3>Recent Sources</h3>
+            ${summary.recentSources.map(s => `
+              <div class="list-item">
+                <div class="list-item-title">
+                  <a href="${s.url}" target="_blank">${s.url}</a>
+                </div>
+                <div class="timestamp">Learned: ${new Date(s.lastFetched).toLocaleString()}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    async function loadBestPractices() {
+      const res = await fetch('/api/cal-knowledge/best-practices');
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      document.getElementById('best-practices').innerHTML = `
+        <div class="stat-card">
+          <h3>💡 Best Practices (${data.total})</h3>
+          ${data.bestPractices.map(bp => `
+            <div class="list-item">
+              <div class="list-item-title">${bp.practice}</div>
+              <div class="list-item-meta">
+                <span class="badge success">Confidence: ${(bp.confidence * 100).toFixed(0)}%</span>
+                <span class="badge">${bp.sources?.length || 0} sources</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Doc search
+    document.getElementById('doc-search').addEventListener('input', async (e) => {
+      const query = e.target.value;
+      if (query.length < 3) return;
+
+      const res = await fetch(`/api/cal-knowledge/docs/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      const { results } = data;
+
+      document.getElementById('docs-content').innerHTML = `
+        <div class="stat-card">
+          <h3>Search Results for "${query}"</h3>
+
+          ${results.sources?.length > 0 ? `
+            <h4 style="margin: 20px 0 10px 0;">Sources (${results.sources.length})</h4>
+            ${results.sources.slice(0, 10).map(s => `
+              <div class="list-item">
+                <div class="list-item-title">
+                  <a href="${s.url}" target="_blank">${s.url}</a>
+                </div>
+                <div class="list-item-meta">Relevance: ${s.relevance.toFixed(2)}</div>
+              </div>
+            `).join('')}
+          ` : ''}
+
+          ${results.bestPractices?.length > 0 ? `
+            <h4 style="margin: 20px 0 10px 0;">Best Practices (${results.bestPractices.length})</h4>
+            ${results.bestPractices.map(bp => `
+              <div class="list-item">
+                <div class="list-item-title">${bp.practice}</div>
+              </div>
+            `).join('')}
+          ` : ''}
+
+          ${results.sources?.length === 0 && results.bestPractices?.length === 0 ?
+            '<p style="padding: 20px; color: #00cc00;">No results found</p>' : ''
+          }
+        </div>
+      `;
+    });
+
+    // Load all data
+    loadSummary();
+    loadMigrations();
+    loadSkills();
+    loadFailures();
+    loadDocs();
+    loadBestPractices();
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+      const activeTab = document.querySelector('.tab.active').dataset.tab;
+
+      if (activeTab === 'summary') loadSummary();
+      else if (activeTab === 'migrations') loadMigrations();
+      else if (activeTab === 'skills') loadSkills();
+      else if (activeTab === 'failures') loadFailures();
+      else if (activeTab === 'docs') loadDocs();
+      else if (activeTab === 'best-practices') loadBestPractices();
+    }, 30000);
+  </script>
+</body>
+</html>

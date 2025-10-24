@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vanity Handles - @username System</title>
+
+  <!-- SOULFRA Dark Theme -->
+  <link rel="stylesheet" href="/themes/soulfra-dark.css">
+
+  <style>
+    body {
+      padding: 30px;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .title {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .search-section {
+      margin-bottom: 40px;
+    }
+
+    .search-container {
+      display: flex;
+      gap: 15px;
+      max-width: 600px;
+    }
+
+    .search-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input-wrapper::before {
+      content: '@';
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .search-input {
+      padding-left: 35px;
+    }
+
+    .availability-status {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: var(--radius-md);
+      display: none;
+    }
+
+    .availability-status.available {
+      background: rgba(68, 204, 68, 0.1);
+      border: 1px solid var(--accent-green);
+      color: var(--accent-green);
+      display: block;
+    }
+
+    .availability-status.unavailable {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+      display: block;
+    }
+
+    .availability-status.checking {
+      background: rgba(255, 153, 68, 0.1);
+      border: 1px solid var(--accent-yellow);
+      color: var(--accent-yellow);
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .premium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .premium-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .premium-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .premium-handle {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 10px;
+    }
+
+    .premium-price {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent-green);
+      margin-bottom: 8px;
+    }
+
+    .premium-description {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .history-table {
+      width: 100%;
+    }
+
+    .history-table th {
+      text-align: left;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .history-table td {
+      font-size: 14px;
+    }
+
+    .handle-change {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .handle-old {
+      color: var(--text-secondary);
+      text-decoration: line-through;
+    }
+
+    .handle-new {
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .user-handle-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .user-handle-display {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 10px;
+    }
+
+    .user-handle-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .changes-remaining {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255, 153, 68, 0.1);
+      border: 1px solid var(--accent-yellow);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--accent-yellow);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="title">
+      <span>👤</span>
+      <span>Vanity Handles</span>
+    </h1>
+    <p class="subtitle">Claim your unique @username across the platform like Discord/Twitter</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="totalHandles">-</div>
+      <div class="stat-label">Total Handles</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="premiumHandles">-</div>
+      <div class="stat-label">Premium Available</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="recentChanges">-</div>
+      <div class="stat-label">Recent Changes (24h)</div>
+    </div>
+  </div>
+
+  <!-- User's Current Handle -->
+  <div class="section" id="userHandleSection" style="display: none;">
+    <div class="section-title">
+      <span>Your Handle</span>
+    </div>
+    <div class="user-handle-card">
+      <div class="user-handle-display" id="userHandleDisplay">@guest</div>
+      <div class="user-handle-meta">
+        <span>Claimed: <span id="handleSetAt">-</span></span>
+        <span class="changes-remaining">
+          <span>⚠️</span>
+          <span id="changesRemaining">0</span> changes remaining
+        </span>
+      </div>
+      <button class="btn btn-primary" onclick="showChangeHandleForm()">Change Handle</button>
+    </div>
+  </div>
+
+  <!-- Search/Claim Handle -->
+  <div class="section">
+    <div class="section-title">
+      <span id="searchSectionTitle">Search & Claim Handle</span>
+    </div>
+    <div class="search-section">
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <input
+            type="text"
+            class="input search-input"
+            id="handleInput"
+            placeholder="username"
+            autocomplete="off"
+            maxlength="30"
+          />
+        </div>
+        <button class="btn btn-primary" id="checkButton" onclick="checkAvailability()">Check</button>
+        <button class="btn btn-success" id="claimButton" onclick="claimHandle()" style="display: none;">Claim</button>
+      </div>
+
+      <div class="availability-status" id="availabilityStatus"></div>
+    </div>
+  </div>
+
+  <!-- Premium Handles Marketplace -->
+  <div class="section">
+    <div class="section-title">
+      <span>💎</span>
+      <span>Premium Handles</span>
+    </div>
+    <div class="premium-grid" id="premiumGrid">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>Loading premium handles...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Handle Changes -->
+  <div class="section">
+    <div class="section-title">
+      <span>📜</span>
+      <span>Recent Handle Changes</span>
+    </div>
+    <div class="card">
+      <table class="history-table" id="historyTable">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Change</th>
+            <th>When</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="4">
+              <div class="loading">
+                <div class="spinner"></div>
+                <div>Loading history...</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('calos_user') || '{}');
+
+    // State
+    let currentHandleCheck = null;
+
+    // Initialize
+    loadUserHandle();
+    loadPremiumHandles();
+    loadRecentChanges();
+    loadStats();
+
+    // Load user's current handle
+    function loadUserHandle() {
+      if (user.handle) {
+        document.getElementById('userHandleSection').style.display = 'block';
+        document.getElementById('userHandleDisplay').textContent = '@' + user.handle;
+        document.getElementById('handleSetAt').textContent = formatDate(user.handle_set_at || new Date());
+        document.getElementById('changesRemaining').textContent = user.handle_changes_remaining || 0;
+        document.getElementById('searchSectionTitle').textContent = 'Change Your Handle';
+      } else {
+        document.getElementById('searchSectionTitle').textContent = 'Claim Your Handle';
+      }
+    }
+
+    // Check handle availability
+    async function checkAvailability() {
+      const handle = document.getElementById('handleInput').value.trim();
+      const status = document.getElementById('availabilityStatus');
+
+      if (!handle) {
+        showStatus('Please enter a handle', 'unavailable');
+        return;
+      }
+
+      // Basic validation
+      if (!/^[a-z0-9_]{3,30}$/i.test(handle)) {
+        showStatus('Handle must be 3-30 characters (letters, numbers, underscore only)', 'unavailable');
+        return;
+      }
+
+      showStatus('Checking availability...', 'checking');
+
+      try {
+        const response = await fetch(`/api/vanity/check/${handle}`);
+        const data = await response.json();
+
+        if (data.available) {
+          showStatus(`@${handle} is available! 🎉`, 'available');
+          document.getElementById('claimButton').style.display = 'block';
+          document.getElementById('checkButton').style.display = 'none';
+          currentHandleCheck = handle;
+        } else {
+          showStatus(`@${handle} is not available. ${data.reason || ''}`, 'unavailable');
+          document.getElementById('claimButton').style.display = 'none';
+          document.getElementById('checkButton').style.display = 'block';
+          currentHandleCheck = null;
+        }
+      } catch (error) {
+        console.error('Error checking handle:', error);
+        showStatus('Error checking availability. Make sure the backend is running.', 'unavailable');
+      }
+    }
+
+    // Claim handle
+    async function claimHandle() {
+      if (!currentHandleCheck) {
+        alert('Please check handle availability first');
+        return;
+      }
+
+      if (!user.user_id) {
+        alert('Please log in to claim a handle');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/vanity/claim', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            handle: currentHandleCheck
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update local storage
+          user.handle = data.handle;
+          user.handle_set_at = new Date().toISOString();
+          user.handle_changes_remaining = (user.handle_changes_remaining || 1) - 1;
+          localStorage.setItem('calos_user', JSON.stringify(user));
+
+          // Update UI
+          loadUserHandle();
+          showStatus(`Successfully claimed @${data.handle}! 🎉`, 'available');
+
+          // Clear input
+          document.getElementById('handleInput').value = '';
+          document.getElementById('claimButton').style.display = 'none';
+          document.getElementById('checkButton').style.display = 'block';
+          currentHandleCheck = null;
+
+          // Reload data
+          loadRecentChanges();
+          loadStats();
+        } else {
+          showStatus(`Failed to claim handle: ${data.error}`, 'unavailable');
+        }
+      } catch (error) {
+        console.error('Error claiming handle:', error);
+        showStatus('Error claiming handle. Make sure the backend is running.', 'unavailable');
+      }
+    }
+
+    // Show change handle form
+    function showChangeHandleForm() {
+      document.getElementById('handleInput').focus();
+      window.scrollTo({ top: document.querySelector('.search-section').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    // Show status message
+    function showStatus(message, type) {
+      const status = document.getElementById('availabilityStatus');
+      status.textContent = message;
+      status.className = `availability-status ${type}`;
+    }
+
+    // Load premium handles
+    async function loadPremiumHandles() {
+      try {
+        const response = await fetch('/api/vanity/premium');
+        const data = await response.json();
+
+        const grid = document.getElementById('premiumGrid');
+
+        if (!data.handles || data.handles.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">💎</div>
+              <div>No premium handles available yet</div>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = data.handles.map(h => `
+          <div class="premium-card" onclick="claimPremiumHandle('${h.handle}', ${h.price_cents})">
+            <div class="premium-handle">@${h.handle}</div>
+            <div class="premium-price">$${(h.price_cents / 100).toFixed(2)}</div>
+            <div class="premium-description">${h.reason || 'Premium handle'}</div>
+          </div>
+        `).join('');
+
+        document.getElementById('premiumHandles').textContent = data.handles.length;
+      } catch (error) {
+        console.error('Error loading premium handles:', error);
+        document.getElementById('premiumGrid').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <div>Error loading premium handles</div>
+          </div>
+        `;
+      }
+    }
+
+    // Load recent changes
+    async function loadRecentChanges() {
+      try {
+        const response = await fetch('/api/vanity/recent-changes');
+        const data = await response.json();
+
+        const tbody = document.getElementById('historyTable').querySelector('tbody');
+
+        if (!data.changes || data.changes.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-state-icon">📭</div>
+                  <div>No recent changes</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = data.changes.map(c => `
+          <tr>
+            <td>${c.username || c.email}</td>
+            <td>
+              <div class="handle-change">
+                ${c.old_handle ? `<span class="handle-old">@${c.old_handle}</span> →` : ''}
+                <span class="handle-new">@${c.new_handle}</span>
+              </div>
+            </td>
+            <td>${formatDate(c.changed_at)}</td>
+            <td><span class="badge badge-primary">${c.change_reason || 'user_change'}</span></td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading recent changes:', error);
+      }
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/vanity/stats');
+        const data = await response.json();
+
+        document.getElementById('totalHandles').textContent = data.total || 0;
+        document.getElementById('recentChanges').textContent = data.recent_changes_24h || 0;
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Claim premium handle
+    function claimPremiumHandle(handle, priceCents) {
+      const price = (priceCents / 100).toFixed(2);
+      const confirmed = confirm(`Claim @${handle} for $${price}?`);
+
+      if (confirmed) {
+        document.getElementById('handleInput').value = handle;
+        checkAvailability();
+      }
+    }
+
+    // Format date
+    function formatDate(date) {
+      if (!date) return '-';
+      const d = new Date(date);
+      const now = new Date();
+      const diff = now - d;
+
+      // Less than 1 minute
+      if (diff < 60000) {
+        return 'Just now';
+      }
+
+      // Less than 1 hour
+      if (diff < 3600000) {
+        const mins = Math.floor(diff / 60000);
+        return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+      }
+
+      // Less than 1 day
+      if (diff < 86400000) {
+        const hours = Math.floor(diff / 3600000);
+        return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+      }
+
+      // Less than 1 week
+      if (diff < 604800000) {
+        const days = Math.floor(diff / 86400000);
+        return `${days} day${days === 1 ? '' : 's'} ago`;
+      }
+
+      // More than 1 week
+      return d.toLocaleDateString();
+    }
+
+    // Auto-check on Enter key
+    document.getElementById('handleInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        if (currentHandleCheck) {
+          claimHandle();
+        } else {
+          checkAvailability();
+        }
+      }
+    });
+
+    // Live validation
+    document.getElementById('handleInput').addEventListener('input', (e) => {
+      const value = e.target.value;
+      const status = document.getElementById('availabilityStatus');
+
+      // Reset claim button when user types
+      if (currentHandleCheck) {
+        document.getElementById('claimButton').style.display = 'none';
+        document.getElementById('checkButton').style.display = 'block';
+        currentHandleCheck = null;
+        status.className = 'availability-status';
+      }
+
+      // Convert to lowercase
+      e.target.value = value.toLowerCase();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BillionDollarGame - Public Building Journey</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 40px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .header h1 {
+      font-size: 3.5em;
+      font-weight: 900;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header .tagline {
+      font-size: 1.4em;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .header .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 30px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 3em;
+      font-weight: 900;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Tier Sections */
+    .tier-section {
+      margin-bottom: 40px;
+    }
+
+    .tier-header {
+      font-size: 1.8em;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .tier-icon {
+      font-size: 1.2em;
+    }
+
+    /* Brand Grid */
+    .brands-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Brand Card */
+    .brand-card {
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-card.launched {
+      border: 3px solid #00b894;
+    }
+
+    .brand-card.in-progress {
+      border: 3px solid #fdcb6e;
+    }
+
+    .brand-card.pending {
+      border: 3px solid #b2bec3;
+      opacity: 0.7;
+    }
+
+    .brand-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    .brand-name {
+      font-size: 1.6em;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .brand-domain {
+      font-size: 0.9em;
+      color: #666;
+      font-family: 'Monaco', monospace;
+    }
+
+    .brand-status {
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-launched {
+      background: #00b894;
+      color: white;
+    }
+
+    .status-in-progress {
+      background: #fdcb6e;
+      color: #333;
+    }
+
+    .status-pending {
+      background: #b2bec3;
+      color: white;
+    }
+
+    .brand-tagline {
+      font-size: 1.1em;
+      color: #555;
+      margin-bottom: 15px;
+      font-style: italic;
+    }
+
+    .brand-features {
+      list-style: none;
+      margin-bottom: 15px;
+    }
+
+    .brand-features li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95em;
+    }
+
+    .brand-features li:before {
+      content: '✓ ';
+      color: #00b894;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    .brand-revenue {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 15px;
+    }
+
+    .brand-revenue strong {
+      color: #333;
+    }
+
+    .brand-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .tool-badge {
+      background: #667eea;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.8em;
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00b894, #55efc4);
+      transition: width 0.5s ease;
+    }
+
+    /* Crowdfunding Section */
+    .crowdfunding {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      margin-top: 40px;
+      backdrop-filter: blur(10px);
+    }
+
+    .crowdfunding h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .funding-goal {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .funding-progress {
+      width: 100%;
+      max-width: 600px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      overflow: hidden;
+      margin: 20px auto;
+      position: relative;
+    }
+
+    .funding-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00b894, #55efc4);
+      transition: width 1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .bounties {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .bounty-card {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+
+    .bounty-title {
+      font-size: 1.2em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .bounty-amount {
+      font-size: 1.5em;
+      color: #fdcb6e;
+      font-weight: 900;
+    }
+
+    /* User Info */
+    .user-info {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 15px 25px;
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2.5em;
+      }
+
+      .header .stats {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .brands-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="user-info" id="user-info">
+    👤 User #1 (Founder)
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎮 The BillionDollarGame</h1>
+      <div class="tagline">Building 12 Interconnected Brands in Public</div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-value" id="brands-launched">0</span>
+          <span class="stat-label">Brands Launched</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="days-building">0</span>
+          <span class="stat-label">Days Building</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="contributors">1</span>
+          <span class="stat-label">Contributors</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Foundation Layer -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-icon">🏗️</span>
+        <span>Foundation Layer (Launch First)</span>
+      </div>
+      <div class="brands-grid" id="foundation-brands"></div>
+    </div>
+
+    <!-- Business Layer -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-icon">💼</span>
+        <span>Business Layer</span>
+      </div>
+      <div class="brands-grid" id="business-brands"></div>
+    </div>
+
+    <!-- Creative Layer -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-icon">🎨</span>
+        <span>Creative Layer</span>
+      </div>
+      <div class="brands-grid" id="creative-brands"></div>
+    </div>
+
+    <!-- Additional Brands -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-icon">⚡</span>
+        <span>Additional Brands</span>
+      </div>
+      <div class="brands-grid" id="additional-brands"></div>
+    </div>
+
+    <!-- Crowdfunding Section -->
+    <div class="crowdfunding">
+      <h2>💰 Community Crowdfunding</h2>
+      <div class="funding-goal">
+        <div class="funding-progress">
+          <div class="funding-fill" id="funding-fill" style="width: 0%">
+            <span id="funding-text">$0 / $100,000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bounties" id="bounties"></div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    const state = {
+      userId: 'user-001',
+      startDate: new Date('2025-01-15'),
+      brandsLaunched: 0,
+      totalFunding: 0,
+      fundingGoal: 100000
+    };
+
+    // Render brand card
+    function renderBrandCard(domain, config, status = 'pending') {
+      const statusClass = status === 'completed' ? 'launched' : (status === 'in_progress' ? 'in-progress' : 'pending');
+      const statusLabel = status === 'completed' ? 'Launched' : (status === 'in_progress' ? 'Building' : 'Planned');
+
+      return `
+        <div class="brand-card ${statusClass}">
+          <div class="brand-header">
+            <div>
+              <div class="brand-name">${config.name}</div>
+              <div class="brand-domain">${domain}</div>
+            </div>
+            <div class="brand-status status-${statusClass}">${statusLabel}</div>
+          </div>
+
+          <div class="brand-tagline">"${config.tagline}"</div>
+
+          <ul class="brand-features">
+            ${config.features.slice(0, 3).map(f => `<li>${f}</li>`).join('')}
+          </ul>
+
+          <div class="brand-revenue">
+            <strong>Revenue Model:</strong> ${config.revenue}
+          </div>
+
+          <div class="brand-tools">
+            ${config.tools.slice(0, 4).map(t => `<span class="tool-badge">${t}</span>`).join('')}
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${status === 'completed' ? 100 : (status === 'in_progress' ? 45 : 0)}%"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Fetch and render brands
+    async function loadBrands() {
+      try {
+        const response = await fetch('/api/billiondollargame/status');
+        const data = await response.json();
+
+        // Update stats
+        document.getElementById('brands-launched').textContent = data.brandsLaunched;
+        document.getElementById('days-building').textContent = data.currentDay;
+
+        // Render brands by tier
+        const tiers = {
+          foundation: document.getElementById('foundation-brands'),
+          business: document.getElementById('business-brands'),
+          creative: document.getElementById('creative-brands'),
+          additional: document.getElementById('additional-brands')
+        };
+
+        data.brands.forEach(brand => {
+          const config = {
+            name: brand.name,
+            tagline: brand.tagline || 'Coming soon',
+            features: brand.features || [],
+            revenue: brand.revenue || 'TBD',
+            tools: brand.tools || []
+          };
+
+          const html = renderBrandCard(brand.domain, config, brand.status.status);
+          const tier = brand.tier || 'additional';
+
+          if (tiers[tier]) {
+            tiers[tier].innerHTML += html;
+          }
+        });
+
+        // Update funding
+        state.totalFunding = data.totalFunding || 0;
+        updateFunding();
+
+      } catch (error) {
+        console.error('Failed to load brands:', error);
+        // Fallback to static data if API fails
+        loadStaticBrands();
+      }
+    }
+
+    // Fallback static data
+    function loadStaticBrands() {
+      const staticBrands = {
+        foundation: [
+          {
+            domain: 'soulfra.com',
+            name: 'Soulfra',
+            tagline: 'Universal Identity Without KYC',
+            features: ['Universal login for all 12 brands', 'No KYC required', 'Ed25519 key pairs'],
+            revenue: 'SaaS ($10/mo per user)',
+            tools: ['auth-system', 'sso-setup', 'ed25519-crypto', 'passkey-auth'],
+            status: 'pending'
+          },
+          {
+            domain: 'calriven.com',
+            name: 'Calriven',
+            tagline: 'AI Agent Operating System',
+            features: ['AI agent marketplace', 'Multi-model routing', 'ELO-based selection'],
+            revenue: 'Platform fee (30% of agent transactions)',
+            tools: ['agent-registry', 'multi-llm-router', 'elo-system'],
+            status: 'pending'
+          },
+          {
+            domain: 'deathtodata.com',
+            name: 'DeathToData',
+            tagline: 'Search Engine Philosophy',
+            features: ['Philosophical search', 'Cross-brand content discovery', 'Knowledge graph'],
+            revenue: 'Ads + Premium search ($5/mo)',
+            tools: ['search-engine', 'content-indexer', 'philosophy-db'],
+            status: 'pending'
+          }
+        ],
+        business: [
+          {
+            domain: 'finishthisidea.com',
+            name: 'FinishThisIdea',
+            tagline: 'Project Completion Service',
+            features: ['AI helps finish abandoned projects', 'Milestone tracking', 'Escrow payments'],
+            revenue: 'Service fee (20% of project value)',
+            tools: ['project-tracker', 'ai-assistant', 'milestone-system'],
+            status: 'pending'
+          },
+          {
+            domain: 'finishthisrepo.com',
+            name: 'FinishThisRepo',
+            tagline: 'Code Completion Marketplace',
+            features: ['Finish incomplete GitHub repos', 'Code bounties', 'AI code review'],
+            revenue: 'Bounty fee (15% of bounty value)',
+            tools: ['github-integration', 'code-analyzer', 'bounty-system'],
+            status: 'pending'
+          },
+          {
+            domain: 'ipomyagent.com',
+            name: 'IPOMyAgent',
+            tagline: 'AI Agent Marketplace',
+            features: ['List AI agents for sale', 'Fractional ownership', 'Revenue sharing'],
+            revenue: 'Listing fee ($50) + Transaction fee (10%)',
+            tools: ['agent-marketplace', 'revenue-sharing', 'ipo-simulation'],
+            status: 'pending'
+          }
+        ],
+        creative: [
+          {
+            domain: 'hollowtown.com',
+            name: 'HollowTown',
+            tagline: 'Virtual World Platform',
+            features: ['Virtual town builder', 'Multiplayer gaming', 'In-game economy'],
+            revenue: 'In-game purchases + Land sales',
+            tools: ['sprite-manager', 'game-engine', 'multiplayer-sync'],
+            status: 'pending'
+          },
+          {
+            domain: 'coldstartkit.com',
+            name: 'ColdStartKit',
+            tagline: 'Startup Launch Templates',
+            features: ['Launch starter kits', 'One-click deployment', 'Growth playbooks'],
+            revenue: 'Template sales ($49-$499) + Pro tier ($29/mo)',
+            tools: ['template-generator', 'deployment-wizard', 'analytics-setup'],
+            status: 'pending'
+          },
+          {
+            domain: 'brandaidkit.com',
+            name: 'BrandAidKit',
+            tagline: 'Complete Brand Creation Platform',
+            features: ['Logo generation', 'Mascot creation', 'Social media kit'],
+            revenue: 'Brand packages ($199-$999) + Monthly subscription ($49/mo)',
+            tools: ['brand-generator', 'icon-generator', 'sprite-manager'],
+            status: 'pending'
+          }
+        ],
+        additional: [
+          {
+            domain: 'dealordelete.com',
+            name: 'DealOrDelete',
+            tagline: 'Decision Making Tool',
+            features: ['AI-powered decisions', 'Team voting', 'Decision tracking'],
+            revenue: 'Freemium ($0-$19/mo)',
+            tools: ['decision-matrix', 'ai-advisor', 'voting-system'],
+            status: 'pending'
+          },
+          {
+            domain: 'saveorsink.com',
+            name: 'SaveOrSink',
+            tagline: 'System Rescue Service',
+            features: ['Auto-recovery', 'System monitoring', 'Disaster recovery'],
+            revenue: 'Service fee ($99-$499/incident)',
+            tools: ['system-monitor', 'auto-recovery', 'backup-system'],
+            status: 'pending'
+          },
+          {
+            domain: 'cringeproof.com',
+            name: 'CringeProof',
+            tagline: 'Social Content Optimizer',
+            features: ['Cringe detection', 'Content improvement', 'Social optimization'],
+            revenue: 'Subscription ($9/mo) + API access',
+            tools: ['content-analyzer', 'cringe-detector', 'improvement-suggester'],
+            status: 'pending'
+          }
+        ]
+      };
+
+      // Render all tiers
+      Object.keys(staticBrands).forEach(tier => {
+        const container = document.getElementById(`${tier}-brands`);
+        staticBrands[tier].forEach(brand => {
+          container.innerHTML += renderBrandCard(brand.domain, brand, brand.status);
+        });
+      });
+
+      // Load bounties
+      loadBounties();
+    }
+
+    // Update funding progress
+    function updateFunding() {
+      const percentage = Math.min(100, (state.totalFunding / state.fundingGoal) * 100);
+      document.getElementById('funding-fill').style.width = `${percentage}%`;
+      document.getElementById('funding-text').textContent = `$${state.totalFunding.toLocaleString()} / $${state.fundingGoal.toLocaleString()}`;
+    }
+
+    // Load bounties
+    function loadBounties() {
+      const bounties = [
+        { title: 'Build Soulfra SSO system', amount: 5000, status: 'open' },
+        { title: 'Create DeathToData search engine', amount: 8000, status: 'open' },
+        { title: 'Design all 12 brand logos', amount: 3000, status: 'open' },
+        { title: 'Implement cross-brand affiliate tracking', amount: 4000, status: 'open' }
+      ];
+
+      const container = document.getElementById('bounties');
+      bounties.forEach(bounty => {
+        container.innerHTML += `
+          <div class="bounty-card">
+            <div class="bounty-title">${bounty.title}</div>
+            <div class="bounty-amount">$${bounty.amount.toLocaleString()}</div>
+            <div style="margin-top: 10px; opacity: 0.8; font-size: 0.9em;">Status: ${bounty.status}</div>
+          </div>
+        `;
+      });
+    }
+
+    // Initialize
+    loadBrands();
+
+    // Update days building
+    setInterval(() => {
+      const days = Math.floor((new Date() - state.startDate) / (1000 * 60 * 60 * 24));
+      document.getElementById('days-building').textContent = days;
+    }, 60000);
+  </script>
+</body>
+</html>

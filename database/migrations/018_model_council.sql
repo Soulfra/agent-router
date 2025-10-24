@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS council_sessions (
 
   -- Results
   consensus JSONB, -- Final consensus (approach, confidence, supporting_models)
-  winning_proposal UUID REFERENCES council_proposals(proposal_id),
+  winning_proposal UUID, -- References council_proposals(proposal_id) - added later
   vote_results JSONB, -- Final vote tallies
 
   -- Metadata
@@ -370,7 +370,7 @@ SELECT
   COUNT(DISTINCT cd.debate_id) as debate_count,
   COUNT(DISTINCT cw.workflow_id) as task_count,
   cs.consensus->>'approach' as winning_approach,
-  cs.vote_results->>'winner'->>'model' as winning_model,
+  cs.vote_results->'winner'->>'model' as winning_model,
   cs.duration_ms,
   cs.started_at,
   cs.completed_at

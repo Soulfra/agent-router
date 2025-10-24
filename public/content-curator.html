@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS - Content Curator</title>
+
+  <style>
+    :root {
+      --primary: #0080ff;
+      --secondary: #00ff88;
+      --bg-dark: #0a0a0a;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #252525;
+      --border: #333;
+      --text-primary: #e0e0e0;
+      --text-secondary: #888;
+      --success: #00ff88;
+      --error: #ff4444;
+      --warning: #ffaa00;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 2px solid var(--primary);
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      flex: 1;
+    }
+
+    /* Wizard Steps */
+    .wizard {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .wizard-header {
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .progress-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-step {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+
+    .progress-step.active {
+      background: var(--primary);
+    }
+
+    .progress-step.completed {
+      background: var(--success);
+    }
+
+    .step-title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .step-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* Step Content */
+    .wizard-content {
+      padding: 2rem;
+      min-height: 400px;
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Checkbox Grid */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .checkbox-item:hover {
+      border-color: var(--primary);
+      background: rgba(0, 128, 255, 0.1);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+    }
+
+    .checkbox-item.checked {
+      border-color: var(--primary);
+      background: rgba(0, 128, 255, 0.15);
+    }
+
+    /* Source List */
+    .source-list {
+      margin-top: 1rem;
+    }
+
+    .source-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+    }
+
+    .source-icon {
+      font-size: 1.5rem;
+    }
+
+    .source-info {
+      flex: 1;
+    }
+
+    .source-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .source-url {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .source-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0066cc;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 128, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-secondary);
+      border-color: var(--primary);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: var(--bg-dark);
+    }
+
+    .btn-danger {
+      background: var(--error);
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .wizard-actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+
+    /* Preview Panel */
+    .preview-panel {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .preview-title {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .preview-item {
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border-left: 3px solid var(--primary);
+      margin-bottom: 0.75rem;
+      border-radius: 4px;
+    }
+
+    .preview-item h4 {
+      margin-bottom: 0.25rem;
+    }
+
+    .preview-item p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 2rem auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <h1>📰 Content Curator</h1>
+    <p>Create your personalized news and content aggregation system</p>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <div class="wizard">
+      <!-- Wizard Header -->
+      <div class="wizard-header">
+        <div class="progress-bar">
+          <div class="progress-step active" data-step="1"></div>
+          <div class="progress-step" data-step="2"></div>
+          <div class="progress-step" data-step="3"></div>
+          <div class="progress-step" data-step="4"></div>
+          <div class="progress-step" data-step="5"></div>
+        </div>
+        <h2 class="step-title" id="step-title">Step 1: Choose Your Interests</h2>
+        <p class="step-subtitle" id="step-subtitle">Select topics you'd like to follow</p>
+      </div>
+
+      <!-- Wizard Content -->
+      <div class="wizard-content">
+        <!-- Step 1: Interests -->
+        <div class="step active" id="step-1">
+          <div class="form-group">
+            <label>What topics interest you?</label>
+            <div class="checkbox-grid" id="topics-grid">
+              <!-- Topics populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: News Sources -->
+        <div class="step" id="step-2">
+          <div class="form-group">
+            <label>Select pre-configured news sources:</label>
+            <div class="checkbox-grid" id="sources-grid">
+              <!-- Sources populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Custom RSS Feeds -->
+        <div class="step" id="step-3">
+          <div class="form-group">
+            <label>Add custom RSS feeds (optional):</label>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+              <input type="url" id="rss-url" placeholder="https://example.com/feed.xml">
+              <button class="btn btn-primary btn-sm" onclick="addRSSFeed()">+ Add Feed</button>
+            </div>
+            <div class="source-list" id="rss-list"></div>
+          </div>
+        </div>
+
+        <!-- Step 4: Delivery Options -->
+        <div class="step" id="step-4">
+          <div class="form-group">
+            <label>How often would you like newsletters?</label>
+            <select id="newsletter-frequency">
+              <option value="daily">Daily Digest</option>
+              <option value="weekly">Weekly Summary</option>
+              <option value="realtime">Real-time (no newsletter)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Delivery time (for daily/weekly):</label>
+            <input type="time" id="delivery-time" value="09:00">
+          </div>
+
+          <div class="form-group">
+            <label>Email for newsletters (optional):</label>
+            <input type="email" id="newsletter-email" placeholder="your@email.com">
+          </div>
+        </div>
+
+        <!-- Step 5: Review & Finish -->
+        <div class="step" id="step-5">
+          <h3>📋 Review Your Curation Settings</h3>
+
+          <div class="preview-panel">
+            <div class="preview-title">Selected Topics</div>
+            <div id="preview-topics"></div>
+          </div>
+
+          <div class="preview-panel">
+            <div class="preview-title">News Sources</div>
+            <div id="preview-sources"></div>
+          </div>
+
+          <div class="preview-panel">
+            <div class="preview-title">Delivery Settings</div>
+            <div id="preview-delivery"></div>
+          </div>
+
+          <div id="loading-spinner" class="hidden">
+            <div class="spinner"></div>
+            <p style="text-align: center; color: var(--text-secondary);">Setting up your content curator...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wizard Actions -->
+      <div class="wizard-actions">
+        <button class="btn btn-secondary" id="prev-btn" onclick="prevStep()" disabled>← Previous</button>
+        <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Wizard State
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    const state = {
+      topics: [],
+      sources: [],
+      customRSS: [],
+      frequency: 'daily',
+      deliveryTime: '09:00',
+      email: ''
+    };
+
+    // Available Topics
+    const topics = [
+      { id: 'ai', name: 'Artificial Intelligence', icon: '🤖' },
+      { id: 'crypto', name: 'Cryptocurrency', icon: '₿' },
+      { id: 'startups', name: 'Startups', icon: '🚀' },
+      { id: 'tech', name: 'Technology', icon: '💻' },
+      { id: 'science', name: 'Science', icon: '🔬' },
+      { id: 'programming', name: 'Programming', icon: '👨‍💻' },
+      { id: 'design', name: 'Design', icon: '🎨' },
+      { id: 'business', name: 'Business', icon: '💼' },
+      { id: 'finance', name: 'Finance', icon: '💰' },
+      { id: 'security', name: 'Cybersecurity', icon: '🔐' },
+      { id: 'webdev', name: 'Web Development', icon: '🌐' },
+      { id: 'mobile', name: 'Mobile Dev', icon: '📱' }
+    ];
+
+    // News Sources
+    const sources = [
+      { id: 'hackernews', name: 'Hacker News', url: 'https://news.ycombinator.com', icon: '🔶' },
+      { id: 'reddit-programming', name: 'r/programming', url: 'https://reddit.com/r/programming', icon: '🤖' },
+      { id: 'reddit-tech', name: 'r/technology', url: 'https://reddit.com/r/technology', icon: '🔧' },
+      { id: 'producthunt', name: 'Product Hunt', url: 'https://producthunt.com', icon: '🐱' },
+      { id: 'techcrunch', name: 'TechCrunch', url: 'https://techcrunch.com/feed', icon: '📰' },
+      { id: 'github-trending', name: 'GitHub Trending', url: 'https://github.com/trending', icon: '⭐' },
+      { id: 'devto', name: 'DEV Community', url: 'https://dev.to/feed', icon: '👩‍💻' },
+      { id: 'medium', name: 'Medium Tech', url: 'https://medium.com/feed/tag/technology', icon: 'Ⓜ️' }
+    ];
+
+    // Initialize
+    function init() {
+      renderTopics();
+      renderSources();
+      updateStepDisplay();
+    }
+
+    function renderTopics() {
+      const grid = document.getElementById('topics-grid');
+      grid.innerHTML = topics.map(topic => `
+        <div class="checkbox-item" onclick="toggleTopic('${topic.id}')">
+          <input type="checkbox" id="topic-${topic.id}" onchange="toggleTopic('${topic.id}')">
+          <span>${topic.icon} ${topic.name}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderSources() {
+      const grid = document.getElementById('sources-grid');
+      grid.innerHTML = sources.map(source => `
+        <div class="checkbox-item" onclick="toggleSource('${source.id}')">
+          <input type="checkbox" id="source-${source.id}" onchange="toggleSource('${source.id}')">
+          <span>${source.icon} ${source.name}</span>
+        </div>
+      `).join('');
+    }
+
+    function toggleTopic(id) {
+      const checkbox = document.getElementById(`topic-${id}`);
+      const item = checkbox.parentElement;
+
+      if (checkbox.checked) {
+        state.topics.push(id);
+        item.classList.add('checked');
+      } else {
+        state.topics = state.topics.filter(t => t !== id);
+        item.classList.remove('checked');
+      }
+    }
+
+    function toggleSource(id) {
+      const checkbox = document.getElementById(`source-${id}`);
+      const item = checkbox.parentElement;
+
+      if (checkbox.checked) {
+        state.sources.push(id);
+        item.classList.add('checked');
+      } else {
+        state.sources = state.sources.filter(s => s !== id);
+        item.classList.remove('checked');
+      }
+    }
+
+    function addRSSFeed() {
+      const input = document.getElementById('rss-url');
+      const url = input.value.trim();
+
+      if (!url) return;
+
+      if (!url.startsWith('http')) {
+        alert('Please enter a valid URL starting with http:// or https://');
+        return;
+      }
+
+      state.customRSS.push(url);
+      renderRSSList();
+      input.value = '';
+    }
+
+    function removeRSSFeed(url) {
+      state.customRSS = state.customRSS.filter(u => u !== url);
+      renderRSSList();
+    }
+
+    function renderRSSList() {
+      const list = document.getElementById('rss-list');
+      if (state.customRSS.length === 0) {
+        list.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No custom feeds added yet</p>';
+        return;
+      }
+
+      list.innerHTML = state.customRSS.map(url => `
+        <div class="source-item">
+          <div class="source-icon">📡</div>
+          <div class="source-info">
+            <div class="source-name">Custom RSS Feed</div>
+            <div class="source-url">${url}</div>
+          </div>
+          <div class="source-actions">
+            <button class="btn btn-danger btn-sm" onclick="removeRSSFeed('${url}')">Remove</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        // Save current step data
+        if (currentStep === 4) {
+          state.frequency = document.getElementById('newsletter-frequency').value;
+          state.deliveryTime = document.getElementById('delivery-time').value;
+          state.email = document.getElementById('newsletter-email').value;
+        }
+
+        currentStep++;
+        updateStepDisplay();
+
+        // Generate preview on final step
+        if (currentStep === 5) {
+          generatePreview();
+        }
+      } else {
+        // Final step - save configuration
+        saveConfiguration();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepDisplay();
+      }
+    }
+
+    function updateStepDisplay() {
+      // Hide all steps
+      document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+
+      // Show current step
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+
+      // Update progress bar
+      document.querySelectorAll('.progress-step').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index + 1 < currentStep) {
+          step.classList.add('completed');
+        } else if (index + 1 === currentStep) {
+          step.classList.add('active');
+        }
+      });
+
+      // Update titles
+      const titles = {
+        1: { title: 'Step 1: Choose Your Interests', subtitle: 'Select topics you\'d like to follow' },
+        2: { title: 'Step 2: Select News Sources', subtitle: 'Pick your preferred news outlets' },
+        3: { title: 'Step 3: Add Custom RSS Feeds', subtitle: 'Optional: add your own RSS feeds' },
+        4: { title: 'Step 4: Delivery Options', subtitle: 'Configure how you receive content' },
+        5: { title: 'Step 5: Review & Finish', subtitle: 'Review your settings and activate' }
+      };
+
+      document.getElementById('step-title').textContent = titles[currentStep].title;
+      document.getElementById('step-subtitle').textContent = titles[currentStep].subtitle;
+
+      // Update buttons
+      document.getElementById('prev-btn').disabled = currentStep === 1;
+      document.getElementById('next-btn').textContent = currentStep === totalSteps ? '✓ Activate Curator' : 'Next →';
+    }
+
+    function generatePreview() {
+      // Topics
+      const topicsEl = document.getElementById('preview-topics');
+      topicsEl.innerHTML = state.topics.length > 0
+        ? state.topics.map(id => {
+            const topic = topics.find(t => t.id === id);
+            return `<div class="preview-item"><h4>${topic.icon} ${topic.name}</h4></div>`;
+          }).join('')
+        : '<p style="color: var(--text-secondary);">No topics selected</p>';
+
+      // Sources
+      const sourcesEl = document.getElementById('preview-sources');
+      const allSources = [
+        ...state.sources.map(id => sources.find(s => s.id === id)),
+        ...state.customRSS.map(url => ({ name: 'Custom RSS', url, icon: '📡' }))
+      ];
+
+      sourcesEl.innerHTML = allSources.length > 0
+        ? allSources.map(s => `
+            <div class="preview-item">
+              <h4>${s.icon} ${s.name}</h4>
+              <p>${s.url}</p>
+            </div>
+          `).join('')
+        : '<p style="color: var(--text-secondary);">No sources selected</p>';
+
+      // Delivery
+      const deliveryEl = document.getElementById('preview-delivery');
+      deliveryEl.innerHTML = `
+        <div class="preview-item">
+          <h4>📅 Frequency</h4>
+          <p>${state.frequency === 'daily' ? 'Daily Digest' : state.frequency === 'weekly' ? 'Weekly Summary' : 'Real-time'}</p>
+        </div>
+        ${state.frequency !== 'realtime' ? `
+          <div class="preview-item">
+            <h4>⏰ Delivery Time</h4>
+            <p>${state.deliveryTime}</p>
+          </div>
+        ` : ''}
+        ${state.email ? `
+          <div class="preview-item">
+            <h4>📧 Email</h4>
+            <p>${state.email}</p>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    async function saveConfiguration() {
+      const spinner = document.getElementById('loading-spinner');
+      const nextBtn = document.getElementById('next-btn');
+
+      spinner.classList.remove('hidden');
+      nextBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/curation/configure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          alert('✓ Content curator activated! Redirecting to your feed...');
+          window.location.href = '/unified-feed.html';
+        } else {
+          alert('Error: ' + (result.error || 'Failed to save configuration'));
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        alert('Error saving configuration. Check console for details.');
+      } finally {
+        spinner.classList.add('hidden');
+        nextBtn.disabled = false;
+      }
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

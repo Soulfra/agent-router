@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOULFRA OS - Network Operations Center</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111;
+      --bg-tertiary: #1a1a1a;
+      --border: #222;
+      --text-primary: #e0e0e0;
+      --text-secondary: #888;
+      --accent-blue: #0066cc;
+      --accent-green: #44cc44;
+      --accent-red: #ff4444;
+      --accent-yellow: #ff9944;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .os-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      grid-template-rows: 50px 1fr 30px;
+      height: 100vh;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      grid-column: 1 / -1;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 12px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline {
+      background: var(--accent-red);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+
+    .nav-section {
+      margin-bottom: 30px;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0 20px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 14px;
+      color: var(--text-primary);
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .nav-item.active {
+      background: var(--bg-tertiary);
+      border-left-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .nav-badge.good {
+      background: var(--accent-green);
+    }
+
+    /* Main Content */
+    .main-content {
+      background: var(--bg-primary);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .view iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .view-content {
+      padding: 30px;
+    }
+
+    .view-header {
+      margin-bottom: 30px;
+    }
+
+    .view-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .view-description {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Welcome Screen */
+    .welcome-container {
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .welcome-logo {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+
+    .welcome-title {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-subtitle {
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .feature-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 25px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 102, 204, 0.2);
+    }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .feature-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-description {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      grid-column: 1 / -1;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .status-left, .status-right {
+      display: flex;
+      gap: 15px;
+    }
+
+    /* Loading State */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      flex-direction: column;
+      gap: 15px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="os-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="logo">SOULFRA OS</div>
+        <div class="status-indicator">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Initializing...</span>
+        </div>
+      </div>
+      <div class="top-bar-right">
+        <div id="userHandle">@guest</div>
+        <div id="systemTime">--:--:--</div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="nav-section">
+        <div class="nav-section-title">Tools</div>
+        <div class="nav-item active" onclick="switchView('welcome')">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchView('file-explorer')">
+          <span class="nav-icon">📁</span>
+          <span>File Explorer</span>
+          <span class="nav-badge good" id="repoBadge">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('ollama')">
+          <span class="nav-icon">🤖</span>
+          <span>Ollama Terminal</span>
+          <span class="nav-badge good" id="modelBadge">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('vanity-handles')">
+          <span class="nav-icon">👤</span>
+          <span>Vanity Handles</span>
+        </div>
+        <div class="nav-item" onclick="switchView('contract-deployer')">
+          <span class="nav-icon">💰</span>
+          <span>Contract Deployer</span>
+        </div>
+        <div class="nav-item" onclick="switchView('device-pairing')">
+          <span class="nav-icon">📱</span>
+          <span>Device Pairing</span>
+          <span class="nav-badge" id="deviceBadge">0</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">System</div>
+        <div class="nav-item" onclick="switchView('calos')">
+          <span class="nav-icon">🖥️</span>
+          <span>CalOS Desktop</span>
+        </div>
+        <div class="nav-item" onclick="switchView('network')">
+          <span class="nav-icon">🌐</span>
+          <span>Network</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Welcome View -->
+      <div class="view active" id="welcome">
+        <div class="welcome-container">
+          <div class="welcome-logo">🚀</div>
+          <h1 class="welcome-title">SOULFRA OS</h1>
+          <p class="welcome-subtitle">Network Operations Center - All Your Tools in One Place</p>
+
+          <div class="feature-grid">
+            <div class="feature-card" onclick="switchView('file-explorer')">
+              <div class="feature-icon">📁</div>
+              <div class="feature-title">File Explorer</div>
+              <div class="feature-description">Browse and manage git repositories across your entire system</div>
+            </div>
+
+            <div class="feature-card" onclick="switchView('ollama')">
+              <div class="feature-icon">🤖</div>
+              <div class="feature-title">Ollama Terminal</div>
+              <div class="feature-description">Chat with local AI models powered by Ollama</div>
+            </div>
+
+            <div class="feature-card" onclick="switchView('vanity-handles')">
+              <div class="feature-icon">👤</div>
+              <div class="feature-title">Vanity Handles</div>
+              <div class="feature-description">Claim your @username across the platform like Discord/Twitter</div>
+            </div>
+
+            <div class="feature-card" onclick="switchView('contract-deployer')">
+              <div class="feature-icon">💰</div>
+              <div class="feature-title">Contract Deployer</div>
+              <div class="feature-description">Generate vanity addresses and deploy smart contracts (SOL/ETH/BTC)</div>
+            </div>
+
+            <div class="feature-card" onclick="switchView('device-pairing')">
+              <div class="feature-icon">📱</div>
+              <div class="feature-title">Device Pairing</div>
+              <div class="feature-description">Sync devices seamlessly like iPhone + Mac pairing</div>
+            </div>
+
+            <div class="feature-card" onclick="switchView('calos')">
+              <div class="feature-icon">🖥️</div>
+              <div class="feature-title">CalOS Desktop</div>
+              <div class="feature-description">Full desktop operating system experience</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Explorer View -->
+      <div class="view" id="file-explorer">
+        <iframe src="http://localhost:3030" title="File Explorer"></iframe>
+      </div>
+
+      <!-- Ollama Terminal View -->
+      <div class="view" id="ollama">
+        <iframe src="/ollama-terminal.html" title="Ollama Terminal"></iframe>
+      </div>
+
+      <!-- Vanity Handles View -->
+      <div class="view" id="vanity-handles">
+        <div class="view-content">
+          <div class="view-header">
+            <h1 class="view-title">👤 Vanity Handles</h1>
+            <p class="view-description">Claim your unique @username - Coming Soon</p>
+          </div>
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Building vanity handles system...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contract Deployer View -->
+      <div class="view" id="contract-deployer">
+        <div class="view-content">
+          <div class="view-header">
+            <h1 class="view-title">💰 Contract Deployer</h1>
+            <p class="view-description">Generate vanity addresses and deploy smart contracts - Coming Soon</p>
+          </div>
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Building contract deployer...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device Pairing View -->
+      <div class="view" id="device-pairing">
+        <div class="view-content">
+          <div class="view-header">
+            <h1 class="view-title">📱 Device Pairing</h1>
+            <p class="view-description">Sync your devices seamlessly - Coming Soon</p>
+          </div>
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Building device pairing system...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CalOS Desktop View -->
+      <div class="view" id="calos">
+        <iframe src="/calos-os.html" title="CalOS Desktop"></iframe>
+      </div>
+
+      <!-- Network View -->
+      <div class="view" id="network">
+        <iframe src="/network.html" title="Network"></iframe>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span>SOULFRA OS v1.0.0</span>
+        <span id="statusInfo">Ready</span>
+      </div>
+      <div class="status-right">
+        <span id="repoCount">0 repositories</span>
+        <span id="modelCount">0 models</span>
+        <span id="deviceCount">0 devices</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // View switching
+    function switchView(viewId) {
+      // Hide all views
+      document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+      });
+
+      // Show selected view
+      document.getElementById(viewId).classList.add('active');
+
+      // Update nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      event.currentTarget.classList.add('active');
+
+      // Update status
+      document.getElementById('statusInfo').textContent = `Viewing: ${viewId}`;
+    }
+
+    // Update system time
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('systemTime').textContent = now.toLocaleTimeString();
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Check system status
+    async function checkSystemStatus() {
+      try {
+        // Check file explorer (standalone server)
+        try {
+          const repos = await fetch('http://localhost:3030/api/scan').then(r => r.json());
+          if (repos.total) {
+            document.getElementById('repoBadge').textContent = repos.total;
+            document.getElementById('repoCount').textContent = `${repos.total} repositories`;
+          }
+        } catch (e) {
+          document.getElementById('repoBadge').textContent = '!';
+          document.getElementById('repoBadge').classList.remove('good');
+        }
+
+        // Check Ollama
+        try {
+          const models = await fetch('http://localhost:11434/api/tags').then(r => r.json());
+          if (models.models) {
+            document.getElementById('modelBadge').textContent = models.models.length;
+            document.getElementById('modelCount').textContent = `${models.models.length} models`;
+          }
+        } catch (e) {
+          document.getElementById('modelBadge').textContent = '!';
+          document.getElementById('modelBadge').classList.remove('good');
+        }
+
+        // Update status
+        document.getElementById('statusDot').classList.remove('offline');
+        document.getElementById('statusText').textContent = 'Online';
+      } catch (error) {
+        document.getElementById('statusDot').classList.add('offline');
+        document.getElementById('statusText').textContent = 'Offline';
+      }
+    }
+
+    // Initialize
+    checkSystemStatus();
+    setInterval(checkSystemStatus, 10000);
+
+    // Load user data from localStorage
+    const user = JSON.parse(localStorage.getItem('calos_user') || '{}');
+    if (user.handle) {
+      document.getElementById('userHandle').textContent = '@' + user.handle;
+    } else if (user.username) {
+      document.getElementById('userHandle').textContent = '@' + user.username;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upgrade to Premium - Recipe ELO Ranker</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .checkout-container {
+      max-width: 500px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #2d3436;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #636e72;
+      margin-bottom: 30px;
+    }
+
+    .price {
+      font-size: 48px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .price-detail {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .features {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: #2d3436;
+    }
+
+    .feature:last-child {
+      margin-bottom: 0;
+    }
+
+    .feature-icon {
+      color: #00b894;
+      font-size: 20px;
+    }
+
+    #card-element {
+      background: #f8f9fa;
+      border: 2px solid #dfe6e9;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    #card-element.StripeElement--focus {
+      border-color: #f5576c;
+    }
+
+    #card-errors {
+      color: #ff4444;
+      font-size: 14px;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 18px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .security-note {
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      margin-top: 20px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      color: #636e72;
+      margin: 20px 0;
+    }
+
+    .loading.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="checkout-container">
+    <h1>🎉 Upgrade to Premium</h1>
+    <p class="subtitle">Unlimited recipe rankings and more</p>
+
+    <div class="price">$4.99</div>
+    <div class="price-detail">per month, cancel anytime</div>
+
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">✓</span>
+        <span>Unlimited recipe swipes</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">✓</span>
+        <span>Save your top recipes</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">✓</span>
+        <span>Export your ELO rankings</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">✓</span>
+        <span>Advanced filtering & search</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">✓</span>
+        <span>Priority recipe additions</span>
+      </div>
+    </div>
+
+    <form id="payment-form">
+      <div id="card-element"></div>
+      <div id="card-errors"></div>
+
+      <div class="loading" id="loading">Processing payment...</div>
+
+      <button type="submit" class="btn-submit" id="submit-btn">
+        Subscribe Now
+      </button>
+    </form>
+
+    <div class="security-note">
+      🔒 Secure checkout powered by Stripe. Your card details are never stored on our servers.
+    </div>
+  </div>
+
+  <script src="../../lib/analytics.js"></script>
+  <script>
+    // Track checkout page load
+    Analytics.track('checkout_page_loaded', {
+      product: 'recipe_premium',
+      price: 4.99
+    });
+    Analytics.trackFunnelStep('recipe_premium', 3, 'checkout_page');
+
+    // NOTE: In production, replace with your actual Stripe publishable key
+    const STRIPE_PUBLISHABLE_KEY = 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXX';
+
+    // Initialize Stripe
+    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+    const elements = stripe.elements();
+    const cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#2d3436',
+          '::placeholder': {
+            color: '#aab7c4',
+          },
+        },
+      },
+    });
+
+    cardElement.mount('#card-element');
+
+    // Handle card errors
+    cardElement.on('change', (event) => {
+      const displayError = document.getElementById('card-errors');
+      if (event.error) {
+        displayError.textContent = event.error.message;
+      } else {
+        displayError.textContent = '';
+      }
+    });
+
+    // Handle form submission
+    const form = document.getElementById('payment-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loading = document.getElementById('loading');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      // Disable submit button
+      submitBtn.disabled = true;
+      loading.classList.add('show');
+
+      // Track payment initiation
+      Analytics.trackPayment('initiated', {
+        amount: 4.99,
+        currency: 'USD',
+        product: 'recipe_premium'
+      });
+
+      try {
+        // Create payment method
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: cardElement,
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        // Send to backend to create subscription
+        const response = await fetch('/api/stripe/create-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentMethodId: paymentMethod.id,
+            priceId: 'price_recipe_premium_monthly', // Replace with actual Stripe price ID
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'succeeded') {
+          // Payment successful!
+          Analytics.trackPayment('completed', {
+            amount: 4.99,
+            currency: 'USD',
+            product: 'recipe_premium',
+            subscription_id: data.subscriptionId
+          });
+
+          Analytics.trackConversion('purchase', {
+            value: 4.99,
+            currency: 'USD',
+            transaction_id: data.subscriptionId
+          });
+
+          // Save premium status
+          localStorage.setItem('recipePremium', 'true');
+
+          // Redirect to app
+          window.location.href = '/swiper-cooking-elo.html?upgraded=true';
+
+        } else {
+          throw new Error(data.error || 'Payment failed');
+        }
+
+      } catch (error) {
+        console.error('Payment error:', error);
+
+        // Track payment failure
+        Analytics.trackPayment('failed', {
+          amount: 4.99,
+          currency: 'USD',
+          product: 'recipe_premium',
+          error: error.message
+        });
+
+        document.getElementById('card-errors').textContent = error.message;
+        submitBtn.disabled = false;
+        loading.classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>

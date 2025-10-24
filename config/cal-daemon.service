@@ -1,0 +1,38 @@
+[Unit]
+Description=Cal Autonomous Daemon - Self-Documenting AI System
+Documentation=https://github.com/calos/agent-router
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=matthewmauer
+WorkingDirectory=/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router
+ExecStart=/usr/local/bin/node /Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/bin/cal-daemon
+Restart=always
+RestartSec=10
+
+# Environment variables
+Environment="NODE_ENV=production"
+Environment="CAL_INTERVAL=1h"
+Environment="CAL_AUTO_PUBLISH=false"
+Environment="CAL_AUTO_SIGN=true"
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+
+# Load .env file (if exists)
+EnvironmentFile=-/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/.env
+
+# Logging
+StandardOutput=append:/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/logs/cal-daemon-out.log
+StandardError=append:/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/logs/cal-daemon-error.log
+SyslogIdentifier=cal-daemon
+
+# Security hardening (optional)
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=4096
+MemoryLimit=500M
+
+[Install]
+WantedBy=multi-user.target

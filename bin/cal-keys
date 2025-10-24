@@ -1,0 +1,594 @@
+#!/usr/bin/env node
+
+/**
+ * CAL-KEYS - API Key Management Tool
+ *
+ * Interactive tool for managing API keys for OpenAI, Anthropic, DeepSeek.
+ * Stores keys securely in .env file with validation.
+ *
+ * Usage:
+ *   cal-keys               # Interactive mode
+ *   cal-keys status        # Check key status
+ *   cal-keys set openai    # Set specific key
+ *   cal-keys test openai   # Test specific key
+ *   cal-keys clear openai  # Clear specific key
+ *   cal-keys help          # Show help
+ *
+ * Global install:
+ *   npm install -g calos-agent-router
+ *   cal-keys
+ */
+
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+
+// Color helpers
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  magenta: '\x1b[35m'
+};
+
+function log(msg, color = 'reset') {
+  console.log(`${colors[color]}${msg}${colors.reset}`);
+}
+
+function error(msg) {
+  console.error(`${colors.red}Error: ${msg}${colors.reset}`);
+}
+
+// Providers config
+const PROVIDERS = {
+  openai: {
+    name: 'OpenAI',
+    envKey: 'OPENAI_API_KEY',
+    keyPrefix: 'sk-',
+    testEndpoint: 'https://api.openai.com/v1/models',
+    testHeader: 'Authorization',
+    testValue: (key) => `Bearer ${key}`
+  },
+  anthropic: {
+    name: 'Anthropic',
+    envKey: 'ANTHROPIC_API_KEY',
+    keyPrefix: 'sk-ant-',
+    testEndpoint: 'https://api.anthropic.com/v1/messages',
+    testHeader: 'x-api-key',
+    testValue: (key) => key
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    envKey: 'DEEPSEEK_API_KEY',
+    keyPrefix: 'sk-',
+    testEndpoint: 'https://api.deepseek.com/v1/chat/completions',
+    testHeader: 'Authorization',
+    testValue: (key) => `Bearer ${key}`
+  }
+};
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const command = args[0];
+const provider = args[1];
+
+// Main command router
+async function main() {
+  switch (command) {
+    case 'status':
+    case 's':
+      await cmdStatus();
+      break;
+
+    case 'set':
+      if (!provider || !PROVIDERS[provider]) {
+        error(`Invalid provider. Use: ${Object.keys(PROVIDERS).join(', ')}`);
+        process.exit(1);
+      }
+      await cmdSet(provider);
+      break;
+
+    case 'test':
+    case 't':
+      if (!provider || !PROVIDERS[provider]) {
+        error(`Invalid provider. Use: ${Object.keys(PROVIDERS).join(', ')}`);
+        process.exit(1);
+      }
+      await cmdTest(provider);
+      break;
+
+    case 'clear':
+    case 'c':
+      if (!provider || !PROVIDERS[provider]) {
+        error(`Invalid provider. Use: ${Object.keys(PROVIDERS).join(', ')}`);
+        process.exit(1);
+      }
+      await cmdClear(provider);
+      break;
+
+    case 'help':
+    case 'h':
+    case '--help':
+    case '-h':
+      showHelp();
+      break;
+
+    case undefined:
+      // Interactive mode
+      await cmdInteractive();
+      break;
+
+    default:
+      error(`Unknown command: ${command}`);
+      showHelp();
+      process.exit(1);
+  }
+}
+
+/**
+ * Interactive mode - guided setup
+ */
+async function cmdInteractive() {
+  log('🔑 CAL API Key Manager', 'bright');
+  log('─'.repeat(60), 'dim');
+  console.log();
+
+  log('This tool will help you set up API keys for:', 'cyan');
+  log('  1. OpenAI (gpt-4, gpt-3.5-turbo)', 'dim');
+  log('  2. Anthropic (claude-3-sonnet, claude-3-opus)', 'dim');
+  log('  3. DeepSeek (deepseek-chat, deepseek-coder)', 'dim');
+  console.log();
+
+  // Check current status
+  const keys = loadKeysFromEnv();
+  const hasAnyKeys = Object.values(keys).some(k => k);
+
+  if (hasAnyKeys) {
+    log('Current status:', 'yellow');
+    displayKeyStatus(keys);
+    console.log();
+
+    const shouldContinue = await prompt('Update keys? (y/n): ');
+    if (shouldContinue.toLowerCase() !== 'y') {
+      log('Cancelled.', 'dim');
+      process.exit(0);
+    }
+  }
+
+  // Set keys for each provider
+  for (const [providerId, config] of Object.entries(PROVIDERS)) {
+    console.log();
+    log(`Setting up ${config.name}...`, 'cyan');
+
+    const currentKey = keys[providerId];
+    if (currentKey) {
+      const keyDisplay = maskKey(currentKey);
+      log(`Current key: ${keyDisplay}`, 'dim');
+
+      const shouldUpdate = await prompt('Update this key? (y/n): ');
+      if (shouldUpdate.toLowerCase() !== 'y') {
+        log('Skipped.', 'dim');
+        continue;
+      }
+    }
+
+    const newKey = await promptSecret(`Enter ${config.name} API key (or press Enter to skip): `);
+
+    if (!newKey || newKey.trim().length === 0) {
+      log('Skipped.', 'dim');
+      continue;
+    }
+
+    // Validate key format
+    if (!newKey.startsWith(config.keyPrefix)) {
+      log(`⚠ Warning: Key doesn't start with ${config.keyPrefix}`, 'yellow');
+      const shouldContinue = await prompt('Continue anyway? (y/n): ');
+      if (shouldContinue.toLowerCase() !== 'y') {
+        log('Skipped.', 'dim');
+        continue;
+      }
+    }
+
+    // Save key
+    saveKeyToEnv(config.envKey, newKey);
+    log(`✓ ${config.name} key saved`, 'green');
+
+    // Test key
+    const shouldTest = await prompt('Test this key now? (y/n): ');
+    if (shouldTest.toLowerCase() === 'y') {
+      await testKey(providerId, newKey);
+    }
+  }
+
+  console.log();
+  log('─'.repeat(60), 'dim');
+  log('✓ Setup complete!', 'green');
+  console.log();
+
+  // Final status
+  const finalKeys = loadKeysFromEnv();
+  displayKeyStatus(finalKeys);
+
+  console.log();
+  log('Next steps:', 'cyan');
+  log('  1. Run: cal-ai status', 'dim');
+  log('  2. Test: cal-ai query "Hello world"', 'dim');
+  log('  3. Try: cal-ai triangle "Should I use React or Vue?"', 'dim');
+}
+
+/**
+ * Status command - show current key status
+ */
+async function cmdStatus() {
+  log('📊 API Key Status', 'bright');
+  log('─'.repeat(60), 'dim');
+  console.log();
+
+  const keys = loadKeysFromEnv();
+  displayKeyStatus(keys);
+
+  console.log();
+  log('─'.repeat(60), 'dim');
+
+  const setCount = Object.values(keys).filter(k => k).length;
+  if (setCount === 0) {
+    log('⚠ No API keys configured', 'yellow');
+    log('Run: cal-keys', 'dim');
+  } else if (setCount < 3) {
+    log(`⚠ Only ${setCount}/3 keys configured`, 'yellow');
+    log('For full Triangle Consensus, all 3 keys are needed.', 'dim');
+  } else {
+    log('✓ All keys configured!', 'green');
+  }
+}
+
+/**
+ * Set command - set specific key
+ */
+async function cmdSet(providerId) {
+  const config = PROVIDERS[providerId];
+
+  log(`Setting ${config.name} API key...`, 'cyan');
+  console.log();
+
+  const currentKey = process.env[config.envKey];
+  if (currentKey) {
+    log(`Current key: ${maskKey(currentKey)}`, 'dim');
+    console.log();
+  }
+
+  const newKey = await promptSecret(`Enter ${config.name} API key: `);
+
+  if (!newKey || newKey.trim().length === 0) {
+    error('No key provided');
+    process.exit(1);
+  }
+
+  // Validate key format
+  if (!newKey.startsWith(config.keyPrefix)) {
+    log(`⚠ Warning: Key doesn't start with ${config.keyPrefix}`, 'yellow');
+    const shouldContinue = await prompt('Continue anyway? (y/n): ');
+    if (shouldContinue.toLowerCase() !== 'y') {
+      log('Cancelled.', 'dim');
+      process.exit(0);
+    }
+  }
+
+  // Save key
+  saveKeyToEnv(config.envKey, newKey);
+  log(`✓ ${config.name} key saved`, 'green');
+
+  // Test key
+  const shouldTest = await prompt('Test this key now? (y/n): ');
+  if (shouldTest.toLowerCase() === 'y') {
+    await testKey(providerId, newKey);
+  }
+}
+
+/**
+ * Test command - test specific key
+ */
+async function cmdTest(providerId) {
+  const config = PROVIDERS[providerId];
+  const key = process.env[config.envKey];
+
+  if (!key) {
+    error(`${config.name} key not set`);
+    log('Run: cal-keys set ' + providerId, 'dim');
+    process.exit(1);
+  }
+
+  log(`Testing ${config.name} API key...`, 'cyan');
+  await testKey(providerId, key);
+}
+
+/**
+ * Clear command - clear specific key
+ */
+async function cmdClear(providerId) {
+  const config = PROVIDERS[providerId];
+
+  log(`Clearing ${config.name} API key...`, 'yellow');
+
+  const currentKey = process.env[config.envKey];
+  if (!currentKey) {
+    log('Key not set.', 'dim');
+    return;
+  }
+
+  log(`Current key: ${maskKey(currentKey)}`, 'dim');
+  const shouldClear = await prompt('Are you sure? (y/n): ');
+
+  if (shouldClear.toLowerCase() !== 'y') {
+    log('Cancelled.', 'dim');
+    return;
+  }
+
+  removeKeyFromEnv(config.envKey);
+  log(`✓ ${config.name} key cleared`, 'green');
+}
+
+/**
+ * Test API key by making a simple request
+ */
+async function testKey(providerId, key) {
+  const config = PROVIDERS[providerId];
+
+  try {
+    const axios = require('axios');
+
+    log(`  Testing ${config.name} key...`, 'dim');
+
+    let response;
+    if (providerId === 'openai') {
+      // Test with models endpoint
+      response = await axios.get(config.testEndpoint, {
+        timeout: 5000,
+        headers: {
+          [config.testHeader]: config.testValue(key)
+        }
+      });
+    } else if (providerId === 'anthropic') {
+      // Test with a minimal message
+      response = await axios.post(config.testEndpoint, {
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Hi' }]
+      }, {
+        timeout: 10000,
+        headers: {
+          [config.testHeader]: config.testValue(key),
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        }
+      });
+    } else if (providerId === 'deepseek') {
+      // Test with a minimal completion
+      response = await axios.post(config.testEndpoint, {
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: 'Hi' }],
+        max_tokens: 10
+      }, {
+        timeout: 10000,
+        headers: {
+          [config.testHeader]: config.testValue(key),
+          'content-type': 'application/json'
+        }
+      });
+    }
+
+    if (response.status === 200) {
+      log(`  ✓ ${config.name} key is valid`, 'green');
+    } else {
+      log(`  ⚠ ${config.name} returned status ${response.status}`, 'yellow');
+    }
+  } catch (err) {
+    if (err.response) {
+      if (err.response.status === 401) {
+        log(`  ✗ ${config.name} key is invalid (401 Unauthorized)`, 'red');
+      } else {
+        log(`  ⚠ ${config.name} returned error ${err.response.status}`, 'yellow');
+      }
+    } else {
+      log(`  ✗ ${config.name} test failed: ${err.message}`, 'red');
+    }
+  }
+}
+
+/**
+ * Load keys from .env file
+ */
+function loadKeysFromEnv() {
+  const envPath = path.join(__dirname, '../.env');
+
+  const keys = {};
+  for (const [providerId, config] of Object.entries(PROVIDERS)) {
+    keys[providerId] = process.env[config.envKey] || null;
+  }
+
+  return keys;
+}
+
+/**
+ * Save key to .env file
+ */
+function saveKeyToEnv(envKey, value) {
+  const envPath = path.join(__dirname, '../.env');
+
+  let envContent = '';
+  if (fs.existsSync(envPath)) {
+    envContent = fs.readFileSync(envPath, 'utf8');
+  }
+
+  // Check if key already exists
+  const regex = new RegExp(`^${envKey}=.*$`, 'm');
+  if (regex.test(envContent)) {
+    // Update existing key
+    envContent = envContent.replace(regex, `${envKey}=${value}`);
+  } else {
+    // Add new key
+    if (envContent && !envContent.endsWith('\n')) {
+      envContent += '\n';
+    }
+    envContent += `${envKey}=${value}\n`;
+  }
+
+  fs.writeFileSync(envPath, envContent, 'utf8');
+}
+
+/**
+ * Remove key from .env file
+ */
+function removeKeyFromEnv(envKey) {
+  const envPath = path.join(__dirname, '../.env');
+
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+
+  let envContent = fs.readFileSync(envPath, 'utf8');
+
+  // Remove the line
+  const regex = new RegExp(`^${envKey}=.*$\\n?`, 'm');
+  envContent = envContent.replace(regex, '');
+
+  fs.writeFileSync(envPath, envContent, 'utf8');
+}
+
+/**
+ * Display key status
+ */
+function displayKeyStatus(keys) {
+  for (const [providerId, config] of Object.entries(PROVIDERS)) {
+    const key = keys[providerId];
+    const status = key ? '✓' : '✗';
+    const statusColor = key ? 'green' : 'red';
+    const keyDisplay = key ? maskKey(key) : 'Not set';
+
+    log(`  ${status} ${config.name}: ${keyDisplay}`, statusColor);
+  }
+}
+
+/**
+ * Mask API key for display
+ */
+function maskKey(key) {
+  if (!key || key.length < 12) return '***';
+  return `${key.substring(0, 8)}...${key.substring(key.length - 4)}`;
+}
+
+/**
+ * Prompt user for input
+ */
+function prompt(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise(resolve => {
+    rl.question(question, answer => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+}
+
+/**
+ * Prompt user for secret input (hidden)
+ */
+function promptSecret(question) {
+  return new Promise(resolve => {
+    const stdin = process.stdin;
+    const stdout = process.stdout;
+
+    stdout.write(question);
+
+    let secret = '';
+
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf8');
+
+    const onData = (char) => {
+      char = char.toString('utf8');
+
+      switch (char) {
+        case '\n':
+        case '\r':
+        case '\u0004':
+          stdin.setRawMode(false);
+          stdin.pause();
+          stdin.removeListener('data', onData);
+          stdout.write('\n');
+          resolve(secret);
+          break;
+        case '\u0003':
+          process.exit(1);
+          break;
+        case '\u007f': // Backspace
+          if (secret.length > 0) {
+            secret = secret.slice(0, -1);
+            stdout.clearLine();
+            stdout.cursorTo(0);
+            stdout.write(question);
+            stdout.write('*'.repeat(secret.length));
+          }
+          break;
+        default:
+          secret += char;
+          stdout.write('*');
+          break;
+      }
+    };
+
+    stdin.on('data', onData);
+  });
+}
+
+/**
+ * Show help
+ */
+function showHelp() {
+  console.log(`
+${colors.bright}CAL-KEYS - API Key Management Tool${colors.reset}
+
+${colors.cyan}Usage:${colors.reset}
+  cal-keys                   Interactive mode (guided setup)
+  cal-keys status            Check current key status
+  cal-keys set <provider>    Set API key for specific provider
+  cal-keys test <provider>   Test API key for specific provider
+  cal-keys clear <provider>  Clear API key for specific provider
+  cal-keys help              Show this help message
+
+${colors.cyan}Providers:${colors.reset}
+  openai       OpenAI (gpt-4, gpt-3.5-turbo)
+  anthropic    Anthropic (claude-3-sonnet, claude-3-opus)
+  deepseek     DeepSeek (deepseek-chat, deepseek-coder)
+
+${colors.cyan}Examples:${colors.reset}
+  cal-keys                   # Interactive setup
+  cal-keys status            # Check status
+  cal-keys set openai        # Set OpenAI key
+  cal-keys test anthropic    # Test Anthropic key
+  cal-keys clear deepseek    # Clear DeepSeek key
+
+${colors.cyan}Notes:${colors.reset}
+  - Keys are stored in .env file
+  - All 3 keys needed for Triangle Consensus
+  - Test keys after setting to verify they work
+  - Keys are never displayed in full (masked)
+
+${colors.dim}For more info: https://github.com/calos/agent-router${colors.reset}
+`);
+}
+
+// Run main
+main().catch(err => {
+  error(err.message);
+  process.exit(1);
+});

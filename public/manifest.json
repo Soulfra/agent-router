@@ -32,24 +32,38 @@
   ],
   "shortcuts": [
     {
-      "name": "New Chat",
-      "short_name": "Chat",
-      "description": "Start a new conversation",
-      "url": "/chat.html",
+      "name": "Enterprise Dashboard",
+      "short_name": "Enterprise",
+      "description": "View all customers and analytics",
+      "url": "/enterprise-dashboard.html",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Builder",
-      "short_name": "Builder",
-      "description": "Open code builder",
-      "url": "/builder.html",
+      "name": "SoulFra OS",
+      "short_name": "SoulFra",
+      "description": "Network operations center",
+      "url": "/soulfra-os.html",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Gallery",
-      "short_name": "Gallery",
-      "description": "View image gallery",
-      "url": "/index.html",
+      "name": "Culture Profile",
+      "short_name": "Culture",
+      "description": "Customer culture analysis",
+      "url": "/culture-profile.html",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Usage Monitoring",
+      "short_name": "Usage",
+      "description": "Track usage and limits",
+      "url": "/usage-monitoring.html",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Pricing Calculator",
+      "short_name": "Pricing",
+      "description": "Calculate pricing tiers",
+      "url": "/pricing-calculator.html",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]

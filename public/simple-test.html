@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Test - Can You See This?</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+    }
+
+    .box {
+      padding: 40px;
+      margin: 20px;
+      border: 5px solid;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .red {
+      background: #ff0000;
+      border-color: #fff;
+      color: #fff;
+    }
+
+    .green {
+      background: #00ff00;
+      border-color: #fff;
+      color: #000;
+    }
+
+    .blue {
+      background: #0000ff;
+      border-color: #fff;
+      color: #fff;
+    }
+
+    .yellow {
+      background: #ffff00;
+      border-color: #fff;
+      color: #000;
+    }
+
+    h1 {
+      background: #fff;
+      color: #000;
+      padding: 30px;
+      text-align: center;
+      font-size: 48px;
+    }
+
+    .info {
+      background: #333;
+      padding: 20px;
+      margin: 20px;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .button {
+      display: inline-block;
+      background: #00ffff;
+      color: #000;
+      padding: 20px 40px;
+      margin: 10px;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: bold;
+      border: 3px solid #fff;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: #ffff00;
+    }
+
+    .footer {
+      background: #fff;
+      color: #000;
+      padding: 20px;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚨 SIMPLE TEST PAGE 🚨</h1>
+
+  <div class="info">
+    <strong>IF YOU CAN SEE THIS, YOUR BROWSER IS WORKING!</strong><br><br>
+    This is a dead-simple HTML page with zero dependencies.<br>
+    No CSS variables. No external JavaScript. No frameworks.<br>
+    Just plain HTML and inline CSS.<br><br>
+    Server: <code>localhost:5001</code><br>
+    Date: <code id="date"></code><br>
+    Time: <code id="time"></code>
+  </div>
+
+  <div class="box red">
+    ✅ RED BOX - Can you see this?
+  </div>
+
+  <div class="box green">
+    ✅ GREEN BOX - Can you see this?
+  </div>
+
+  <div class="box blue">
+    ✅ BLUE BOX - Can you see this?
+  </div>
+
+  <div class="box yellow">
+    ✅ YELLOW BOX - Can you see this?
+  </div>
+
+  <div class="info" style="background: #00ffff; color: #000;">
+    <strong>NEXT STEPS:</strong><br><br>
+    1. If you can see these colored boxes → Your browser works!<br>
+    2. Click the buttons below to test other pages:<br><br>
+
+    <a href="/glossary-test.html" class="button">→ Diagnostic Test</a>
+    <a href="/publishing-glossary.html" class="button">→ Glossary Page</a>
+    <br><br>
+
+    3. Open browser console (F12 or Cmd+Option+I) and check for errors
+  </div>
+
+  <div class="footer">
+    CALOS Agent Router • Simple Test Page<br>
+    If you can read this, HTML and CSS are working correctly.
+  </div>
+
+  <script>
+    // Simple JavaScript test - updates time
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('date').textContent = now.toLocaleDateString();
+      document.getElementById('time').textContent = now.toLocaleTimeString();
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Log to console
+    console.log('✅ Simple test page loaded successfully!');
+    console.log('🚀 Server: localhost:5001');
+    console.log('📅 Time:', new Date().toISOString());
+  </script>
+</body>
+</html>

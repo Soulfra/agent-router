@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Soulfra Platform</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 450px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .oauth-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .oauth-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      color: #333;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .oauth-button:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .oauth-button.google {
+      border-color: #4285f4;
+    }
+
+    .oauth-button.google:hover {
+      background: #f1f5ff;
+    }
+
+    .oauth-button.microsoft {
+      border-color: #00a4ef;
+    }
+
+    .oauth-button.microsoft:hover {
+      background: #f0f9ff;
+    }
+
+    .oauth-button.github {
+      border-color: #333;
+    }
+
+    .oauth-button.github:hover {
+      background: #f5f5f5;
+    }
+
+    .oauth-button.icloud {
+      border-color: #0071e3;
+    }
+
+    .oauth-button.icloud:hover {
+      background: #f0f6ff;
+    }
+
+    .oauth-button svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .divider span {
+      padding: 0 16px;
+    }
+
+    .passkey-section {
+      margin-bottom: 24px;
+    }
+
+    .passkey-button {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid #9C27B0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #9C27B0 0%, #673AB7 100%);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .passkey-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+    }
+
+    .passkey-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .traditional-login {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .traditional-login a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .traditional-login a:hover {
+      text-decoration: underline;
+    }
+
+    .status-message {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status-message.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+    }
+
+    .status-message.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+    }
+
+    .status-message.info {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+    }
+
+    .features {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .features h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .feature-item::before {
+      content: '✓';
+      color: #4caf50;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 20px;
+      }
+
+      .feature-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>🚀 Soulfra</h1>
+      <p>Your encrypted workspace on any platform</p>
+    </div>
+
+    <div class="oauth-buttons" id="oauthButtons">
+      <!-- OAuth buttons will be dynamically loaded -->
+      <div style="text-align: center; color: #999;">Loading providers...</div>
+    </div>
+
+    <div class="divider">
+      <span>OR</span>
+    </div>
+
+    <div class="passkey-section">
+      <button class="passkey-button" id="passkeyLogin">
+        <span>🔐</span>
+        <span>Sign in with Passkey</span>
+      </button>
+      <p style="text-align: center; margin-top: 12px; font-size: 13px; color: #999;">
+        Use FaceID, TouchID, or fingerprint
+      </p>
+    </div>
+
+    <div class="traditional-login">
+      <a href="/login.html">Sign in with email & password</a>
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <div class="features">
+      <h3>🔒 Encrypted Passthrough Architecture</h3>
+      <div class="feature-list">
+        <div class="feature-item">Google Drive access</div>
+        <div class="feature-item">OneDrive access</div>
+        <div class="feature-item">iCloud encryption</div>
+        <div class="feature-item">GitHub integration</div>
+        <div class="feature-item">End-to-end security</div>
+        <div class="feature-item">Cross-device sync</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const API_BASE = window.location.origin;
+
+    // OAuth provider icons (SVG)
+    const PROVIDER_ICONS = {
+      google: '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
+      microsoft: '<svg viewBox="0 0 24 24"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#00a4ef" d="M13 1h10v10H13z"/><path fill="#7fba00" d="M1 13h10v10H1z"/><path fill="#ffb900" d="M13 13h10v10H13z"/></svg>',
+      github: '<svg viewBox="0 0 24 24"><path fill="#333" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>',
+      icloud: '<svg viewBox="0 0 24 24"><path fill="#0071e3" d="M13.762 4.29a6.51 6.51 0 0 0-5.669 3.332 3.571 3.571 0 0 0-1.558-.36 3.571 3.571 0 0 0-3.516 3A4.918 4.918 0 0 0 0 14.796a4.918 4.918 0 0 0 4.92 4.914 4.93 4.93 0 0 0 .617-.045h14.42c2.305-.272 4.041-2.258 4.043-4.589v-1.061c0-2.506-2.032-4.538-4.539-4.538-.747 0-1.453.186-2.084.514-1.092-2.993-3.931-5.13-7.215-5.13"/></svg>'
+    };
+
+    // Show status message
+    function showStatus(message, type = 'info') {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = `status-message ${type}`;
+      statusEl.style.display = 'block';
+
+      if (type === 'success') {
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    // Load available OAuth providers
+    async function loadOAuthProviders() {
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/oauth/providers`);
+        if (!response.ok) throw new Error('Failed to load providers');
+
+        const data = await response.json();
+        const container = document.getElementById('oauthButtons');
+
+        if (!data.providers || data.providers.length === 0) {
+          container.innerHTML = '<p style="text-align: center; color: #999; font-size: 14px;">No OAuth providers configured</p>';
+          return;
+        }
+
+        container.innerHTML = data.providers
+          .filter(p => p.is_active)
+          .map(provider => `
+            <a href="${API_BASE}/api/auth/oauth/${provider.provider_id}/authorize"
+               class="oauth-button ${provider.provider_id}">
+              ${PROVIDER_ICONS[provider.provider_id] || '🔐'}
+              <span>Continue with ${provider.name}</span>
+            </a>
+          `).join('');
+
+      } catch (error) {
+        console.error('Error loading OAuth providers:', error);
+        document.getElementById('oauthButtons').innerHTML =
+          '<p style="text-align: center; color: #f44336; font-size: 14px;">Failed to load sign-in options</p>';
+      }
+    }
+
+    // Base64URL encoding for WebAuthn
+    function base64urlEncode(buffer) {
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    }
+
+    function base64urlDecode(base64url) {
+      const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+      const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+      const str = atob(base64 + padding);
+      return Uint8Array.from(str, c => c.charCodeAt(0));
+    }
+
+    // Passkey login
+    async function loginWithPasskey() {
+      const button = document.getElementById('passkeyLogin');
+      button.disabled = true;
+      button.innerHTML = '<span>⏳</span><span>Authenticating...</span>';
+
+      try {
+        // Check if WebAuthn is supported
+        if (!window.PublicKeyCredential) {
+          throw new Error('Passkeys are not supported on this device');
+        }
+
+        showStatus('Requesting authentication options...', 'info');
+
+        // Get authentication options from server
+        const optionsResponse = await fetch(`${API_BASE}/api/auth/passkey/authenticate/options`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!optionsResponse.ok) {
+          throw new Error('Failed to get authentication options');
+        }
+
+        const options = await optionsResponse.json();
+
+        showStatus('Present your passkey (FaceID, TouchID, or fingerprint)...', 'info');
+
+        // Convert base64url to ArrayBuffer
+        const publicKey = {
+          ...options.options,
+          challenge: base64urlDecode(options.options.challenge),
+          allowCredentials: options.options.allowCredentials?.map(cred => ({
+            ...cred,
+            id: base64urlDecode(cred.id)
+          }))
+        };
+
+        // Prompt user for authentication
+        const credential = await navigator.credentials.get({ publicKey });
+
+        showStatus('Verifying passkey...', 'info');
+
+        // Prepare credential for server
+        const credentialJSON = {
+          id: credential.id,
+          rawId: base64urlEncode(credential.rawId),
+          response: {
+            authenticatorData: base64urlEncode(credential.response.authenticatorData),
+            clientDataJSON: base64urlEncode(credential.response.clientDataJSON),
+            signature: base64urlEncode(credential.response.signature),
+            userHandle: credential.response.userHandle ? base64urlEncode(credential.response.userHandle) : null
+          },
+          type: credential.type
+        };
+
+        // Verify with server
+        const verifyResponse = await fetch(`${API_BASE}/api/auth/passkey/authenticate/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credentialJSON)
+        });
+
+        if (!verifyResponse.ok) {
+          const error = await verifyResponse.json();
+          throw new Error(error.error || 'Authentication failed');
+        }
+
+        const result = await verifyResponse.json();
+
+        showStatus('✅ Authentication successful! Redirecting...', 'success');
+
+        // Store session token
+        if (result.token) {
+          localStorage.setItem('auth_token', result.token);
+        }
+
+        // Redirect to dashboard
+        setTimeout(() => {
+          window.location.href = '/dashboard.html';
+        }, 1500);
+
+      } catch (error) {
+        console.error('Passkey login error:', error);
+        showStatus(`❌ ${error.message}`, 'error');
+        button.disabled = false;
+        button.innerHTML = '<span>🔐</span><span>Sign in with Passkey</span>';
+      }
+    }
+
+    // Event listeners
+    document.getElementById('passkeyLogin').addEventListener('click', loginWithPasskey);
+
+    // Check for OAuth callback
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error')) {
+      showStatus(`OAuth Error: ${urlParams.get('error')}`, 'error');
+    } else if (urlParams.get('success')) {
+      showStatus('✅ Signed in successfully! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard.html';
+      }, 1500);
+    }
+
+    // Load OAuth providers on page load
+    loadOAuthProviders();
+  </script>
+</body>
+</html>

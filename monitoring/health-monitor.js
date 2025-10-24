@@ -24,6 +24,10 @@ class HealthMonitor extends EventEmitter {
     this.processes = new Map(); // Process name -> config
     this.metrics = new Map(); // Process name -> latest metrics
 
+    // AI Analytics (optional)
+    this.aiCostAlerts = options.aiCostAlerts;
+    this.aiInstanceRegistry = options.aiInstanceRegistry;
+
     this.STATUS = {
       HEALTHY: { emoji: '🟢', color: 'green', code: 200 },
       WORKING: { emoji: '🟡', color: 'yellow', code: 102 },
@@ -461,6 +465,80 @@ class HealthMonitor extends EventEmitter {
     if (metrics) {
       metrics.errorCount = 0;
     }
+  }
+
+  /**
+   * Check AI providers health
+   * Integrates with AI Cost Alerts to monitor provider status
+   * @returns {Promise<object>} AI providers health status
+   */
+  async checkAIProviders() {
+    if (!this.aiCostAlerts || !this.aiInstanceRegistry) {
+      return {
+        enabled: false,
+        message: 'AI provider monitoring not configured'
+      };
+    }
+
+    try {
+      const instances = this.aiInstanceRegistry.listInstances({ enabledOnly: true });
+      const summary = await this.aiCostAlerts.getAlertSummary();
+
+      const providerStatus = {};
+
+      for (const instance of instances) {
+        // Get alert status for this instance
+        const status = await this.aiCostAlerts.checkThresholds(instance.name);
+
+        providerStatus[instance.name] = {
+          instance: instance.displayName,
+          provider: instance.provider,
+          model: instance.model,
+          status: status.status.emoji,
+          color: status.status.color,
+          alerts: status.alerts || [],
+          free: instance.costProfile.free
+        };
+      }
+
+      return {
+        enabled: true,
+        healthy: summary.healthy.length,
+        warning: summary.warning.length,
+        critical: summary.critical.length,
+        total: summary.total,
+        providers: providerStatus,
+        circuitBreakers: {
+          total: summary.circuitBreakers.total,
+          tripped: summary.circuitBreakers.tripped
+        },
+        fallbacks: {
+          total: summary.fallbacks.total,
+          active: summary.fallbacks.active
+        }
+      };
+
+    } catch (error) {
+      console.error('[HealthMonitor] Error checking AI providers:', error.message);
+      return {
+        enabled: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get combined system health including AI providers
+   * @returns {Promise<object>} Complete system health
+   */
+  async getCompleteSystemHealth() {
+    const systemHealth = this.getSystemHealth();
+    const aiHealth = await this.checkAIProviders();
+
+    return {
+      ...systemHealth,
+      ai: aiHealth
+    };
   }
 }
 

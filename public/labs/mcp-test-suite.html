@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Test Suite - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .test-results {
+      margin-top: 20px;
+    }
+
+    .test-item {
+      background: #0a0a15;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      border-left: 3px solid #888;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .test-item.passed {
+      border-left-color: #4caf50;
+    }
+
+    .test-item.failed {
+      border-left-color: #e74c3c;
+    }
+
+    .test-item.running {
+      border-left-color: #f39c12;
+    }
+
+    .test-name {
+      color: #e0e0e0;
+    }
+
+    .test-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .test-status.passed {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .test-status.failed {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .test-status.running {
+      background: rgba(243, 156, 18, 0.2);
+      color: #f39c12;
+    }
+
+    .test-status.pending {
+      background: rgba(136, 136, 136, 0.2);
+      color: #888;
+    }
+
+    .test-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .summary-item {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .summary-value {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .summary-value.passed {
+      color: #4caf50;
+    }
+
+    .summary-value.failed {
+      color: #e74c3c;
+    }
+
+    .summary-value.total {
+      color: #667eea;
+    }
+
+    .summary-label {
+      color: #888;
+      font-size: 12px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #0a0a15;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .test-details {
+      background: #000;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      display: none;
+    }
+
+    .test-item.failed .test-details {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>MCP Test Suite</h1>
+  <p class="subtitle">Automated testing for all 8 MCP tools</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- Test Controls -->
+  <div class="section">
+    <h2>Test Controls</h2>
+    <div class="button-grid">
+      <button onclick="runAllTests()" style="background: linear-gradient(135deg, #4caf50, #45a049);">Run All Tests</button>
+      <button onclick="runFilesystemTests()">Test Filesystem Tools</button>
+      <button onclick="runRPGTests()">Test RPG Tools</button>
+      <button onclick="runCodeTests()">Test Code Tools</button>
+      <button onclick="clearResults()">Clear Results</button>
+    </div>
+  </div>
+
+  <!-- Test Progress -->
+  <div class="section" id="progress-section" style="display: none;">
+    <h2>Test Progress</h2>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+    </div>
+  </div>
+
+  <!-- Test Summary -->
+  <div class="section" id="summary-section" style="display: none;">
+    <h2>Test Summary</h2>
+    <div class="test-summary">
+      <div class="summary-item">
+        <div class="summary-value total" id="total-tests">0</div>
+        <div class="summary-label">Total</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value passed" id="passed-tests">0</div>
+        <div class="summary-label">Passed</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value failed" id="failed-tests">0</div>
+        <div class="summary-label">Failed</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value" id="success-rate">0%</div>
+        <div class="summary-label">Success Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Results -->
+  <div class="section">
+    <h2>Test Results</h2>
+    <div class="test-results" id="test-results">
+      <p style="color: #888; text-align: center; padding: 20px;">Click "Run All Tests" to start testing...</p>
+    </div>
+  </div>
+
+  <!-- Output Log -->
+  <div class="section">
+    <h2>Test Log</h2>
+    <pre class="output" id="output">Test output will appear here...</pre>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+
+    const TEST_SUITE = [
+      // Filesystem Tools
+      { name: 'filesystem_read - Read package.json', tool: 'filesystem_read', input: { path: './package.json' }, validate: (r) => r.content && r.content.includes('name') },
+      { name: 'filesystem_write - Create test file', tool: 'filesystem_write', input: { path: './test-mcp.txt', content: 'MCP Test' }, validate: (r) => r.success !== false },
+      { name: 'filesystem_list - List root directory', tool: 'filesystem_list', input: { path: '.' }, validate: (r) => r.files && r.files.length > 0 },
+
+      // Code Search Tools
+      { name: 'code_grep - Search for TODO comments', tool: 'code_grep', input: { pattern: 'TODO', path: './lib', ignoreCase: true }, validate: (r) => r.matches !== undefined },
+      { name: 'code_find - Find JavaScript files', tool: 'code_find', input: { pattern: '*.js', path: './lib' }, validate: (r) => r.files !== undefined },
+
+      // RPG Tools
+      { name: 'rpg_get_player - Get player stats', tool: 'rpg_get_player', input: { userId: 'test-user' }, validate: (r) => r.userId && r.level !== undefined },
+      { name: 'rpg_award_xp - Award experience points', tool: 'rpg_award_xp', input: { userId: 'test-user', amount: 10, reason: 'Test' }, validate: (r) => r.awarded && r.level !== undefined },
+
+      // System Tools
+      { name: 'system_info - Get system information', tool: 'system_info', input: {}, validate: (r) => r.platform || r.uptime !== undefined }
+    ];
+
+    let testResults = [];
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Append to log
+    function appendLog(message) {
+      output.textContent += '\n' + message;
+    }
+
+    // Call MCP tool
+    async function callMCP(toolName, input) {
+      const response = await fetch(`${MCP_URL}/mcp/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: toolName, input })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Tool call failed');
+      return data.result;
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+        return true;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+        return false;
+      }
+    }
+
+    // Run single test
+    async function runTest(test, index) {
+      const testElement = document.getElementById(`test-${index}`);
+      testElement.className = 'test-item running';
+      testElement.querySelector('.test-status').className = 'test-status running';
+      testElement.querySelector('.test-status').textContent = 'RUNNING';
+
+      appendLog(`\n[${index + 1}/${TEST_SUITE.length}] Running: ${test.name}...`);
+
+      try {
+        const result = await callMCP(test.tool, test.input);
+
+        // Validate result
+        const isValid = test.validate(result);
+
+        if (isValid) {
+          testElement.className = 'test-item passed';
+          testElement.querySelector('.test-status').className = 'test-status passed';
+          testElement.querySelector('.test-status').textContent = 'PASSED';
+          appendLog(`    ✓ PASSED`);
+          return { passed: true, error: null };
+        } else {
+          throw new Error('Validation failed');
+        }
+      } catch (error) {
+        testElement.className = 'test-item failed';
+        testElement.querySelector('.test-status').className = 'test-status failed';
+        testElement.querySelector('.test-status').textContent = 'FAILED';
+
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'test-details';
+        detailsDiv.textContent = `Error: ${error.message}`;
+        testElement.appendChild(detailsDiv);
+
+        appendLog(`    ✗ FAILED: ${error.message}`);
+        return { passed: false, error: error.message };
+      }
+    }
+
+    // Initialize test UI
+    function initializeTestUI() {
+      const container = document.getElementById('test-results');
+      container.innerHTML = '';
+
+      TEST_SUITE.forEach((test, index) => {
+        const div = document.createElement('div');
+        div.id = `test-${index}`;
+        div.className = 'test-item';
+        div.innerHTML = `
+          <span class="test-name">${test.name}</span>
+          <span class="test-status pending">PENDING</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Update progress
+    function updateProgress(current, total) {
+      const percentage = Math.round((current / total) * 100);
+      const progressFill = document.getElementById('progress-fill');
+      progressFill.style.width = percentage + '%';
+      progressFill.textContent = percentage + '%';
+    }
+
+    // Update summary
+    function updateSummary(results) {
+      const passed = results.filter(r => r.passed).length;
+      const failed = results.filter(r => !r.passed).length;
+      const total = results.length;
+      const successRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+      document.getElementById('total-tests').textContent = total;
+      document.getElementById('passed-tests').textContent = passed;
+      document.getElementById('failed-tests').textContent = failed;
+      document.getElementById('success-rate').textContent = successRate + '%';
+
+      document.getElementById('summary-section').style.display = 'block';
+    }
+
+    // Run all tests
+    async function runAllTests() {
+      // Check server first
+      const isOnline = await checkServerStatus();
+      if (!isOnline) {
+        log('Cannot run tests: MCP server is offline', 'error');
+        return;
+      }
+
+      // Initialize
+      initializeTestUI();
+      testResults = [];
+      log('Starting test suite...\n');
+
+      document.getElementById('progress-section').style.display = 'block';
+      updateProgress(0, TEST_SUITE.length);
+
+      // Run tests sequentially
+      for (let i = 0; i < TEST_SUITE.length; i++) {
+        const result = await runTest(TEST_SUITE[i], i);
+        testResults.push(result);
+        updateProgress(i + 1, TEST_SUITE.length);
+      }
+
+      // Update summary
+      updateSummary(testResults);
+
+      const passed = testResults.filter(r => r.passed).length;
+      const failed = testResults.filter(r => !r.passed).length;
+
+      appendLog(`\n\n========================================`);
+      appendLog(`Test Suite Complete!`);
+      appendLog(`Total: ${TEST_SUITE.length}`);
+      appendLog(`Passed: ${passed}`);
+      appendLog(`Failed: ${failed}`);
+      appendLog(`Success Rate: ${Math.round((passed / TEST_SUITE.length) * 100)}%`);
+      appendLog(`========================================`);
+
+      if (failed === 0) {
+        output.classList.add('success');
+      } else {
+        output.classList.add('error');
+      }
+    }
+
+    // Run specific test groups
+    async function runFilesystemTests() {
+      const tests = TEST_SUITE.slice(0, 3);
+      await runTestGroup(tests, 'Filesystem Tools');
+    }
+
+    async function runRPGTests() {
+      const tests = TEST_SUITE.slice(5, 7);
+      await runTestGroup(tests, 'RPG Tools');
+    }
+
+    async function runCodeTests() {
+      const tests = TEST_SUITE.slice(3, 5);
+      await runTestGroup(tests, 'Code Search Tools');
+    }
+
+    async function runTestGroup(tests, groupName) {
+      log(`Running ${groupName}...\n`);
+      initializeTestUI();
+      testResults = [];
+
+      for (let i = 0; i < tests.length; i++) {
+        const globalIndex = TEST_SUITE.indexOf(tests[i]);
+        const result = await runTest(tests[i], globalIndex);
+        testResults.push(result);
+      }
+
+      updateSummary(testResults);
+    }
+
+    // Clear results
+    function clearResults() {
+      document.getElementById('test-results').innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Click "Run All Tests" to start testing...</p>';
+      document.getElementById('progress-section').style.display = 'none';
+      document.getElementById('summary-section').style.display = 'none';
+      log('Test output will appear here...');
+      testResults = [];
+    }
+
+    // Check status on load
+    window.addEventListener('load', () => {
+      checkServerStatus();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Collection Viewer - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-group label {
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      padding: 8px 12px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      border: 2px solid;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card.common { border-color: #888; }
+    .card.uncommon { border-color: #4caf50; }
+    .card.rare { border-color: #2196f3; }
+    .card.epic { border-color: #9c27b0; }
+    .card.legendary { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title { font-size: 18px; font-weight: bold; }
+
+    .card-rarity {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .card-rarity.common { background: #888; color: white; }
+    .card-rarity.uncommon { background: #4caf50; color: white; }
+    .card-rarity.rare { background: #2196f3; color: white; }
+    .card-rarity.epic { background: #9c27b0; color: white; }
+    .card-rarity.legendary { background: #ffd700; color: #0f0f23; }
+
+    .card-desc {
+      color: #aaa;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 15px;
+      min-height: 40px;
+    }
+
+    .card-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      background: #0a0a15;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    .collection-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-box-value {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #667eea;
+    }
+
+    .stat-box-label {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <h1>Card Collection Viewer</h1>
+  <p class="subtitle">Browse and filter your complete card collection</p>
+
+  <div class="section">
+    <h2>Collection Stats</h2>
+    <div class="collection-stats">
+      <div class="stat-box">
+        <div class="stat-box-value" id="total-cards">0</div>
+        <div class="stat-box-label">Total Cards</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="unique-cards">0</div>
+        <div class="stat-box-label">Unique</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="completion">0%</div>
+        <div class="stat-box-label">Completion</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Filters</h2>
+    <div class="filters">
+      <div class="filter-group">
+        <label>Rarity</label>
+        <select id="rarity-filter" onchange="applyFilters()">
+          <option value="all">All Rarities</option>
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Sort By</label>
+        <select id="sort-filter" onchange="applyFilters()">
+          <option value="name">Name (A-Z)</option>
+          <option value="rarity">Rarity</option>
+          <option value="power">Power</option>
+          <option value="defense">Defense</option>
+          <option value="speed">Speed</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Search</label>
+        <input type="text" id="search-filter" placeholder="Card name..." oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button onclick="resetFilters()">Reset Filters</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Your Collection</h2>
+    <div class="cards-grid" id="cards-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <p>No cards yet! Open some packs to start your collection.</p>
+        <button onclick="window.location.href='card-opener.html'" style="margin-top: 20px;">Open Packs</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample collection (in production, this would come from API/database)
+    let collection = [];
+
+    const ALL_CARDS = {
+      common: [
+        { name: 'Console Logger', desc: 'Basic debugging tool.', power: 2, defense: 1, speed: 5 },
+        { name: 'Variable Hoarder', desc: 'Stores too many variables.', power: 1, defense: 2, speed: 3 },
+        { name: 'Copy Pasta', desc: 'Stack Overflow\'s friend.', power: 3, defense: 1, speed: 4 },
+        { name: 'Syntax Error', desc: 'Always at the worst time.', power: 1, defense: 1, speed: 2 }
+      ],
+      uncommon: [
+        { name: 'Git Committer', desc: 'Commits often, pushes rarely.', power: 4, defense: 3, speed: 6 },
+        { name: 'API Caller', desc: 'Fetches all the data.', power: 5, defense: 2, speed: 7 },
+        { name: 'Async Master', desc: 'Promise resolver.', power: 6, defense: 3, speed: 8 }
+      ],
+      rare: [
+        { name: 'Code Reviewer', desc: 'Finds unknown bugs.', power: 7, defense: 5, speed: 6 },
+        { name: 'DevOps Wizard', desc: 'Friday deployer.', power: 8, defense: 6, speed: 7 },
+        { name: 'Regex Ninja', desc: 'Regex master.', power: 9, defense: 4, speed: 8 }
+      ],
+      epic: [
+        { name: 'Tech Lead', desc: 'Architect and mentor.', power: 12, defense: 8, speed: 9 },
+        { name: '10x Engineer', desc: 'Fast coder, many bugs.', power: 15, defense: 5, speed: 12 }
+      ],
+      legendary: [
+        { name: 'Stack Overflow', desc: 'The oracle.', power: 20, defense: 15, speed: 10 },
+        { name: 'ChatGPT', desc: 'Code writer.', power: 25, defense: 10, speed: 15 }
+      ]
+    };
+
+    function loadCollection() {
+      // Generate sample collection
+      const rarities = ['common', 'common', 'common', 'uncommon', 'uncommon', 'rare', 'epic', 'legendary'];
+      collection = [];
+
+      rarities.forEach(rarity => {
+        const pool = ALL_CARDS[rarity];
+        const card = pool[Math.floor(Math.random() * pool.length)];
+        collection.push({ ...card, rarity, id: Date.now() + Math.random() });
+      });
+
+      updateStats();
+      applyFilters();
+    }
+
+    function updateStats() {
+      const totalCards = collection.length;
+      const uniqueCards = new Set(collection.map(c => c.name)).size;
+      const allPossibleCards = Object.values(ALL_CARDS).flat().length;
+      const completion = Math.round((uniqueCards / allPossibleCards) * 100);
+
+      document.getElementById('total-cards').textContent = totalCards;
+      document.getElementById('unique-cards').textContent = uniqueCards;
+      document.getElementById('completion').textContent = completion + '%';
+    }
+
+    function applyFilters() {
+      const rarityFilter = document.getElementById('rarity-filter').value;
+      const sortFilter = document.getElementById('sort-filter').value;
+      const searchFilter = document.getElementById('search-filter').value.toLowerCase();
+
+      let filtered = [...collection];
+
+      // Apply rarity filter
+      if (rarityFilter !== 'all') {
+        filtered = filtered.filter(card => card.rarity === rarityFilter);
+      }
+
+      // Apply search filter
+      if (searchFilter) {
+        filtered = filtered.filter(card =>
+          card.name.toLowerCase().includes(searchFilter) ||
+          card.desc.toLowerCase().includes(searchFilter)
+        );
+      }
+
+      // Apply sort
+      const rarityOrder = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+
+      filtered.sort((a, b) => {
+        switch (sortFilter) {
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'rarity':
+            return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+          case 'power':
+            return b.power - a.power;
+          case 'defense':
+            return b.defense - a.defense;
+          case 'speed':
+            return b.speed - a.speed;
+          default:
+            return 0;
+        }
+      });
+
+      displayCards(filtered);
+    }
+
+    function displayCards(cards) {
+      const grid = document.getElementById('cards-grid');
+
+      if (cards.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <p>No cards match your filters.</p>
+            <button onclick="resetFilters()" style="margin-top: 20px;">Reset Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = cards.map(card => `
+        <div class="card ${card.rarity}">
+          <div class="card-header">
+            <div class="card-title">${card.name}</div>
+            <div class="card-rarity ${card.rarity}">${card.rarity}</div>
+          </div>
+          <div class="card-desc">${card.desc}</div>
+          <div class="card-stats">
+            <div class="stat">
+              <div class="stat-value">${card.power}</div>
+              <div class="stat-label">Power</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${card.defense}</div>
+              <div class="stat-label">Defense</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${card.speed}</div>
+              <div class="stat-label">Speed</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function resetFilters() {
+      document.getElementById('rarity-filter').value = 'all';
+      document.getElementById('sort-filter').value = 'name';
+      document.getElementById('search-filter').value = '';
+      applyFilters();
+    }
+
+    window.addEventListener('load', loadCollection);
+  </script>
+</body>
+</html>

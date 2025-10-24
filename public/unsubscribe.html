@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribe - CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 50px;
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .icon.success {
+      color: #28a745;
+    }
+
+    .icon.error {
+      color: #dc3545;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    .email-address {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      color: #667eea;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    .button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+
+    .button.secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .button.secondary:hover {
+      background: #f8f9fa;
+    }
+
+    .feedback {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 2px solid #e9ecef;
+    }
+
+    .feedback h3 {
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .feedback-options {
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .feedback-option {
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feedback-option:hover {
+      background: #f8f9fa;
+    }
+
+    .feedback-option input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .feedback-option label {
+      cursor: pointer;
+      flex: 1;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-top: 15px;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 0.9rem;
+      color: #999;
+    }
+
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Loading State -->
+    <div id="loading-state">
+      <div class="icon">⏳</div>
+      <h1>Processing...</h1>
+      <p class="message">Please wait while we unsubscribe you.</p>
+    </div>
+
+    <!-- Success State -->
+    <div id="success-state" class="hidden">
+      <div class="icon success">✓</div>
+      <h1>You've been unsubscribed</h1>
+      <p class="message">
+        We've removed your email from our mailing list.
+        <br>You'll no longer receive emails from us.
+      </p>
+
+      <div class="email-address" id="email-display">
+        <!-- Email will be inserted here -->
+      </div>
+
+      <div style="margin: 30px 0;">
+        <a href="#" class="button" onclick="resubscribe(); return false;">Changed your mind? Resubscribe</a>
+        <a href="/email-preferences.html" class="button secondary">Manage Preferences</a>
+      </div>
+
+      <!-- Feedback Section -->
+      <div class="feedback">
+        <h3>Mind telling us why?</h3>
+        <p style="color: #666; margin-bottom: 20px; font-size: 0.95rem;">
+          Your feedback helps us improve. It's completely optional.
+        </p>
+
+        <div class="feedback-options">
+          <div class="feedback-option">
+            <input type="radio" name="reason" value="too_many" id="reason1">
+            <label for="reason1">📬 Too many emails</label>
+          </div>
+          <div class="feedback-option">
+            <input type="radio" name="reason" value="not_relevant" id="reason2">
+            <label for="reason2">🎯 Not relevant to me</label>
+          </div>
+          <div class="feedback-option">
+            <input type="radio" name="reason" value="never_signed_up" id="reason3">
+            <label for="reason3">❓ I never signed up</label>
+          </div>
+          <div class="feedback-option">
+            <input type="radio" name="reason" value="spam" id="reason4">
+            <label for="reason4">🚫 Feels like spam</label>
+          </div>
+          <div class="feedback-option">
+            <input type="radio" name="reason" value="other" id="reason5">
+            <label for="reason5">💭 Other reason</label>
+          </div>
+        </div>
+
+        <textarea id="feedback-text" placeholder="Tell us more (optional)..."></textarea>
+
+        <button class="button" onclick="submitFeedback()" style="margin-top: 20px;">
+          Submit Feedback
+        </button>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="hidden">
+      <div class="icon error">✗</div>
+      <h1>Oops! Something went wrong</h1>
+      <p class="message" id="error-message">
+        We couldn't process your unsubscribe request.
+      </p>
+      <a href="mailto:support@calos.ai" class="button">Contact Support</a>
+    </div>
+
+    <!-- Already Unsubscribed State -->
+    <div id="already-unsubscribed-state" class="hidden">
+      <div class="icon">ℹ️</div>
+      <h1>Already unsubscribed</h1>
+      <p class="message">
+        This email is already unsubscribed from our list.
+      </p>
+      <a href="/" class="button">Go Home</a>
+    </div>
+
+    <div class="footer">
+      <p>Need help? <a href="mailto:support@calos.ai">Contact Support</a></p>
+      <p style="margin-top: 10px;">
+        <a href="/">Home</a> •
+        <a href="/careers.html">Careers</a> •
+        <a href="/privacy">Privacy Policy</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Get token from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token') || window.location.pathname.split('/').pop();
+
+    // State
+    let unsubscribedEmail = '';
+    let userId = '';
+
+    // Initialize
+    async function init() {
+      if (!token || token === 'unsubscribe.html') {
+        showError('Invalid unsubscribe link. Please use the link from your email.');
+        return;
+      }
+
+      await unsubscribe(token);
+    }
+
+    // Unsubscribe
+    async function unsubscribe(token) {
+      try {
+        const response = await fetch(`/api/email/unsubscribe/${token}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          unsubscribedEmail = data.email || 'your email';
+          userId = data.userId;
+          showSuccess();
+        } else if (data.code === 'ALREADY_UNSUBSCRIBED') {
+          showAlreadyUnsubscribed();
+        } else {
+          showError(data.error || 'Failed to unsubscribe');
+        }
+
+      } catch (error) {
+        console.error('Unsubscribe error:', error);
+        showError('Network error. Please try again later.');
+      }
+    }
+
+    // Resubscribe
+    async function resubscribe() {
+      if (!token) return;
+
+      const button = event.target;
+      const originalText = button.textContent;
+      button.innerHTML = '<span class="spinner"></span> Resubscribing...';
+      button.disabled = true;
+
+      try {
+        const response = await fetch(`/api/email/resubscribe/${token}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          button.textContent = '✓ Resubscribed!';
+          button.style.background = '#28a745';
+          setTimeout(() => {
+            window.location.href = '/email-preferences.html?token=' + token;
+          }, 1500);
+        } else {
+          button.textContent = originalText;
+          button.disabled = false;
+          alert('Failed to resubscribe: ' + data.error);
+        }
+
+      } catch (error) {
+        button.textContent = originalText;
+        button.disabled = false;
+        alert('Network error. Please try again.');
+      }
+    }
+
+    // Submit feedback
+    async function submitFeedback() {
+      const selectedReason = document.querySelector('input[name="reason"]:checked');
+      const feedbackText = document.getElementById('feedback-text').value;
+
+      if (!selectedReason && !feedbackText) {
+        alert('Please select a reason or enter feedback.');
+        return;
+      }
+
+      const button = event.target;
+      button.innerHTML = '<span class="spinner"></span> Submitting...';
+      button.disabled = true;
+
+      try {
+        await fetch('/api/email/feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token,
+            reason: selectedReason ? selectedReason.value : 'other',
+            feedback: feedbackText,
+            email: unsubscribedEmail
+          })
+        });
+
+        button.textContent = '✓ Thank you!';
+        button.style.background = '#28a745';
+
+      } catch (error) {
+        button.textContent = 'Submit Feedback';
+        button.disabled = false;
+        alert('Failed to submit feedback. But that's okay!');
+      }
+    }
+
+    // Show success
+    function showSuccess() {
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('success-state').classList.remove('hidden');
+      document.getElementById('email-display').textContent = unsubscribedEmail;
+    }
+
+    // Show error
+    function showError(message) {
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('error-state').classList.remove('hidden');
+      document.getElementById('error-message').textContent = message;
+    }
+
+    // Show already unsubscribed
+    function showAlreadyUnsubscribed() {
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('already-unsubscribed-state').classList.remove('hidden');
+    }
+
+    // Run on load
+    init();
+  </script>
+</body>
+</html>

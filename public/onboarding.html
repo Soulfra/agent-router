@@ -482,6 +482,7 @@
     </div>
   </div>
 
+  <script src="../lib/analytics.js"></script>
   <script>
     const app = {
       sessionId: null,
@@ -494,6 +495,11 @@
 
       async init() {
         await this.loadArchetypes();
+
+        // Track page load
+        Analytics.track('brand_builder_loaded', {
+          source: 'direct'
+        });
       },
 
       async loadArchetypes() {
@@ -524,6 +530,13 @@
             this.currentLevel = data.currentLevel;
             await this.loadLevel(this.currentLevel);
             this.switchScreen('welcome-screen', 'survey-questions');
+
+            // Track survey start
+            Analytics.track('survey_started', {
+              survey_type: 'brand_builder',
+              session_id: this.sessionId
+            });
+            Analytics.trackFunnelStep('brand_builder', 1, 'survey_started');
           } else {
             throw new Error(data.error || 'Failed to start session');
           }
@@ -709,11 +722,24 @@
             this.totalEarnings = data.totalEarned;
             document.getElementById('earnings-display').textContent = `$${parseFloat(data.totalEarned).toFixed(2)}`;
 
+            // Track answer submission
+            Analytics.track('survey_answer_submitted', {
+              question_id: question.id,
+              level: question.level,
+              earnings: data.totalEarned
+            });
+
             // Move to next question or level
             if (this.currentQuestionIndex < this.questions.length - 1) {
               this.currentQuestionIndex++;
               this.renderQuestion();
             } else if (data.levelComplete && data.nextLevel <= 10) {
+              // Track level completion
+              Analytics.track('survey_level_completed', {
+                level: this.currentLevel,
+                earnings: data.totalEarned
+              });
+
               // Load next level
               await this.loadLevel(data.nextLevel);
             } else {
@@ -741,6 +767,20 @@
         document.getElementById('final-earnings').textContent = `$${parseFloat(this.totalEarnings).toFixed(2)}`;
         this.switchScreen('survey-questions', 'completion-screen');
         document.getElementById('progress-bar').style.width = '100%';
+
+        // Track completion + conversion
+        Analytics.track('survey_completed', {
+          survey_type: 'brand_builder',
+          total_earnings: this.totalEarnings,
+          session_id: this.sessionId
+        });
+
+        Analytics.trackConversion('signup', {
+          value: this.totalEarnings,
+          currency: 'USD'
+        });
+
+        Analytics.trackFunnelStep('brand_builder', 10, 'survey_completed');
       },
 
       updateProgress() {

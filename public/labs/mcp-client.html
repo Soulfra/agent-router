@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Client Lab - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .tool-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .tool-list li {
+      padding: 10px;
+      background: #0a0a15;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      border-left: 3px solid #667eea;
+    }
+
+    .tool-name {
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .tool-desc {
+      color: #888;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .input-group input,
+    .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .input-group input:focus,
+    .input-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 CalOS MCP Client Lab</h1>
+  <p class="subtitle">Interactive lab for Lesson 2: Using MCP Client with Fetch</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="section">
+    <h2>Quick Actions</h2>
+    <div class="button-grid">
+      <button onclick="checkHealth()">Check Health</button>
+      <button onclick="listTools()">List Tools</button>
+      <button onclick="readPackageJson()">Read package.json</button>
+      <button onclick="searchTODOs()">Search TODOs</button>
+      <button onclick="getPlayerStats()">Get Player Stats</button>
+      <button onclick="awardXPDemo()">Award XP</button>
+    </div>
+  </div>
+
+  <!-- Custom Tool Call -->
+  <div class="section">
+    <h2>Custom Tool Call</h2>
+    <div class="input-group">
+      <label>Tool Name:</label>
+      <input type="text" id="tool-name" placeholder="e.g., filesystem_read" value="filesystem_read">
+    </div>
+    <div class="input-group">
+      <label>Input (JSON):</label>
+      <textarea id="tool-input" rows="4" placeholder='{"path": "./README.md"}'>{"path": "./README.md"}</textarea>
+    </div>
+    <button onclick="callCustomTool()">Call Tool</button>
+  </div>
+
+  <!-- Output -->
+  <div class="section">
+    <h2>Output</h2>
+    <pre class="output" id="output">Click a button to test MCP tools...</pre>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Call MCP tool
+    async function callMCP(toolName, input) {
+      const response = await fetch(`${MCP_URL}/mcp/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: toolName, input })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Tool call failed');
+      return data.result;
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+      const statusDetails = document.getElementById('status-details');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+      }
+    }
+
+    // Check health
+    async function checkHealth() {
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+        log(data, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}\n\nMake sure MCP server is running:\n./bin/mcp-server`, 'error');
+      }
+    }
+
+    // List tools
+    async function listTools() {
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/tools`);
+        const data = await response.json();
+
+        let toolsText = `Available Tools (${data.tools.length}):\n\n`;
+        data.tools.forEach(tool => {
+          toolsText += `${tool.name}\n  → ${tool.description}\n\n`;
+        });
+
+        log(toolsText, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Read package.json
+    async function readPackageJson() {
+      try {
+        const result = await callMCP('filesystem_read', {
+          path: './package.json'
+        });
+
+        const pkg = JSON.parse(result.content);
+        log({
+          name: pkg.name,
+          version: pkg.version,
+          description: pkg.description,
+          main: pkg.main
+        }, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Search TODOs
+    async function searchTODOs() {
+      try {
+        const result = await callMCP('code_grep', {
+          pattern: 'TODO',
+          path: './lib',
+          ignoreCase: true
+        });
+
+        let output = `Found ${result.count} TODOs:\n\n`;
+        result.matches.slice(0, 10).forEach(match => {
+          output += `${match}\n`;
+        });
+
+        if (result.count > 10) {
+          output += `\n... and ${result.count - 10} more`;
+        }
+
+        log(output, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Get player stats
+    async function getPlayerStats() {
+      try {
+        const result = await callMCP('rpg_get_player', {
+          userId: 'demo-user'
+        });
+
+        log({
+          userId: result.userId,
+          level: result.level,
+          xp: `${result.xp}/100`,
+          totalXp: result.totalXp,
+          achievements: result.achievements.length,
+          newPlayer: result.newPlayer || false
+        }, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Award XP demo
+    async function awardXPDemo() {
+      try {
+        const result = await callMCP('rpg_award_xp', {
+          userId: 'demo-user',
+          amount: 50,
+          reason: 'Completed MCP Client Lab'
+        });
+
+        let output = `🎉 Awarded ${result.awarded} XP!\n\n`;
+        output += `User: ${result.userId}\n`;
+        output += `Level: ${result.level}\n`;
+        output += `XP: ${result.xp}/100\n`;
+        output += `Total XP: ${result.totalXp}\n`;
+
+        if (result.leveledUp) {
+          output += `\n🎊 LEVEL UP! Gained ${result.levelsGained} level(s)!\n`;
+        }
+
+        log(output, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Call custom tool
+    async function callCustomTool() {
+      try {
+        const toolName = document.getElementById('tool-name').value;
+        const inputText = document.getElementById('tool-input').value;
+
+        const input = JSON.parse(inputText);
+        const result = await callMCP(toolName, input);
+
+        log(result, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Check status on load
+    window.addEventListener('load', () => {
+      checkServerStatus();
+    });
+  </script>
+</body>
+</html>

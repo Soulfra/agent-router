@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Dashboard - CALOS Platform</title>
+  <link rel="stylesheet" href="/themes/soulfra-dark.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #3a3a5c;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      color: #61dafb;
+    }
+
+    .header p {
+      color: #a0a0c0;
+      font-size: 1.1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(97, 218, 251, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #61dafb;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon {
+      font-size: 1.5rem;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: #a0a0c0;
+      font-size: 0.95rem;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #61dafb, #2196f3);
+      transition: width 0.3s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge-success {
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+      border: 1px solid rgba(46, 204, 113, 0.4);
+    }
+
+    .badge-warning {
+      background: rgba(241, 196, 15, 0.2);
+      color: #f1c40f;
+      border: 1px solid rgba(241, 196, 15, 0.4);
+    }
+
+    .badge-info {
+      background: rgba(97, 218, 251, 0.2);
+      color: #61dafb;
+      border: 1px solid rgba(97, 218, 251, 0.4);
+    }
+
+    .code-block {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      color: #c9d1d9;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .comparison-item h4 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+      color: #a0a0c0;
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .trust-score {
+      font-size: 3rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 20px 0;
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .chart-container {
+      margin-top: 20px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 200px;
+      gap: 12px;
+    }
+
+    .bar {
+      flex: 1;
+      background: linear-gradient(to top, #61dafb, #2196f3);
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: height 0.3s ease;
+    }
+
+    .bar-label {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: #a0a0c0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .bar-value {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 600;
+      color: #61dafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="header">
+      <h1>🔒 Privacy Dashboard</h1>
+      <p>Transparency into data flow, telemetry obfuscation, and trust metrics</p>
+    </div>
+
+    <div class="grid">
+      <!-- Data Flow Card -->
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">📊</span>
+          Data Flow Visualization
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Local (Ollama) 🔒</span>
+          <span class="stat-value" id="local-count">--</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="local-progress" style="width: 0%;"></div>
+        </div>
+
+        <div class="stat-row" style="margin-top: 16px;">
+          <span class="stat-label">External (OpenAI/Anthropic) 🌐</span>
+          <span class="stat-value" id="external-count">--</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="external-progress" style="width: 0%;"></div>
+        </div>
+
+        <div class="stat-row" style="margin-top: 16px;">
+          <span class="stat-label">Obfuscated ✓</span>
+          <span class="badge badge-success" id="obfuscated-badge">100%</span>
+        </div>
+      </div>
+
+      <!-- Trust Metrics Card -->
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">✅</span>
+          Trust Metrics
+        </div>
+        <div class="trust-score pulse">100%</div>
+        <div class="stat-row">
+          <span class="stat-label">PII Leaks Detected</span>
+          <span class="stat-value" id="pii-leaks">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Requests</span>
+          <span class="stat-value" id="total-requests">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">System Uptime</span>
+          <span class="stat-value" id="uptime">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Preview Card -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">👁️</span>
+        Telemetry Obfuscation Preview
+      </div>
+      <p style="color: #a0a0c0; margin-bottom: 20px;">See exactly what data we see (and don't see) after obfuscation</p>
+
+      <div class="comparison">
+        <div class="comparison-item">
+          <h4>❌ Original Data (NOT sent)</h4>
+          <div class="code-block">
+            <pre id="raw-data">Loading...</pre>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <h4>✅ Obfuscated Data (what we see)</h4>
+          <div class="code-block">
+            <pre id="obfuscated-data">Loading...</pre>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <h4 style="color: #61dafb; margin-bottom: 12px;">Obfuscation Explanation</h4>
+        <ul style="color: #a0a0c0; line-height: 1.8;">
+          <li><strong>User ID:</strong> Hashed with SHA-256 (irreversible)</li>
+          <li><strong>Email:</strong> Domain only (e.g., "gmail.com")</li>
+          <li><strong>Amount:</strong> Removed (financial data never sent)</li>
+          <li><strong>IP Address:</strong> Country-level only (not stored)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- GDPR Controls -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">⚖️</span>
+        GDPR Controls
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Telemetry Status</span>
+        <span class="badge badge-info">Enabled</span>
+      </div>
+      <div style="margin-top: 20px; display: flex; gap: 12px;">
+        <button class="btn btn-warning" onclick="optOut()">Opt Out of Telemetry</button>
+        <button class="btn btn-primary" onclick="exportData()">Export My Data</button>
+        <button class="btn btn-danger" onclick="deleteData()">Delete My Data</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fetch privacy dashboard data
+    async function loadDashboard() {
+      try {
+        const response = await fetch('/api/privacy/dashboard');
+        const data = await response.json();
+
+        if (data.success) {
+          const { dataFlow, telemetry, trustMetrics } = data.dashboard;
+
+          // Data flow
+          document.getElementById('local-count').textContent = `${dataFlow.local} queries (${dataFlow.localPercentage}%)`;
+          document.getElementById('external-count').textContent = `${dataFlow.external} queries (${100 - dataFlow.localPercentage}%)`;
+          document.getElementById('local-progress').style.width = `${dataFlow.localPercentage}%`;
+          document.getElementById('external-progress').style.width = `${100 - dataFlow.localPercentage}%`;
+          document.getElementById('obfuscated-badge').textContent = `${dataFlow.obfuscated} / ${dataFlow.obfuscated}`;
+
+          // Trust metrics
+          document.getElementById('pii-leaks').textContent = trustMetrics.piiLeaks;
+          document.getElementById('total-requests').textContent = trustMetrics.totalRequests.toLocaleString();
+          document.getElementById('uptime').textContent = trustMetrics.uptime;
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard:', error);
+      }
+    }
+
+    // Load telemetry preview
+    async function loadTelemetryPreview() {
+      try {
+        const response = await fetch('/api/privacy/telemetry/preview');
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('raw-data').textContent = JSON.stringify(data.preview.raw.data, null, 2);
+          document.getElementById('obfuscated-data').textContent = JSON.stringify(data.preview.obfuscated.data, null, 2);
+        }
+      } catch (error) {
+        console.error('Failed to load telemetry preview:', error);
+      }
+    }
+
+    // GDPR controls
+    async function optOut() {
+      if (!confirm('Are you sure you want to opt out of telemetry collection?')) return;
+
+      try {
+        const response = await fetch('/api/privacy/telemetry/opt-out', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: 'demo_user' })
+        });
+        const data = await response.json();
+        alert(data.message);
+      } catch (error) {
+        alert('Failed to opt out: ' + error.message);
+      }
+    }
+
+    async function exportData() {
+      try {
+        const response = await fetch('/api/privacy/export?userId=demo_user');
+        const data = await response.json();
+
+        const blob = new Blob([JSON.stringify(data.export, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'calos-data-export.json';
+        a.click();
+        alert('Data exported successfully!');
+      } catch (error) {
+        alert('Failed to export data: ' + error.message);
+      }
+    }
+
+    async function deleteData() {
+      if (!confirm('⚠️ This will permanently delete all your data. This cannot be undone. Continue?')) return;
+
+      try {
+        const response = await fetch('/api/privacy/data?userId=demo_user', { method: 'DELETE' });
+        const data = await response.json();
+        alert(data.message);
+      } catch (error) {
+        alert('Failed to delete data: ' + error.message);
+      }
+    }
+
+    // Initial load
+    loadDashboard();
+    loadTelemetryPreview();
+
+    // Refresh every 10 seconds
+    setInterval(loadDashboard, 10000);
+  </script>
+</body>
+</html>

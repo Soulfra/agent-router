@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalOS Schema Tools Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline {
+      font-size: 18px;
+      color: #aaa;
+      margin-bottom: 30px;
+    }
+    .status-bar {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .status-item {
+      text-align: center;
+    }
+    .status-label {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .status-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ff00;
+    }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+    .tool-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 30px;
+      transition: all 0.3s;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+    .tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+    .tool-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    .tool-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #667eea;
+    }
+    .tool-description {
+      color: #bbb;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .tool-features {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    .tool-features li {
+      padding: 5px 0;
+      font-size: 13px;
+      color: #999;
+    }
+    .tool-features li:before {
+      content: "✓ ";
+      color: #00ff00;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .tool-link {
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .tool-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+    }
+    .workflow {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 40px;
+    }
+    .workflow-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #667eea;
+    }
+    .workflow-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .workflow-step {
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+    }
+    .workflow-step-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    .workflow-step-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .workflow-step-desc {
+      font-size: 12px;
+      color: #888;
+    }
+    .arrow {
+      font-size: 24px;
+      color: #667eea;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔐 CalOS Schema Tools</h1>
+      <p class="tagline">Schema-Locked Business System | JSON → Everything</p>
+    </header>
+
+    <div class="status-bar" id="statusBar">
+      <div class="status-item">
+        <div class="status-label">Server Status</div>
+        <div class="status-value" id="serverStatus">🔄 Checking...</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Schemas Loaded</div>
+        <div class="status-value" id="schemaCount">-</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Schema Lock</div>
+        <div class="status-value" id="lockStatus">-</div>
+      </div>
+    </div>
+
+    <div class="workflow">
+      <h2 class="workflow-title">📊 Schema-Lock Workflow</h2>
+      <div class="workflow-steps">
+        <div class="workflow-step">
+          <div class="workflow-step-number">1</div>
+          <div class="workflow-step-title">Define Schema</div>
+          <div class="workflow-step-desc">Single source of truth JSON Schema</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="workflow-step">
+          <div class="workflow-step-number">2</div>
+          <div class="workflow-step-title">Auto-Generate</div>
+          <div class="workflow-step-desc">HTML, Docs, Validators</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="workflow-step">
+          <div class="workflow-step-number">3</div>
+          <div class="workflow-step-title">Validate</div>
+          <div class="workflow-step-desc">API responses match schema</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="workflow-step">
+          <div class="workflow-step-number">4</div>
+          <div class="workflow-step-title">Self-Heal</div>
+          <div class="workflow-step-desc">Detect & fix drift</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin-bottom: 20px; color: #667eea;">🛠 Available Tools</h2>
+
+    <div class="tools-grid">
+      <div class="tool-card" onclick="window.location.href='/key-verifier.html'">
+        <div class="tool-icon">🔑</div>
+        <div class="tool-title">API Key Verifier</div>
+        <div class="tool-description">
+          Verify platform API keys, check credit balances, and test live requests to Ollama endpoints.
+        </div>
+        <ul class="tool-features">
+          <li>Check key validity & status</li>
+          <li>View credit balance</li>
+          <li>Test live API calls</li>
+          <li>Monitor rate limits</li>
+        </ul>
+        <a href="/key-verifier.html" class="tool-link">Open Tool →</a>
+      </div>
+
+      <div class="tool-card" onclick="window.location.href='/schema-test-dashboard.html'">
+        <div class="tool-icon">📊</div>
+        <div class="tool-title">Schema Test Dashboard</div>
+        <div class="tool-description">
+          Live validation testing dashboard that continuously checks if API responses match schemas.
+        </div>
+        <ul class="tool-features">
+          <li>Real-time schema validation</li>
+          <li>Drift detection</li>
+          <li>Live test logs</li>
+          <li>Pass/fail statistics</li>
+        </ul>
+        <a href="/schema-test-dashboard.html" class="tool-link">Open Tool →</a>
+      </div>
+
+      <div class="tool-card" onclick="window.location.href='/json-html-transformer.html'">
+        <div class="tool-icon">🔄</div>
+        <div class="tool-title">JSON→HTML Transformer</div>
+        <div class="tool-description">
+          Live preview tool that generates HTML forms, API docs, and validators from JSON schemas.
+        </div>
+        <ul class="tool-features">
+          <li>Schema → HTML forms</li>
+          <li>Schema → Markdown docs</li>
+          <li>Schema → JS validators</li>
+          <li>Live preview iframe</li>
+        </ul>
+        <a href="/json-html-transformer.html" class="tool-link">Open Tool →</a>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon">⚙️</div>
+        <div class="tool-title">Schema Lock CLI</div>
+        <div class="tool-description">
+          Command-line tool for validating APIs and auto-generating code from schemas.
+        </div>
+        <ul class="tool-features">
+          <li>Validate: Check API responses</li>
+          <li>Generate: Create HTML/docs/validators</li>
+          <li>Watch: Auto-regenerate on change</li>
+        </ul>
+        <div style="background: #000; padding: 12px; border-radius: 4px; font-family: monospace; font-size: 11px; margin-top: 15px;">
+          <div style="color: #00ff00;">$ node scripts/schema-lock.js validate</div>
+          <div style="color: #00ff00;">$ node scripts/schema-lock.js generate</div>
+          <div style="color: #00ff00;">$ node scripts/schema-lock.js watch</div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon">📁</div>
+        <div class="tool-title">Generated Artifacts</div>
+        <div class="tool-description">
+          Auto-generated files from schemas - forms, docs, validators. Never edit manually!
+        </div>
+        <ul class="tool-features">
+          <li>generated/api-key-form.html</li>
+          <li>generated/api-key-docs.md</li>
+          <li>generated/api-key-validator.js</li>
+        </ul>
+        <div style="background: rgba(255, 165, 0, 0.1); border-left: 3px solid orange; padding: 10px; border-radius: 4px; font-size: 11px; margin-top: 15px; color: orange;">
+          ⚠️ DO NOT EDIT - Regenerate from schema
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-icon">🗂</div>
+        <div class="tool-title">Schema Directory</div>
+        <div class="tool-description">
+          Single source of truth - all schemas defined here. Edit these, not the generated files.
+        </div>
+        <ul class="tool-features">
+          <li>schemas/api-key.schema.json</li>
+          <li>JSON Schema draft-07</li>
+          <li>Required fields enforcement</li>
+          <li>Type validation</li>
+        </ul>
+        <div style="background: rgba(0, 255, 0, 0.1); border-left: 3px solid #00ff00; padding: 10px; border-radius: 4px; font-size: 11px; margin-top: 15px; color: #00ff00;">
+          ✓ Edit schemas here, then regenerate
+        </div>
+      </div>
+    </div>
+
+    <div class="workflow" style="background: rgba(102, 126, 234, 0.1); border-color: #667eea;">
+      <h2 class="workflow-title">🎯 What This System Does</h2>
+      <div style="line-height: 1.8; color: #ccc;">
+        <p style="margin-bottom: 15px;">
+          <strong style="color: #667eea;">Problem:</strong> Manual HTML/JSON/API development leads to drift. Forms don't match APIs. Docs get stale. Validators are out of sync.
+        </p>
+        <p style="margin-bottom: 15px;">
+          <strong style="color: #667eea;">Solution:</strong> Define JSON Schemas once. Auto-generate everything else. Validate APIs against schemas. Detect drift automatically.
+        </p>
+        <p style="margin-bottom: 15px;">
+          <strong style="color: #667eea;">Result:</strong> A self-healing, schema-locked system where all code flows from a single source of truth. No manual drift. Real tests, not docs.
+        </p>
+      </div>
+    </div>
+
+    <footer>
+      CalOS Platform Schema Tools | Schema Lock System v1.0
+    </footer>
+  </div>
+
+  <script>
+    const backendUrl = 'http://localhost:5001';
+
+    async function checkServerStatus() {
+      try {
+        const response = await fetch(`${backendUrl}/api/keys`, {
+          headers: { 'X-User-Id': 'e7dc083f-61de-4567-a5b6-b21ddb09cb2d' }
+        });
+
+        if (response.ok) {
+          document.getElementById('serverStatus').innerHTML = '✅ Online';
+          document.getElementById('serverStatus').style.color = '#00ff00';
+
+          // Get schemas count
+          try {
+            const schemasResponse = await fetch('/schemas/api-key.schema.json');
+            if (schemasResponse.ok) {
+              document.getElementById('schemaCount').textContent = '1';
+              document.getElementById('lockStatus').innerHTML = '🔒 Locked';
+            }
+          } catch (e) {
+            document.getElementById('schemaCount').textContent = '0';
+          }
+        } else {
+          throw new Error('Server returned error');
+        }
+      } catch (error) {
+        document.getElementById('serverStatus').innerHTML = '❌ Offline';
+        document.getElementById('serverStatus').style.color = '#ff0000';
+        document.getElementById('schemaCount').textContent = '-';
+        document.getElementById('lockStatus').innerHTML = '🔓 Unlocked';
+      }
+    }
+
+    // Check status on load
+    checkServerStatus();
+
+    // Re-check every 10 seconds
+    setInterval(checkServerStatus, 10000);
+  </script>
+</body>
+</html>

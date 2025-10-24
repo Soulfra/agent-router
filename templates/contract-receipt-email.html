@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Receipt</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 32px; text-align: center; color: white;">
+              <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">🔏 Contract Signed</h1>
+              <p style="margin: 0; font-size: 16px; opacity: 0.9;">Your AI contract has been cryptographically signed</p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <h2 style="margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: #111827;">{{sessionName}}</h2>
+
+              {{#customMessage}}
+              <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+                <p style="margin: 0; color: #1e40af; font-size: 14px;">{{customMessage}}</p>
+              </div>
+              {{/customMessage}}
+
+              <!-- Contract Details -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong style="color: #6b7280; font-size: 14px;">Session ID:</strong>
+                  </td>
+                  <td align="right" style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #111827; font-size: 12px; font-family: 'Courier New', monospace;">{{sessionId}}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong style="color: #6b7280; font-size: 14px;">Model:</strong>
+                  </td>
+                  <td align="right" style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #111827; font-size: 14px; font-weight: 600;">{{primaryModel}}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong style="color: #6b7280; font-size: 14px;">Messages:</strong>
+                  </td>
+                  <td align="right" style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #111827; font-size: 14px; font-weight: 600;">{{messageCount}}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <strong style="color: #6b7280; font-size: 14px;">Version:</strong>
+                  </td>
+                  <td align="right" style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #111827; font-size: 14px; font-weight: 600;">{{version}}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 2px solid #667eea;">
+                    <strong style="color: #6b7280; font-size: 14px;">Total Cost:</strong>
+                  </td>
+                  <td align="right" style="padding: 12px 0; border-bottom: 2px solid #667eea;">
+                    <span style="color: #667eea; font-size: 20px; font-weight: 700;">${{totalCost}}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0;">
+                    <strong style="color: #6b7280; font-size: 14px;">Signed At:</strong>
+                  </td>
+                  <td align="right" style="padding: 12px 0;">
+                    <span style="color: #111827; font-size: 14px; font-weight: 600;">{{signedAt}}</span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Soulfra Cryptographic Proof -->
+              <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 24px; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 700; color: white; text-align: center;">
+                  🔐 Cryptographic Proof
+                </h3>
+                <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 600;">SHA-256</p>
+                  <p style="margin: 0; font-size: 11px; color: white; font-family: 'Courier New', monospace; word-break: break-all;">
+                    {{soulfraHashSha256}}
+                  </p>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 600;">SHA-512</p>
+                  <p style="margin: 0; font-size: 11px; color: white; font-family: 'Courier New', monospace; word-break: break-all;">
+                    {{soulfraHashSha512}}
+                  </p>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 600;">Ed25519 Signature</p>
+                  <p style="margin: 0; font-size: 11px; color: white; font-family: 'Courier New', monospace; word-break: break-all;">
+                    {{soulfraHashEd25519}}
+                  </p>
+                </div>
+                <p style="margin: 16px 0 0 0; font-size: 12px; color: white; text-align: center; opacity: 0.9;">
+                  ✅ 5-layer cryptographic proof ensures contract authenticity
+                </p>
+              </div>
+
+              {{#qrCodeDataUrl}}
+              <!-- QR Code Verification -->
+              <div style="text-align: center; padding: 24px; background: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: #111827;">Scan to Verify</h3>
+                <img src="{{qrCodeDataUrl}}" alt="Verification QR Code" style="width: 200px; height: 200px; border-radius: 8px; background: white; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <p style="margin: 12px 0 0 0; font-size: 14px; color: #6b7280;">
+                  Scan this QR code to verify the contract signature
+                </p>
+              </div>
+              {{/qrCodeDataUrl}}
+
+              <!-- Call to Action -->
+              <div style="text-align: center; margin-bottom: 24px;">
+                <a href="{{baseUrl}}{{publicShareUrl}}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                  View Full Contract →
+                </a>
+              </div>
+
+              <!-- What This Means -->
+              <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #166534;">What This Means</h4>
+                <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #166534; line-height: 1.6;">
+                  <li>This contract is <strong>cryptographically signed</strong> with Soulfra 5-layer proof</li>
+                  <li>The contract is <strong>immutable</strong> - it cannot be modified or deleted</li>
+                  <li>You can <strong>verify the signature</strong> at any time using the link above</li>
+                  <li>This serves as <strong>proof of work</strong> for billing and compliance</li>
+                </ul>
+              </div>
+
+              <!-- Share Options -->
+              <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #111827; text-align: center;">Share This Contract</h4>
+                <div style="text-align: center;">
+                  <p style="margin: 0 0 12px 0; font-size: 13px; color: #6b7280;">Send to clients, post to forums, or share on social media</p>
+                  <input type="text" value="{{baseUrl}}{{publicShareUrl}}" readonly style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; font-family: 'Courier New', monospace; background: white; color: #111827; text-align: center;">
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background: #f9fafb; padding: 24px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280; font-weight: 600;">Built with ❤️ by CALOS</p>
+              <p style="margin: 0 0 12px 0; font-size: 12px; color: #9ca3af;">DocuSign-like contracts • Soulfra cryptographic signing • Multi-device sync</p>
+              <div style="margin-top: 16px;">
+                <a href="https://github.com/calos" style="color: #667eea; text-decoration: none; font-size: 12px; margin: 0 8px;">GitHub</a>
+                <span style="color: #e5e7eb;">•</span>
+                <a href="https://discord.gg/calos" style="color: #667eea; text-decoration: none; font-size: 12px; margin: 0 8px;">Discord</a>
+                <span style="color: #e5e7eb;">•</span>
+                <a href="{{baseUrl}}/docs" style="color: #667eea; text-decoration: none; font-size: 12px; margin: 0 8px;">Documentation</a>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Legal Notice -->
+          <tr>
+            <td style="background: #f9fafb; padding: 16px 32px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #9ca3af; line-height: 1.5;">
+                This is an automated email receipt for a cryptographically signed AI contract.
+                The signature can be independently verified using the Soulfra verification system.
+                For questions or support, please visit our documentation.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

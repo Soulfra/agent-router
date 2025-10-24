@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Banner - We DON'T Track Cookies</title>
+  <style>
+    /* Privacy Banner Styles */
+    #privacy-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: none; /* Hidden by default, shown on first visit */
+    }
+
+    #privacy-banner.show {
+      display: block;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .privacy-banner-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .privacy-banner-text {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .privacy-banner-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .privacy-banner-title::before {
+      content: "🔒";
+      font-size: 1.8rem;
+    }
+
+    .privacy-banner-description {
+      font-size: 1rem;
+      line-height: 1.5;
+      opacity: 0.95;
+    }
+
+    .privacy-banner-description strong {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    .privacy-banner-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .privacy-banner-btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 1rem;
+      border: none;
+    }
+
+    .privacy-banner-btn-primary {
+      background: white;
+      color: #667eea;
+    }
+
+    .privacy-banner-btn-primary:hover {
+      background: #f0f0f0;
+      transform: translateY(-2px);
+    }
+
+    .privacy-banner-btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+    }
+
+    .privacy-banner-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .privacy-banner-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .privacy-banner-actions {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .privacy-banner-btn {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Privacy Banner -->
+<div id="privacy-banner">
+  <div class="privacy-banner-content">
+    <div class="privacy-banner-text">
+      <div class="privacy-banner-title">
+        We DON'T Track Cookies
+      </div>
+      <div class="privacy-banner-description">
+        Unlike most websites, <strong>we don't use tracking cookies</strong>, Google Analytics, Facebook Pixel, or any third-party analytics. Your privacy is respected. We only track sessions anonymously for basic functionality.
+      </div>
+    </div>
+    <div class="privacy-banner-actions">
+      <button class="privacy-banner-btn privacy-banner-btn-primary" id="privacy-accept-btn">
+        Got It
+      </button>
+      <a href="/privacy-policy.html" class="privacy-banner-btn privacy-banner-btn-secondary">
+        Learn More
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Privacy Banner Logic
+  (function() {
+    const STORAGE_KEY = 'privacy_banner_dismissed';
+    const banner = document.getElementById('privacy-banner');
+    const acceptBtn = document.getElementById('privacy-accept-btn');
+
+    // Check if banner has been dismissed
+    function isBannerDismissed() {
+      return localStorage.getItem(STORAGE_KEY) === 'true';
+    }
+
+    // Show banner if not dismissed
+    function showBanner() {
+      if (!isBannerDismissed()) {
+        banner.classList.add('show');
+      }
+    }
+
+    // Dismiss banner
+    function dismissBanner() {
+      localStorage.setItem(STORAGE_KEY, 'true');
+      banner.style.animation = 'slideDown 0.5s ease-out forwards';
+
+      setTimeout(() => {
+        banner.classList.remove('show');
+      }, 500);
+    }
+
+    // Add slideDown animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideDown {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Event listeners
+    acceptBtn.addEventListener('click', dismissBanner);
+
+    // Show banner on page load
+    window.addEventListener('DOMContentLoaded', showBanner);
+  })();
+</script>
+
+<!-- Optional: Include in other pages -->
+<script>
+  /**
+   * Include this banner in any page:
+   *
+   * <script src="/privacy-banner.html"></script>
+   *
+   * Or fetch and inject:
+   */
+  window.PrivacyBanner = {
+    inject: function() {
+      fetch('/privacy-banner.html')
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const banner = doc.getElementById('privacy-banner');
+          const styles = doc.querySelectorAll('style');
+          const scripts = doc.querySelectorAll('script');
+
+          // Inject styles
+          styles.forEach(style => document.head.appendChild(style.cloneNode(true)));
+
+          // Inject banner
+          document.body.appendChild(banner.cloneNode(true));
+
+          // Execute scripts
+          scripts.forEach(script => {
+            if (script.textContent.includes('Privacy Banner Logic')) {
+              eval(script.textContent);
+            }
+          });
+        })
+        .catch(err => console.error('Failed to load privacy banner:', err));
+    }
+  };
+</script>
+
+</body>
+</html>

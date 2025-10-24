@@ -82,14 +82,51 @@ async function getSymbols() {
 }
 
 /**
+ * Parse time string (handles both ISO dates and human-readable formats)
+ * @param {string} timeStr - Time string like "1 hour ago", "2 days ago", or ISO date
+ * @returns {Date|null} Parsed date or null if invalid
+ */
+function parseTimeString(timeStr) {
+  if (!timeStr) return null;
+
+  // Try ISO date first
+  const isoDate = new Date(timeStr);
+  if (!isNaN(isoDate.getTime())) {
+    return isoDate;
+  }
+
+  // Parse human-readable formats like "1 hour ago", "30 minutes ago", "2 days ago"
+  const match = timeStr.match(/^(\d+)\s+(second|minute|hour|day|week)s?\s+ago$/i);
+  if (match) {
+    const amount = parseInt(match[1]);
+    const unit = match[2].toLowerCase();
+
+    const now = Date.now();
+    const multipliers = {
+      second: 1000,
+      minute: 60 * 1000,
+      hour: 60 * 60 * 1000,
+      day: 24 * 60 * 60 * 1000,
+      week: 7 * 24 * 60 * 60 * 1000
+    };
+
+    const offset = amount * (multipliers[unit] || 0);
+    return new Date(now - offset);
+  }
+
+  console.warn(`[compute-candles] Could not parse time string: "${timeStr}"`);
+  return null;
+}
+
+/**
  * Get date range for processing
  */
 function getDateRange() {
   const now = new Date();
   const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
-  const from = FROM_DATE ? new Date(FROM_DATE) : sevenDaysAgo;
-  const to = TO_DATE ? new Date(TO_DATE) : now;
+  const from = FROM_DATE ? (parseTimeString(FROM_DATE) || sevenDaysAgo) : sevenDaysAgo;
+  const to = TO_DATE ? (parseTimeString(TO_DATE) || now) : now;
 
   return { from, to };
 }

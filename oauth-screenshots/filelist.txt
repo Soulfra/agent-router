@@ -1,0 +1,5 @@
+file 'github-step-1.png'
+file 'github-step-2.png'
+file 'github-step-3.png'
+file 'github-step-4.png'
+file 'github-step-5.png'

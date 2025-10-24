@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Careers - Join Our Team</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      padding: 60px 20px;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    header p {
+      font-size: 1.3rem;
+      opacity: 0.9;
+    }
+
+    .mission {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      margin: 30px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .mission h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    .mission p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #555;
+    }
+
+    .filters {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .filters h3 {
+      margin-bottom: 20px;
+      color: #667eea;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      padding: 10px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .job-card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      border-left: 5px solid #667eea;
+    }
+
+    .job-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    .job-header {
+      margin-bottom: 15px;
+    }
+
+    .job-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .job-company {
+      font-size: 1.1rem;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .job-meta {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .job-description {
+      color: #666;
+      margin: 15px 0;
+      line-height: 1.6;
+    }
+
+    .job-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 15px 0;
+    }
+
+    .skill-tag {
+      background: #f0f4ff;
+      color: #667eea;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .job-salary {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #4caf50;
+      margin: 15px 0;
+    }
+
+    .job-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #f0f4ff;
+      color: #667eea;
+    }
+
+    .btn-secondary:hover {
+      background: #e1e9ff;
+    }
+
+    .share-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .share-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .share-twitter { background: #1da1f2; color: white; }
+    .share-linkedin { background: #0077b5; color: white; }
+    .share-email { background: #ea4335; color: white; }
+
+    .share-btn:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .no-jobs {
+      text-align: center;
+      padding: 60px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .no-jobs h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 1.8rem;
+    }
+
+    .stats {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      header h1 { font-size: 2rem; }
+      header p { font-size: 1rem; }
+      .jobs-grid { grid-template-columns: 1fr; }
+      .filter-group { flex-direction: column; }
+      .stats { flex-direction: column; gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 Join Our Mission</h1>
+      <p>Help us build the future of AI and change the world for the better</p>
+    </header>
+
+    <div class="mission">
+      <h2>Why Work With Us?</h2>
+      <p>
+        We're building technology that matters. Our team is passionate about democratizing AI,
+        creating tools that empower developers, and making the world a better place through innovation.
+        We believe in transparency, collaboration, and building products that solve real problems.
+      </p>
+      <p style="margin-top: 15px;">
+        <strong>What We Offer:</strong> Competitive compensation, remote-friendly culture, cutting-edge tech stack,
+        opportunities for growth, and the chance to work with some of the brightest minds in the industry.
+      </p>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat">
+        <div class="stat-number" id="total-jobs">-</div>
+        <div class="stat-label">Open Positions</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" id="total-companies">-</div>
+        <div class="stat-label">Companies</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number" id="total-remote">-</div>
+        <div class="stat-label">Remote Jobs</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <h3>Find Your Perfect Role</h3>
+      <div class="filter-group">
+        <input type="text" id="search" placeholder="Search by title or company..." />
+        <input type="text" id="location-filter" placeholder="Location (e.g., Remote, Tampa, FL)" />
+        <select id="company-filter">
+          <option value="">All Companies</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="jobs-container">
+      <div class="loading">Loading amazing opportunities...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let allJobs = [];
+
+    // Load jobs on page load
+    async function loadJobs() {
+      try {
+        const response = await fetch(`${API_BASE}/api/jobs/public`);
+        const data = await response.json();
+
+        allJobs = data.jobs;
+        updateStats();
+        populateCompanyFilter();
+        renderJobs(allJobs);
+      } catch (error) {
+        console.error('Error loading jobs:', error);
+        document.getElementById('jobs-container').innerHTML = `
+          <div class="no-jobs">
+            <h3>Oops! Something went wrong</h3>
+            <p>We couldn't load the job listings. Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Update stats
+    function updateStats() {
+      const totalJobs = allJobs.length;
+      const companies = new Set(allJobs.map(j => j.company)).size;
+      const remote = allJobs.filter(j =>
+        j.location && (j.location.toLowerCase().includes('remote') || j.location.toLowerCase().includes('anywhere'))
+      ).length;
+
+      document.getElementById('total-jobs').textContent = totalJobs;
+      document.getElementById('total-companies').textContent = companies;
+      document.getElementById('total-remote').textContent = remote;
+    }
+
+    // Populate company filter
+    function populateCompanyFilter() {
+      const companies = [...new Set(allJobs.map(j => j.company))].sort();
+      const select = document.getElementById('company-filter');
+
+      companies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company;
+        option.textContent = company;
+        select.appendChild(option);
+      });
+    }
+
+    // Render jobs
+    function renderJobs(jobs) {
+      const container = document.getElementById('jobs-container');
+
+      if (jobs.length === 0) {
+        container.innerHTML = `
+          <div class="no-jobs">
+            <h3>No jobs found</h3>
+            <p>Try adjusting your filters or check back later for new opportunities.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<div class="jobs-grid">${jobs.map(job => createJobCard(job)).join('')}</div>`;
+
+      // Attach event listeners
+      jobs.forEach(job => {
+        document.getElementById(`view-${job.job_id}`)?.addEventListener('click', () => viewJob(job.job_id));
+        document.getElementById(`lesson-${job.job_id}`)?.addEventListener('click', () => viewLessonPlan(job.job_id));
+        document.getElementById(`share-twitter-${job.job_id}`)?.addEventListener('click', () => shareJob(job, 'twitter'));
+        document.getElementById(`share-linkedin-${job.job_id}`)?.addEventListener('click', () => shareJob(job, 'linkedin'));
+        document.getElementById(`share-email-${job.job_id}`)?.addEventListener('click', () => shareJob(job, 'email'));
+      });
+    }
+
+    // Create job card HTML
+    function createJobCard(job) {
+      const skills = (job.required_skills || []).slice(0, 5);
+
+      return `
+        <div class="job-card">
+          <div class="job-header">
+            <div class="job-title">${job.title}</div>
+            <div class="job-company">${job.company}</div>
+          </div>
+
+          <div class="job-meta">
+            ${job.location ? `<div class="meta-tag">📍 ${job.location}</div>` : ''}
+            <div class="meta-tag">💼 ${job.job_type || 'Full-time'}</div>
+          </div>
+
+          ${job.salary_range ? `<div class="job-salary">💰 ${job.salary_range}</div>` : ''}
+
+          <div class="job-description">${job.description}</div>
+
+          ${skills.length > 0 ? `
+            <div class="job-skills">
+              ${skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              ${job.required_skills.length > 5 ? `<span class="skill-tag">+${job.required_skills.length - 5} more</span>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="job-actions">
+            <button class="btn btn-primary" id="view-${job.job_id}">View Details</button>
+            <button class="btn btn-secondary" id="lesson-${job.job_id}">Learning Path</button>
+          </div>
+
+          <div class="share-buttons">
+            <button class="share-btn share-twitter" id="share-twitter-${job.job_id}">🐦 Tweet</button>
+            <button class="share-btn share-linkedin" id="share-linkedin-${job.job_id}">💼 Share</button>
+            <button class="share-btn share-email" id="share-email-${job.job_id}">📧 Email</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // View job details
+    function viewJob(jobId) {
+      window.location.href = `${API_BASE}/job-detail.html?id=${jobId}`;
+    }
+
+    // View lesson plan
+    function viewLessonPlan(jobId) {
+      window.location.href = `${API_BASE}/job-detail.html?id=${jobId}&tab=lesson`;
+    }
+
+    // Share job
+    async function shareJob(job, platform) {
+      try {
+        // Generate PR content
+        const response = await fetch(`${API_BASE}/api/jobs/${job.job_id}/pr`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseUrl: window.location.origin })
+        });
+        const prData = await response.json();
+
+        // Open share link
+        const shareLink = prData.share_links[platform];
+        window.open(shareLink, '_blank');
+      } catch (error) {
+        console.error('Error sharing job:', error);
+        // Fallback: simple share
+        const jobUrl = `${window.location.origin}/job-detail.html?id=${job.job_id}`;
+        const text = `Check out this opportunity: ${job.title} at ${job.company}!`;
+
+        if (platform === 'twitter') {
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(jobUrl)}`, '_blank');
+        } else if (platform === 'linkedin') {
+          window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(jobUrl)}`, '_blank');
+        } else if (platform === 'email') {
+          window.location.href = `mailto:?subject=${encodeURIComponent(`Job: ${job.title}`)}&body=${encodeURIComponent(text + '\n\n' + jobUrl)}`;
+        }
+      }
+    }
+
+    // Filter jobs
+    function filterJobs() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const location = document.getElementById('location-filter').value.toLowerCase();
+      const company = document.getElementById('company-filter').value;
+
+      const filtered = allJobs.filter(job => {
+        const matchesSearch = !search ||
+          job.title.toLowerCase().includes(search) ||
+          job.company.toLowerCase().includes(search) ||
+          job.description.toLowerCase().includes(search);
+
+        const matchesLocation = !location ||
+          (job.location && job.location.toLowerCase().includes(location));
+
+        const matchesCompany = !company || job.company === company;
+
+        return matchesSearch && matchesLocation && matchesCompany;
+      });
+
+      renderJobs(filtered);
+    }
+
+    // Attach filter listeners
+    document.getElementById('search').addEventListener('input', filterJobs);
+    document.getElementById('location-filter').addEventListener('input', filterJobs);
+    document.getElementById('company-filter').addEventListener('change', filterJobs);
+
+    // Load jobs
+    loadJobs();
+  </script>
+</body>
+</html>

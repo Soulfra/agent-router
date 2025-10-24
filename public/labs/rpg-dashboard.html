@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG Dashboard - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1200px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    .player-header { background: linear-gradient(135deg, #667eea, #764ba2); padding: 30px; border-radius: 10px; margin-bottom: 20px; }
+    .player-name { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
+    .player-title { font-size: 14px; color: #ffd700; margin-bottom: 20px; }
+    .level-badge { display: inline-block; background: #ffd700; color: #0f0f23; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 20px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-box { background: #0a0a15; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 36px; font-weight: bold; color: #667eea; margin-bottom: 5px; }
+    .stat-label { font-size: 12px; color: #888; text-transform: uppercase; }
+    .xp-bar { width: 100%; height: 30px; background: #0a0a15; border-radius: 15px; overflow: hidden; position: relative; margin-top: 15px; }
+    .xp-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #45a049); transition: width 1s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; }
+    .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+    .achievement { background: #0a0a15; padding: 15px; border-radius: 8px; border-left: 3px solid #ffd700; }
+    .achievement-icon { font-size: 32px; margin-bottom: 10px; }
+    .achievement-name { font-weight: bold; margin-bottom: 5px; }
+    .achievement-desc { font-size: 12px; color: #888; }
+    .quest-item { background: #0a0a15; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .quest-title { font-weight: bold; color: #667eea; }
+    .quest-progress { font-size: 12px; color: #888; margin-top: 5px; }
+    .quest-reward { background: #ffd700; color: #0f0f23; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+  </style>
+</head>
+<body>
+  <h1>RPG Player Dashboard</h1>
+  <p class="subtitle">Track your progress, achievements, and quests</p>
+
+  <div class="player-header">
+    <div class="player-name" id="player-name">CodeWarrior_2024</div>
+    <div class="player-title" id="player-title">Master of JavaScript</div>
+    <div>
+      <span class="level-badge">Level <span id="player-level">12</span></span>
+    </div>
+    <div class="xp-bar">
+      <div class="xp-fill" id="xp-fill" style="width: 65%">
+        <span id="xp-text">650 / 1000 XP</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Player Stats</h2>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-value" id="total-xp">8,450</div>
+        <div class="stat-label">Total XP</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="quests-completed">23</div>
+        <div class="stat-label">Quests Done</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="achievement-count">15</div>
+        <div class="stat-label">Achievements</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="win-streak">7</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="cards-owned">42</div>
+        <div class="stat-label">Cards Owned</div>
+      </div>
+    </div>
+    <button onclick="refreshStats()">Refresh Stats</button>
+  </div>
+
+  <div class="section">
+    <h2>Active Quests</h2>
+    <div id="quests-list">
+      <div class="quest-item">
+        <div>
+          <div class="quest-title">Complete 5 Code Challenges</div>
+          <div class="quest-progress">Progress: 3/5</div>
+        </div>
+        <div class="quest-reward">+100 XP</div>
+      </div>
+      <div class="quest-item">
+        <div>
+          <div class="quest-title">Open 10 Card Packs</div>
+          <div class="quest-progress">Progress: 7/10</div>
+        </div>
+        <div class="quest-reward">+200 XP</div>
+      </div>
+      <div class="quest-item">
+        <div>
+          <div class="quest-title">Reach Level 15</div>
+          <div class="quest-progress">Progress: 12/15</div>
+        </div>
+        <div class="quest-reward">Legendary Pack</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Achievements</h2>
+    <div class="achievements-grid">
+      <div class="achievement">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-name">First Steps</div>
+        <div class="achievement-desc">Complete your first quest</div>
+      </div>
+      <div class="achievement">
+        <div class="achievement-icon">⚡</div>
+        <div class="achievement-name">Speed Runner</div>
+        <div class="achievement-desc">Complete 5 quests in one day</div>
+      </div>
+      <div class="achievement">
+        <div class="achievement-icon">📚</div>
+        <div class="achievement-name">Knowledge Seeker</div>
+        <div class="achievement-desc">Read 10 documentation pages</div>
+      </div>
+      <div class="achievement">
+        <div class="achievement-icon">💎</div>
+        <div class="achievement-name">Collector</div>
+        <div class="achievement-desc">Own 50 unique cards</div>
+      </div>
+      <div class="achievement">
+        <div class="achievement-icon">🔥</div>
+        <div class="achievement-name">On Fire</div>
+        <div class="achievement-desc">Maintain 7-day streak</div>
+      </div>
+      <div class="achievement">
+        <div class="achievement-icon">👑</div>
+        <div class="achievement-name">Legend</div>
+        <div class="achievement-desc">Reach level 10</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function refreshStats() {
+      // Simulate loading from MCP API
+      const newXP = Math.floor(Math.random() * 100);
+      const currentXP = parseInt(document.getElementById('total-xp').textContent.replace(',', ''));
+
+      document.getElementById('total-xp').textContent = (currentXP + newXP).toLocaleString();
+
+      // Update XP bar
+      const xpInLevel = Math.floor(Math.random() * 1000);
+      const xpPercentage = (xpInLevel / 1000) * 100;
+
+      document.getElementById('xp-fill').style.width = xpPercentage + '%';
+      document.getElementById('xp-text').textContent = `${xpInLevel} / 1000 XP`;
+
+      alert(`Refreshed! Gained ${newXP} XP!`);
+    }
+
+    // Simulate real-time updates
+    setInterval(() => {
+      const currentLevel = parseInt(document.getElementById('player-level').textContent);
+      const streak = parseInt(document.getElementById('win-streak').textContent);
+
+      // Small chance to level up
+      if (Math.random() < 0.05) {
+        document.getElementById('player-level').textContent = currentLevel + 1;
+        showLevelUpNotification(currentLevel + 1);
+      }
+    }, 10000);
+
+    function showLevelUpNotification(level) {
+      alert(`🎉 LEVEL UP! You are now level ${level}!`);
+    }
+
+    // Load player data on startup
+    window.addEventListener('load', () => {
+      const playerName = localStorage.getItem('rpg-player-name') || 'CodeWarrior_2024';
+      document.getElementById('player-name').textContent = playerName;
+    });
+  </script>
+</body>
+</html>

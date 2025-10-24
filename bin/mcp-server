@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+
+/**
+ * CalOS MCP Server CLI
+ *
+ * Start the privacy-first MCP server
+ *
+ * Usage:
+ *   ./bin/mcp-server [options]
+ *
+ * Options:
+ *   --port <port>     Port to listen on (default: 3100)
+ *   --no-db           Run without database connection
+ *   --help            Show help
+ */
+
+const CalOSMCPServer = require('../lib/mcp-server/calos-mcp-server');
+const { Pool } = require('pg');
+
+async function main() {
+  const args = process.argv.slice(2);
+
+  // Parse args
+  let port = 3100;
+  let useDatabase = true;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--port' && args[i + 1]) {
+      port = parseInt(args[i + 1]);
+      i++;
+    } else if (args[i] === '--no-db') {
+      useDatabase = false;
+    } else if (args[i] === '--help') {
+      console.log(`
+CalOS MCP Server - Privacy-first Model Context Protocol
+
+Usage:
+  ./bin/mcp-server [options]
+
+Options:
+  --port <port>     Port to listen on (default: 3100)
+  --no-db           Run without database connection
+  --help            Show this help
+
+Examples:
+  # Start on default port (3100)
+  ./bin/mcp-server
+
+  # Start on custom port
+  ./bin/mcp-server --port 3200
+
+  # Start without database (file/code tools only)
+  ./bin/mcp-server --no-db
+
+Environment Variables:
+  DATABASE_URL      PostgreSQL connection string
+
+Privacy Guarantees:
+  - NO telemetry
+  - NO external calls
+  - Local-only access
+  - Zero dependencies
+      `);
+      process.exit(0);
+    }
+  }
+
+  // Initialize database if enabled
+  let db = null;
+  if (useDatabase) {
+    const connectionString = process.env.DATABASE_URL || 'postgresql://localhost:5432/calos';
+
+    try {
+      db = new Pool({ connectionString });
+      await db.query('SELECT 1'); // Test connection
+      console.log('[CalOS MCP] Database connected');
+    } catch (error) {
+      console.warn('[CalOS MCP] Database connection failed:', error.message);
+      console.warn('[CalOS MCP] Running without database (file/code tools only)');
+      db = null;
+    }
+  }
+
+  // Create and start server
+  const server = new CalOSMCPServer({ db, port });
+
+  await server.start();
+
+  console.log('');
+  console.log('┌────────────────────────────────────────────────────────┐');
+  console.log('│         CalOS MCP Server - Privacy First              │');
+  console.log('└────────────────────────────────────────────────────────┘');
+  console.log('');
+  console.log(`  Server:     http://localhost:${port}`);
+  console.log(`  Tools:      ${Object.keys(server.tools).length} available`);
+  console.log(`  Database:   ${db ? 'Connected' : 'Disabled'}`);
+  console.log('');
+  console.log('  Privacy:    ✓ NO telemetry');
+  console.log('              ✓ NO external calls');
+  console.log('              ✓ Local-only access');
+  console.log('');
+  console.log('  Endpoints:');
+  console.log(`    GET  /mcp/tools    - List tools`);
+  console.log(`    POST /mcp/call     - Execute tool`);
+  console.log(`    GET  /mcp/health   - Health check`);
+  console.log('');
+  console.log('  Press Ctrl+C to stop');
+  console.log('');
+
+  // Handle shutdown
+  process.on('SIGINT', async () => {
+    console.log('');
+    console.log('[CalOS MCP] Shutting down...');
+    await server.stop();
+    if (db) {
+      await db.end();
+    }
+    process.exit(0);
+  });
+}
+
+main().catch(error => {
+  console.error('[CalOS MCP] Fatal error:', error);
+  process.exit(1);
+});

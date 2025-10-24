@@ -1,0 +1,6 @@
+{
+  "question": "What is 2+2?",
+  "format": "json",
+  "maxTokens": 50,
+  "temperature": 0.7
+}

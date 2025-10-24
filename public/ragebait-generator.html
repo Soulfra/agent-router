@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dev Ragebait Generator - CalOS</title>
+
+  <style>
+    :root {
+      --primary: #6c5ce7;
+      --secondary: #a29bfe;
+      --success: #00b894;
+      --danger: #d63031;
+      --bg-dark: #2d3436;
+      --text-dark: #2d3436;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    /* Main Content */
+    .container {
+      flex: 1;
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      width: 100%;
+    }
+
+    .generator-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 2rem;
+      height: calc(100vh - 200px);
+    }
+
+    /* Left Panel - Template Selector */
+    .templates-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+    }
+
+    .template-card {
+      background: #f8f9fa;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-card:hover {
+      background: #e9ecef;
+      border-color: var(--secondary);
+    }
+
+    .template-card.active {
+      background: rgba(108, 92, 231, 0.1);
+      border-color: var(--primary);
+    }
+
+    .template-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .template-desc {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .template-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .template-tag {
+      font-size: 0.75rem;
+      background: var(--secondary);
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .generate-btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.2s;
+    }
+
+    .generate-btn:hover:not(:disabled) {
+      background: #5f50d4;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+    }
+
+    .generate-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* Right Panel - Preview */
+    .preview-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .format-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .format-btn {
+      background: white;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .format-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .preview-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8f9fa;
+      border-radius: 8px;
+      position: relative;
+      min-height: 400px;
+    }
+
+    .preview-placeholder {
+      text-align: center;
+      color: #999;
+    }
+
+    .preview-placeholder h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #gifPreview, #mp4Preview {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      display: none;
+    }
+
+    #mp4Preview {
+      width: 100%;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .preview-footer {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .file-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .download-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .download-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #00a383;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+    }
+
+    .share-text {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    .copy-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #5f50d4;
+    }
+
+    .copy-btn.copied {
+      background: var(--success);
+    }
+  </style>
+
+  <!-- Keyboard Shortcuts -->
+  <script src="/lib/keyboard-shortcut-manager.js"></script>
+  <script src="/lib/keyboard-shortcuts.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div>
+        <h1>🔥 Dev Ragebait Generator</h1>
+        <div class="subtitle">Create viral dev memes for Twitter • GIF & MP4</div>
+      </div>
+      <a href="/tools" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back to Tools</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+    <div class="generator-grid">
+      <!-- Left Panel - Templates -->
+      <div class="templates-panel">
+        <h2 class="panel-title">Select Template</h2>
+        <div id="templateList">
+          <div class="loading active">
+            <div class="spinner"></div>
+            <p>Loading templates...</p>
+          </div>
+        </div>
+
+        <!-- Domain Branding Selector -->
+        <div style="margin: 1rem 0;">
+          <label for="domainSelect" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">
+            🎨 Domain Branding (Optional)
+          </label>
+          <select id="domainSelect" style="width: 100%; padding: 0.75rem; border: 2px solid #dfe6e9; border-radius: 6px; font-size: 1rem; background: white;">
+            <option value="none">No Branding (Default)</option>
+          </select>
+        </div>
+
+        <button class="generate-btn" id="generateBtn" disabled>
+          🎨 Generate Ragebait
+        </button>
+      </div>
+
+      <!-- Right Panel - Preview -->
+      <div class="preview-panel">
+        <div class="preview-header">
+          <h2 class="panel-title">Preview</h2>
+          <div class="format-toggle">
+            <button class="format-btn active" data-format="mp4">
+              🎬 MP4 (<span id="mp4Size">0</span> MB)
+            </button>
+            <button class="format-btn" data-format="gif">
+              🖼️ GIF (<span id="gifSize">0</span> MB)
+            </button>
+          </div>
+        </div>
+
+        <div class="preview-area">
+          <div class="preview-placeholder" id="placeholder">
+            <h3>👈 Select a template</h3>
+            <p>Choose a template and click generate to create your ragebait</p>
+          </div>
+          <div class="loading" id="previewLoading">
+            <div class="spinner"></div>
+            <p>Generating ragebait...</p>
+          </div>
+          <img id="gifPreview" alt="GIF Preview">
+          <video id="mp4Preview" controls loop muted autoplay></video>
+        </div>
+
+        <div class="preview-footer" id="previewFooter" style="display: none;">
+          <div class="file-info">
+            <span id="formatInfo">MP4 Format</span>
+            <span id="frameCount">3 frames</span>
+          </div>
+
+          <div class="download-section">
+            <a class="download-btn" id="downloadGIF" download="ragebait.gif">
+              ⬇️ Download GIF
+            </a>
+            <a class="download-btn" id="downloadMP4" download="ragebait.mp4">
+              ⬇️ Download MP4
+            </a>
+          </div>
+
+          <div class="share-section" style="margin-top: 1rem;">
+            <button class="generate-btn" id="shareToForumBtn" style="background: #6c5ce7; margin-top: 0;">
+              💬 Share to Forum
+            </button>
+          </div>
+
+          <div class="share-text" id="shareText">
+            <strong>Share on Twitter:</strong>
+            <p id="shareContent" style="margin: 0.5rem 0;"></p>
+            <button class="copy-btn" id="copyBtn">📋 Copy to Clipboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let templates = [];
+    let domains = [];
+    let selectedTemplate = null;
+    let currentResult = null;
+    let currentFormat = 'mp4';
+
+    // Test API connectivity
+    async function testAPI() {
+      const testBtn = document.getElementById('testAPIBtn');
+      testBtn.textContent = '⏳ Testing...';
+      testBtn.disabled = true;
+
+      try {
+        const fullURL = `${window.location.origin}/api/mobile/ragebait/templates`;
+        console.log(`[RagebaitGen] Testing API at: ${fullURL}`);
+
+        const response = await fetch(fullURL);
+        const text = await response.text();
+
+        alert(`✅ API Works!\n\nStatus: ${response.status}\nResponse length: ${text.length} bytes\n\nCheck console for full response.`);
+        console.log('[RagebaitGen] API Response:', JSON.parse(text));
+
+        // If API works, load templates
+        loadTemplates();
+      } catch (error) {
+        alert(`❌ API Test Failed!\n\nError: ${error.message}\n\nYou might be on the wrong server or port.`);
+        console.error('[RagebaitGen] API Test Failed:', error);
+      } finally {
+        testBtn.textContent = '🧪 Test API';
+        testBtn.disabled = false;
+      }
+    }
+
+    // Load templates on page load
+    async function loadTemplates() {
+      // Check for file:// protocol
+      if (window.location.protocol === 'file:') {
+        const message = '⚠️ This tool requires a server to function properly.\n\n' +
+                       'Please run:\n' +
+                       '  npm run ragebait\n\n' +
+                       'Or manually:\n' +
+                       '  npm start\n' +
+                       '  open http://localhost:5001/ragebait-generator.html';
+
+        document.getElementById('status').innerHTML =
+          '<div style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; white-space: pre-wrap;">' +
+          message.replace(/\n/g, '<br>') +
+          '</div>';
+
+        console.warn('[RagebaitGen] ⚠️ File protocol detected. Server required.');
+        return;
+      }
+
+      const currentURL = window.location.href;
+      const apiURL = `${window.location.origin}/api/mobile/ragebait/templates`;
+
+      console.log('[RagebaitGen] Loading templates...');
+      console.log('[RagebaitGen] Current page:', currentURL);
+      console.log('[RagebaitGen] API endpoint:', apiURL);
+
+      try {
+        const response = await fetch('/api/mobile/ragebait/templates');
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        templates = data.templates;
+
+        console.log(`[RagebaitGen] ✅ Loaded ${templates.length} templates successfully`);
+        console.log('[RagebaitGen] Templates:', templates.map(t => t.name).join(', '));
+
+        renderTemplates();
+      } catch (error) {
+        console.error('[RagebaitGen] ❌ Error loading templates:', error);
+        console.error('[RagebaitGen] Current URL:', currentURL);
+        console.error('[RagebaitGen] Expected server: http://localhost:5001');
+
+        document.getElementById('templateList').innerHTML = `
+          <div style="color: var(--danger); text-align: center; padding: 2rem;">
+            <h3 style="margin-bottom: 1rem;">❌ Failed to Load Templates</h3>
+            <p style="margin-bottom: 0.5rem; font-weight: bold;">${error.message}</p>
+
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0; text-align: left; font-size: 0.875rem;">
+              <strong>Debug Info:</strong><br>
+              Current URL: <code style="background: #e9ecef; padding: 2px 4px; border-radius: 3px;">${currentURL}</code><br>
+              Expected: <code style="background: #e9ecef; padding: 2px 4px; border-radius: 3px;">http://localhost:5001/ragebait-generator.html</code>
+            </div>
+
+            <p style="font-size: 0.875rem; color: #666; margin-bottom: 1rem;">
+              <strong>Solutions:</strong><br>
+              1. Hard refresh: <strong>Cmd+Shift+R</strong> (Mac) or <strong>Ctrl+Shift+R</strong> (Windows)<br>
+              2. Clear browser cache for localhost<br>
+              3. Check you're on <strong>port 5001</strong><br>
+              4. Test API below to see if server is reachable
+            </p>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+              <button onclick="loadTemplates()" class="generate-btn" style="margin: 0;">
+                🔄 Retry
+              </button>
+              <button onclick="testAPI()" id="testAPIBtn" class="generate-btn" style="margin: 0; background: #00b894;">
+                🧪 Test API
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Load domain branding options on page load
+    async function loadDomains() {
+      console.log('[RagebaitGen] Loading domain branding options...');
+
+      try {
+        const response = await fetch('/api/mobile/ragebait/domains');
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        domains = data.domains;
+
+        console.log(`[RagebaitGen] ✅ Loaded ${domains.length} domain branding options`);
+
+        // Populate domain selector
+        const domainSelect = document.getElementById('domainSelect');
+        domainSelect.innerHTML = '<option value="none">No Branding (Default)</option>' +
+          domains
+            .filter(d => d.id !== 'none') // Skip 'none' since it's already default
+            .map(domain => `<option value="${domain.id}">${domain.name}</option>`)
+            .join('');
+
+      } catch (error) {
+        console.error('[RagebaitGen] ❌ Error loading domains:', error);
+        // Don't show error to user - domain branding is optional
+      }
+    }
+
+    function renderTemplates() {
+      const container = document.getElementById('templateList');
+      container.innerHTML = templates.map(template => `
+        <div class="template-card" onclick="selectTemplate('${template.id}')">
+          <div class="template-name">${template.name}</div>
+          <div class="template-desc">${template.description}</div>
+          <div class="template-meta">
+            ${template.hashtags.map(tag => `<span class="template-tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectTemplate(id) {
+      selectedTemplate = id;
+
+      // Update UI
+      document.querySelectorAll('.template-card').forEach(card => {
+        card.classList.remove('active');
+      });
+      event.target.closest('.template-card').classList.add('active');
+
+      // Enable generate button
+      document.getElementById('generateBtn').disabled = false;
+    }
+
+    async function generateRagebait() {
+      if (!selectedTemplate) return;
+
+      // Show loading
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('previewLoading').classList.add('active');
+      document.getElementById('previewFooter').style.display = 'none';
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('generateBtn').textContent = '⏳ Generating...';
+
+      try {
+        // Get selected domain
+        const domainSelect = document.getElementById('domainSelect');
+        const selectedDomain = domainSelect.value;
+
+        console.log(`[RagebaitGen] Generating with template: ${selectedTemplate}, domain: ${selectedDomain}`);
+
+        const response = await fetch(`/api/mobile/ragebait/generate/${selectedTemplate}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            domainId: selectedDomain === 'none' ? null : selectedDomain
+          })
+        });
+        const data = await response.json();
+        currentResult = data;
+
+        console.log(`[RagebaitGen] Generated successfully`);
+        console.log(`[RagebaitGen] GIF: ${data.gif.sizeMB} MB, MP4: ${data.mp4.sizeMB} MB`);
+
+        // Setup image/video load handlers before setting src
+        const gifPreview = document.getElementById('gifPreview');
+        const mp4Preview = document.getElementById('mp4Preview');
+
+        gifPreview.onload = () => {
+          console.log('[RagebaitGen] GIF loaded successfully');
+        };
+
+        gifPreview.onerror = () => {
+          console.error('[RagebaitGen] GIF failed to load');
+          alert('⚠️ GIF failed to load. File might be too large. Try downloading instead.');
+        };
+
+        mp4Preview.onloadeddata = () => {
+          console.log('[RagebaitGen] MP4 loaded successfully');
+        };
+
+        mp4Preview.onerror = () => {
+          console.error('[RagebaitGen] MP4 failed to load');
+          alert('⚠️ MP4 failed to load. Try downloading instead.');
+        };
+
+        // Update previews
+        gifPreview.src = data.gif.dataUrl;
+        mp4Preview.src = data.mp4.dataUrl;
+        document.getElementById('downloadGIF').href = data.gif.dataUrl;
+        document.getElementById('downloadMP4').href = data.mp4.dataUrl;
+
+        // Update file info
+        document.getElementById('gifSize').textContent = data.gif.sizeMB;
+        document.getElementById('mp4Size').textContent = data.mp4.sizeMB;
+        document.getElementById('frameCount').textContent = `${data.gif.frames} frames`;
+
+        // Warn if files are large
+        if (data.gif.sizeMB > 3) {
+          console.warn(`[RagebaitGen] Large GIF: ${data.gif.sizeMB} MB`);
+        }
+
+        // Update share text
+        document.getElementById('shareContent').textContent = data.shareText;
+
+        // Show preview (hide loading, show footer, display correct format)
+        document.getElementById('previewLoading').classList.remove('active');
+        document.getElementById('previewFooter').style.display = 'block';
+        showFormat(currentFormat);
+
+      } catch (error) {
+        console.error('Error generating ragebait:', error);
+        alert('Failed to generate ragebait. Please try again.');
+        document.getElementById('previewLoading').classList.remove('active');
+        document.getElementById('placeholder').style.display = 'block';
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('generateBtn').textContent = '🎨 Generate Ragebait';
+      }
+    }
+
+    function showFormat(format) {
+      currentFormat = format;
+      console.log(`[RagebaitGen] Switching to ${format.toUpperCase()} format`);
+
+      // Update buttons
+      document.querySelectorAll('.format-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.format === format);
+      });
+
+      // Ensure placeholder and loading are hidden
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('previewLoading').classList.remove('active');
+
+      // Show/hide previews
+      const gifPreview = document.getElementById('gifPreview');
+      const mp4Preview = document.getElementById('mp4Preview');
+
+      if (format === 'gif') {
+        gifPreview.style.display = 'block';
+        mp4Preview.style.display = 'none';
+        mp4Preview.pause(); // Pause MP4 when hidden
+        document.getElementById('formatInfo').textContent = 'GIF Format';
+        console.log('[RagebaitGen] Showing GIF, hiding MP4');
+      } else {
+        gifPreview.style.display = 'none';
+        mp4Preview.style.display = 'block';
+        document.getElementById('formatInfo').textContent = 'MP4 Format';
+
+        // Auto-play MP4 when shown
+        mp4Preview.play().catch(err => {
+          console.warn('[RagebaitGen] MP4 autoplay blocked:', err.message);
+        });
+        console.log('[RagebaitGen] Showing MP4, hiding GIF');
+      }
+    }
+
+    async function copyToClipboard() {
+      const text = document.getElementById('shareContent').textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✅ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copy to Clipboard';
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (error) {
+        alert('Failed to copy to clipboard');
+      }
+    }
+
+    //=== FORUM SHARING ===
+    async function shareToForum() {
+      if (!currentResult) {
+        alert('Please generate a ragebait first');
+        return;
+      }
+
+      const shareBtn = document.getElementById('shareToForumBtn');
+      shareBtn.disabled = true;
+      shareBtn.textContent = '⏳ Posting to forum...';
+
+      try {
+        const template = templates.find(t => t.id === selectedTemplate);
+
+        // Create forum thread
+        const response = await fetch('/api/forum/threads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: currentResult.caption,
+            body: `${currentResult.shareText}\n\n![Generated Ragebait](${currentResult.gif.dataUrl})`,
+            tags: template.hashtags.map(h => h.replace('#', '')),
+            flair: 'ragebait'
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          alert(`✅ Posted to forum! Thread ID: ${data.thread.thread_id}`);
+
+          // Optional: redirect to forum thread
+          // window.location.href = `/forum/threads/${data.thread.thread_id}`;
+        } else {
+          const error = await response.json();
+          alert(`❌ Forum post failed: ${error.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error sharing to forum:', error);
+        alert('❌ Failed to share to forum. Forum may not be available.');
+      } finally {
+        shareBtn.disabled = false;
+        shareBtn.textContent = '💬 Share to Forum';
+      }
+    }
+
+    // === THEME SUPPORT ===
+    function loadTheme() {
+      try {
+        const savedTheme = localStorage.getItem('calos_theme') || 'classic';
+        applyTheme(savedTheme);
+      } catch (e) {
+        console.log('[RagebaitGen] Theme not available, using defaults');
+      }
+    }
+
+    function applyTheme(themeId) {
+      // Simple theme application - could be extended with ThemeManager
+      document.body.classList.add(`theme-${themeId}`);
+      console.log(`[RagebaitGen] Applied theme: ${themeId}`);
+    }
+
+    // Event listeners
+    document.getElementById('generateBtn').addEventListener('click', generateRagebait);
+    document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+    document.getElementById('shareToForumBtn').addEventListener('click', shareToForum);
+
+    document.querySelectorAll('.format-btn').forEach(btn => {
+      btn.addEventListener('click', () => showFormat(btn.dataset.format));
+    });
+
+    // Load theme, templates, and domains on page load
+    loadTheme();
+    loadTemplates();
+    loadDomains();
+  </script>
+</body>
+</html>

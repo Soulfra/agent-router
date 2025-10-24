@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BillionDollarGame Network Map</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #0f0;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 2px solid #0f0;
+      background: rgba(0, 255, 0, 0.05);
+    }
+
+    .header h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #0f0;
+    }
+
+    .header p {
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      padding: 15px;
+      border: 1px solid #0f0;
+      background: rgba(0, 255, 0, 0.03);
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .label {
+      font-size: 0.9em;
+      opacity: 0.7;
+    }
+
+    .network-viz {
+      position: relative;
+      min-height: 600px;
+      border: 2px solid #0f0;
+      background: rgba(0, 255, 0, 0.02);
+      padding: 40px;
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
+
+    .tier {
+      margin-bottom: 60px;
+    }
+
+    .tier-header {
+      font-size: 1.2em;
+      margin-bottom: 20px;
+      padding: 10px;
+      background: rgba(0, 255, 0, 0.1);
+      border-left: 4px solid #0f0;
+    }
+
+    .brands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .brand-node {
+      position: relative;
+      padding: 20px;
+      border: 2px solid #0f0;
+      background: rgba(0, 0, 0, 0.8);
+      min-width: 200px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .brand-node:hover {
+      background: rgba(0, 255, 0, 0.1);
+      box-shadow: 0 0 20px #0f0;
+      transform: scale(1.05);
+    }
+
+    .brand-node.active {
+      background: rgba(0, 255, 0, 0.2);
+      box-shadow: 0 0 30px #0f0;
+    }
+
+    .brand-node .name {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .brand-node .domain {
+      font-size: 0.8em;
+      opacity: 0.6;
+      margin-bottom: 10px;
+    }
+
+    .brand-node .status {
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid #0f0;
+      font-size: 0.7em;
+      margin-top: 10px;
+    }
+
+    .brand-node .status.launched {
+      background: rgba(0, 255, 0, 0.2);
+    }
+
+    .brand-node .status.pending {
+      opacity: 0.5;
+    }
+
+    .connections {
+      margin-top: 40px;
+      padding: 20px;
+      border: 1px solid #0f0;
+      background: rgba(0, 255, 0, 0.03);
+    }
+
+    .connection-line {
+      position: absolute;
+      height: 2px;
+      background: #0f0;
+      opacity: 0.3;
+      transform-origin: left center;
+    }
+
+    .subdomains {
+      margin-top: 40px;
+    }
+
+    .subdomain-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .subdomain-item {
+      padding: 10px;
+      border: 1px solid #0f0;
+      background: rgba(0, 255, 0, 0.02);
+      font-size: 0.9em;
+    }
+
+    .subdomain-item .full-domain {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .subdomain-item .owner {
+      opacity: 0.6;
+      font-size: 0.85em;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+
+    .connection-line.active {
+      animation: pulse 2s infinite;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+    }
+
+    .error {
+      color: #f00;
+      padding: 20px;
+      border: 2px solid #f00;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>BillionDollarGame Network Map</h1>
+    <p>12 interconnected brands | is-a.dev style network | Cross-promotion ecosystem</p>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="value" id="total-domains">-</div>
+      <div class="label">Total Domains</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="total-subdomains">-</div>
+      <div class="label">User Subdomains</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="brands-launched">-</div>
+      <div class="label">Brands Launched</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="discord-servers">12</div>
+      <div class="label">Discord Servers</div>
+    </div>
+  </div>
+
+  <div class="network-viz" id="network-viz">
+    <div class="loading">Loading network data...</div>
+  </div>
+
+  <div class="subdomains" id="subdomains" style="display: none;">
+    <div class="tier-header">User Subdomains (<span id="subdomain-count">0</span>)</div>
+    <div class="subdomain-list" id="subdomain-list"></div>
+  </div>
+
+  <script>
+    // Fetch network data
+    async function loadNetworkData() {
+      try {
+        const response = await fetch('/api/network/domains.json');
+        const domains = await response.json();
+
+        // Separate main brands and subdomains
+        const mainBrands = domains.filter(d => d.subdomain === null);
+        const userSubdomains = domains.filter(d => d.subdomain !== null);
+
+        // Update stats
+        document.getElementById('total-domains').textContent = domains.length;
+        document.getElementById('total-subdomains').textContent = userSubdomains.length;
+        document.getElementById('brands-launched').textContent = mainBrands.filter(b => b.status === 'launched').length;
+
+        // Render network
+        renderNetwork(mainBrands);
+
+        // Render subdomains if any
+        if (userSubdomains.length > 0) {
+          renderSubdomains(userSubdomains);
+        }
+
+      } catch (error) {
+        console.error('Failed to load network data:', error);
+        document.getElementById('network-viz').innerHTML = `
+          <div class="error">
+            Failed to load network data: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    function renderNetwork(brands) {
+      const viz = document.getElementById('network-viz');
+      viz.innerHTML = '';
+
+      // Group by tier
+      const tiers = {
+        foundation: brands.filter(b => b.brand?.tier === 'foundation'),
+        business: brands.filter(b => b.brand?.tier === 'business'),
+        creative: brands.filter(b => b.brand?.tier === 'creative'),
+        additional: brands.filter(b => b.brand?.tier === 'additional')
+      };
+
+      // Render each tier
+      Object.entries(tiers).forEach(([tierName, tierBrands]) => {
+        if (tierBrands.length === 0) return;
+
+        const tierDiv = document.createElement('div');
+        tierDiv.className = 'tier';
+
+        const tierHeader = document.createElement('div');
+        tierHeader.className = 'tier-header';
+        tierHeader.textContent = `${tierName.toUpperCase()} LAYER (${tierBrands.length} brands)`;
+        tierDiv.appendChild(tierHeader);
+
+        const brandsDiv = document.createElement('div');
+        brandsDiv.className = 'brands';
+
+        tierBrands.forEach(brand => {
+          const node = document.createElement('div');
+          node.className = `brand-node ${brand.status}`;
+          node.innerHTML = `
+            <div class="name">${brand.brand?.name || brand.domain}</div>
+            <div class="domain">${brand.domain}</div>
+            <div class="tagline">${brand.brand?.tagline || ''}</div>
+            <div class="status ${brand.status}">${brand.status.toUpperCase()}</div>
+          `;
+
+          node.addEventListener('click', () => {
+            window.open(brand.discordInvite, '_blank');
+          });
+
+          brandsDiv.appendChild(node);
+        });
+
+        tierDiv.appendChild(brandsDiv);
+        viz.appendChild(tierDiv);
+      });
+
+      // Add connections section
+      const connectionsDiv = document.createElement('div');
+      connectionsDiv.className = 'connections';
+      connectionsDiv.innerHTML = `
+        <h3>Network Connections</h3>
+        <p>All ${brands.length} brands cross-promote each other through:</p>
+        <ul>
+          <li>Discord invite rotator (random 3 shown per page)</li>
+          <li>Random brand routing for A/B testing</li>
+          <li>Subdomain registration (yourname.brand.com)</li>
+          <li>Shared affiliate tracking</li>
+        </ul>
+      `;
+      viz.appendChild(connectionsDiv);
+    }
+
+    function renderSubdomains(subdomains) {
+      const container = document.getElementById('subdomains');
+      const list = document.getElementById('subdomain-list');
+      const count = document.getElementById('subdomain-count');
+
+      count.textContent = subdomains.length;
+      container.style.display = 'block';
+
+      list.innerHTML = '';
+      subdomains.forEach(sub => {
+        const item = document.createElement('div');
+        item.className = 'subdomain-item';
+        item.innerHTML = `
+          <div class="full-domain">${sub.domain}</div>
+          <div class="owner">@${sub.owner.username} → ${sub.parent}</div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // Load on page load
+    loadNetworkData();
+
+    // Refresh every 30 seconds
+    setInterval(loadNetworkData, 30000);
+  </script>
+</body>
+</html>

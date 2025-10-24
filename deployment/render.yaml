@@ -1,0 +1,103 @@
+# Render.com deployment config for CALOS Agent Router
+#
+# Auto-deploy: Push to GitHub, Render detects this file and deploys automatically
+# Cost: FREE tier (750 hours/month) or Starter ($7/month for 24/7 uptime)
+#
+# Setup:
+# 1. Push this repo to GitHub
+# 2. Go to render.com and sign in
+# 3. Click "New +" → "Web Service"
+# 4. Connect your GitHub repo
+# 5. Render reads this file automatically
+# 6. Click "Create Web Service"
+# 7. Your app is live!
+#
+# Or use one-click deploy:
+# https://render.com/deploy?repo=https://github.com/YOUR_USERNAME/agent-router
+
+services:
+  - type: web
+    name: calos-agent-router
+    env: node
+    plan: free  # Change to "starter" for $7/month (no sleep)
+    region: oregon  # Closest to your users
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+
+    # Auto-scaling (paid plans only)
+    # numInstances: 1
+
+    # Disk storage (if needed)
+    # disk:
+    #   name: calos-data
+    #   mountPath: /app/data
+    #   sizeGB: 1
+
+    # Environment variables
+    envVars:
+      # Node environment
+      - key: NODE_ENV
+        value: production
+
+      # Server configuration
+      - key: PORT
+        value: 5001
+
+      - key: HOST
+        value: 0.0.0.0
+
+      # Base URL (automatically set by Render)
+      - key: BASE_URL
+        generateValue: true
+        # Will be: https://your-app-name.onrender.com
+
+      # CORS (allow all for now, restrict in production)
+      - key: CORS_ORIGIN
+        value: "*"
+
+      # Database (optional - uncomment if using external PostgreSQL)
+      # - key: DATABASE_URL
+      #   fromDatabase:
+      #     name: calos-db
+      #     property: connectionString
+
+      # OR use SQLite for free tier (no external DB needed)
+      - key: DB_TYPE
+        value: sqlite
+
+      - key: SQLITE_PATH
+        value: /app/data/calos.db
+
+      # AI API Keys (add these in Render dashboard for security)
+      # Don't commit actual keys to git!
+      # - key: OPENAI_API_KEY
+      #   sync: false  # Means: Set manually in dashboard
+
+      # - key: ANTHROPIC_API_KEY
+      #   sync: false
+
+      # - key: DEEPSEEK_API_KEY
+      #   sync: false
+
+      # Gmail Webhook (optional)
+      # - key: GOOGLE_SHEETS_DB_ID
+      #   sync: false
+
+      # - key: ENCRYPTION_KEY
+      #   sync: false
+
+      # - key: GMAIL_SMTP_USER
+      #   sync: false
+
+      # - key: GMAIL_APP_PASSWORD
+      #   sync: false
+
+# Optional: PostgreSQL database (costs extra)
+# Uncomment if you need a real database instead of SQLite
+# databases:
+#   - name: calos-db
+#     databaseName: calos
+#     user: calos
+#     plan: free  # Free tier: 90 days, then $7/month
+#     # plan: starter  # $7/month, 256MB RAM

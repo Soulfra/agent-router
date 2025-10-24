@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP File Manager Lab - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .input-group input,
+    .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .input-group input:focus,
+    .input-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .file-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .file-item {
+      padding: 10px;
+      background: #0a0a15;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      border-left: 3px solid #667eea;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .file-item.directory {
+      border-left-color: #ffd700;
+    }
+
+    .file-item:hover {
+      background: #1a1a2e;
+      cursor: pointer;
+    }
+
+    .file-name {
+      color: #e0e0e0;
+      font-weight: bold;
+    }
+
+    .file-size {
+      color: #888;
+      font-size: 11px;
+    }
+
+    .breadcrumb {
+      background: #0a0a15;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .breadcrumb span {
+      color: #667eea;
+      cursor: pointer;
+    }
+
+    .breadcrumb span:hover {
+      text-decoration: underline;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .tab-button {
+      padding: 8px 16px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #888;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-color: transparent;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>MCP File Manager</h1>
+  <p class="subtitle">Interactive filesystem browser with read/write/list capabilities</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- File Browser -->
+  <div class="section">
+    <h2>File Browser</h2>
+
+    <div class="breadcrumb" id="breadcrumb">
+      <span onclick="navigateTo('.')">Home</span>
+    </div>
+
+    <div class="input-group">
+      <label>Current Directory:</label>
+      <input type="text" id="current-path" value="." readonly>
+    </div>
+
+    <button onclick="listFiles()">Refresh</button>
+    <button onclick="navigateTo('..')">Go Up</button>
+
+    <div id="file-list-container" style="margin-top: 15px;">
+      <ul class="file-list" id="file-list">
+        <li style="color: #888; padding: 20px; text-align: center;">Click "Refresh" to load files</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- File Operations -->
+  <div class="section">
+    <h2>File Operations</h2>
+
+    <div class="tab-buttons">
+      <button class="tab-button active" onclick="switchTab('read')">Read File</button>
+      <button class="tab-button" onclick="switchTab('write')">Write File</button>
+      <button class="tab-button" onclick="switchTab('append')">Append File</button>
+      <button class="tab-button" onclick="switchTab('delete')">Delete File</button>
+    </div>
+
+    <!-- Read Tab -->
+    <div class="tab-content active" id="tab-read">
+      <div class="input-group">
+        <label>File Path:</label>
+        <input type="text" id="read-path" placeholder="e.g., ./README.md" value="./package.json">
+      </div>
+      <button onclick="readFile()">Read File</button>
+    </div>
+
+    <!-- Write Tab -->
+    <div class="tab-content" id="tab-write">
+      <div class="input-group">
+        <label>File Path:</label>
+        <input type="text" id="write-path" placeholder="e.g., ./test.txt" value="./test-file.txt">
+      </div>
+      <div class="input-group">
+        <label>Content:</label>
+        <textarea id="write-content" rows="6" placeholder="File content...">Hello from CalOS MCP File Manager!\nThis is a test file.</textarea>
+      </div>
+      <button onclick="writeFile()">Write File</button>
+    </div>
+
+    <!-- Append Tab -->
+    <div class="tab-content" id="tab-append">
+      <div class="input-group">
+        <label>File Path:</label>
+        <input type="text" id="append-path" placeholder="e.g., ./log.txt" value="./test-file.txt">
+      </div>
+      <div class="input-group">
+        <label>Content to Append:</label>
+        <textarea id="append-content" rows="4" placeholder="Content to add...">\nAppended line at ${new Date().toISOString()}</textarea>
+      </div>
+      <button onclick="appendFile()">Append to File</button>
+    </div>
+
+    <!-- Delete Tab -->
+    <div class="tab-content" id="tab-delete">
+      <div class="input-group">
+        <label>File Path:</label>
+        <input type="text" id="delete-path" placeholder="e.g., ./temp.txt">
+      </div>
+      <button onclick="deleteFile()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Delete File</button>
+      <p style="color: #e74c3c; font-size: 11px; margin-top: 10px;">⚠️ Warning: This action cannot be undone!</p>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="section">
+    <h2>Quick Actions</h2>
+    <div class="button-grid">
+      <button onclick="quickRead('package.json')">Read package.json</button>
+      <button onclick="quickRead('README.md')">Read README.md</button>
+      <button onclick="quickList('lib')">List /lib</button>
+      <button onclick="quickList('public')">List /public</button>
+      <button onclick="quickList('bin')">List /bin</button>
+      <button onclick="createTestFile()">Create Test File</button>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="section">
+    <h2>Output</h2>
+    <pre class="output" id="output">Select a file operation...</pre>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+    let currentPath = '.';
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Call MCP tool
+    async function callMCP(toolName, input) {
+      const response = await fetch(`${MCP_URL}/mcp/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: toolName, input })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Tool call failed');
+      return data.result;
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+      }
+    }
+
+    // Switch tabs
+    function switchTab(tabName) {
+      // Update buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    // List files in directory
+    async function listFiles() {
+      try {
+        const path = document.getElementById('current-path').value;
+        const result = await callMCP('filesystem_list', { path });
+
+        const fileList = document.getElementById('file-list');
+        fileList.innerHTML = '';
+
+        if (result.files && result.files.length > 0) {
+          result.files.forEach(file => {
+            const li = document.createElement('li');
+            li.className = file.type === 'directory' ? 'file-item directory' : 'file-item';
+            li.innerHTML = `
+              <div>
+                <span class="file-name">${file.type === 'directory' ? '📁' : '📄'} ${file.name}</span>
+                <div class="file-size">${file.size ? formatFileSize(file.size) : 'directory'}</div>
+              </div>
+            `;
+
+            if (file.type === 'directory') {
+              li.onclick = () => navigateTo(path + '/' + file.name);
+            } else {
+              li.onclick = () => {
+                document.getElementById('read-path').value = path + '/' + file.name;
+                switchTab('read');
+              };
+            }
+
+            fileList.appendChild(li);
+          });
+
+          log(`Listed ${result.files.length} items in ${path}`, 'success');
+        } else {
+          fileList.innerHTML = '<li style="color: #888; padding: 20px; text-align: center;">Empty directory</li>';
+          log(`Directory ${path} is empty`, 'success');
+        }
+
+        updateBreadcrumb(path);
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Navigate to directory
+    function navigateTo(path) {
+      currentPath = path;
+      document.getElementById('current-path').value = path;
+      listFiles();
+    }
+
+    // Update breadcrumb
+    function updateBreadcrumb(path) {
+      const parts = path.split('/').filter(p => p && p !== '.');
+      const breadcrumb = document.getElementById('breadcrumb');
+
+      let html = '<span onclick="navigateTo(\\'.\\')"  >Home</span>';
+      let currentPath = '.';
+
+      parts.forEach((part, index) => {
+        currentPath += '/' + part;
+        const navPath = currentPath;
+        html += ` / <span onclick="navigateTo('${navPath}')">${part}</span>`;
+      });
+
+      breadcrumb.innerHTML = html;
+    }
+
+    // Read file
+    async function readFile() {
+      try {
+        const path = document.getElementById('read-path').value;
+        const result = await callMCP('filesystem_read', { path });
+
+        log(result.content, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Write file
+    async function writeFile() {
+      try {
+        const path = document.getElementById('write-path').value;
+        const content = document.getElementById('write-content').value;
+
+        const result = await callMCP('filesystem_write', { path, content });
+
+        log(`File written successfully:\n\nPath: ${path}\nSize: ${content.length} bytes`, 'success');
+        listFiles(); // Refresh if in current directory
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Append to file
+    async function appendFile() {
+      try {
+        const path = document.getElementById('append-path').value;
+        const content = document.getElementById('append-content').value;
+
+        // Read existing content
+        const existing = await callMCP('filesystem_read', { path });
+        const newContent = existing.content + content;
+
+        // Write combined content
+        await callMCP('filesystem_write', { path, content: newContent });
+
+        log(`Content appended successfully:\n\nPath: ${path}\nAppended: ${content.length} bytes`, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Delete file
+    async function deleteFile() {
+      const path = document.getElementById('delete-path').value;
+
+      if (!confirm(`Are you sure you want to delete ${path}?`)) {
+        return;
+      }
+
+      try {
+        // Note: filesystem_delete might not exist, this is a demo
+        log(`Delete operation would remove: ${path}\n\n(Delete not implemented in demo - requires filesystem_delete tool)`, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Quick read
+    function quickRead(filename) {
+      document.getElementById('read-path').value = './' + filename;
+      switchTabProgrammatic('read');
+      readFile();
+    }
+
+    // Quick list
+    function quickList(dir) {
+      navigateTo('./' + dir);
+    }
+
+    // Create test file
+    async function createTestFile() {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      document.getElementById('write-path').value = `./test-${timestamp}.txt`;
+      document.getElementById('write-content').value = `Test file created at ${new Date().toISOString()}\n\nThis is a demo file from CalOS MCP File Manager.`;
+      switchTabProgrammatic('write');
+      await writeFile();
+    }
+
+    // Switch tab programmatically
+    function switchTabProgrammatic(tabName) {
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(tabName)) {
+          btn.classList.add('active');
+        }
+      });
+
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Check status on load
+    window.addEventListener('load', () => {
+      checkServerStatus();
+    });
+  </script>
+</body>
+</html>

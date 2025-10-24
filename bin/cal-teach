@@ -1,0 +1,331 @@
+#!/usr/bin/env node
+
+/**
+ * cal-teach CLI
+ *
+ * Teach Cal new concepts, patterns, anti-patterns, and lessons.
+ * Updates Cal's knowledge base and learning system.
+ *
+ * Usage:
+ *   cal-teach concept <category> <topic> "<concept description>"
+ *   cal-teach pattern <category> <topic> "<pattern description>"
+ *   cal-teach anti-pattern <category> <topic> "<anti-pattern description>"
+ *   cal-teach lesson <task-type> "<lesson learned>"
+ *   cal-teach example <category> <topic> "<title>" <code-file>
+ *   cal-teach stats
+ *   cal-teach reflect
+ *   cal-teach list <category>
+ *
+ * Examples:
+ *   cal-teach concept dns recursive "Recursive DNS follows CNAME chains"
+ *   cal-teach pattern tokens counting "Always use tiktoken for accurate counts"
+ *   cal-teach anti-pattern loops infinite "Never use while(true) without break"
+ *   cal-teach lesson oauth "Save tokens to .env immediately after exchange"
+ *   cal-teach example oauth authCode "OAuth flow" ./oauth-example.js
+ *   cal-teach stats
+ *   cal-teach reflect --period 7d
+ *   cal-teach list dns
+ */
+
+const CalKnowledgeBase = require('../lib/cal-knowledge-base');
+const CalLearningSystem = require('../lib/cal-learning-system');
+const CalSelfReflection = require('../lib/cal-self-reflection');
+const fs = require('fs').promises;
+const path = require('path');
+
+const args = process.argv.slice(2);
+const command = args[0];
+
+const knowledgeBase = new CalKnowledgeBase();
+const learningSystem = new CalLearningSystem();
+
+async function main() {
+  if (!command) {
+    showHelp();
+    process.exit(1);
+  }
+
+  try {
+    await knowledgeBase.init();
+    await learningSystem.init();
+
+    switch (command) {
+      case 'concept':
+        await teachConcept(args[1], args[2], args[3]);
+        break;
+
+      case 'pattern':
+        await teachPattern(args[1], args[2], args[3]);
+        break;
+
+      case 'anti-pattern':
+        await teachAntiPattern(args[1], args[2], args[3]);
+        break;
+
+      case 'lesson':
+        await teachLesson(args[1], args[2]);
+        break;
+
+      case 'example':
+        await teachExample(args[1], args[2], args[3], args[4]);
+        break;
+
+      case 'stats':
+        await showStats();
+        break;
+
+      case 'reflect':
+        await reflect(args[1], args[2]);
+        break;
+
+      case 'list':
+        await listKnowledge(args[1]);
+        break;
+
+      case 'search':
+        await searchKnowledge(args[1]);
+        break;
+
+      default:
+        console.error(`Unknown command: ${command}`);
+        showHelp();
+        process.exit(1);
+    }
+
+    knowledgeBase.close();
+    learningSystem.close();
+
+  } catch (error) {
+    console.error('Error:', error.message);
+    process.exit(1);
+  }
+}
+
+async function teachConcept(category, topic, concept) {
+  if (!category || !topic || !concept) {
+    console.error('Usage: cal-teach concept <category> <topic> "<concept>"');
+    process.exit(1);
+  }
+
+  await knowledgeBase.add(category, topic, 'concept', concept);
+  console.log(`✅ Taught Cal: ${category}/${topic} concept`);
+  console.log(`   "${concept}"`);
+}
+
+async function teachPattern(category, topic, pattern) {
+  if (!category || !topic || !pattern) {
+    console.error('Usage: cal-teach pattern <category> <topic> "<pattern>"');
+    process.exit(1);
+  }
+
+  await knowledgeBase.add(category, topic, 'pattern', pattern);
+  console.log(`✅ Taught Cal: ${category}/${topic} pattern`);
+  console.log(`   "${pattern}"`);
+}
+
+async function teachAntiPattern(category, topic, antiPattern) {
+  if (!category || !topic || !antiPattern) {
+    console.error('Usage: cal-teach anti-pattern <category> <topic> "<anti-pattern>"');
+    process.exit(1);
+  }
+
+  await knowledgeBase.add(category, topic, 'antiPattern', antiPattern);
+  console.log(`✅ Taught Cal: ${category}/${topic} anti-pattern`);
+  console.log(`   "${antiPattern}"`);
+}
+
+async function teachLesson(taskType, lesson) {
+  if (!taskType || !lesson) {
+    console.error('Usage: cal-teach lesson <task-type> "<lesson>"');
+    process.exit(1);
+  }
+
+  await learningSystem.recordSuccess(
+    taskType,
+    `Manual lesson: ${lesson}`,
+    {
+      whatWorked: lesson,
+      lesson: lesson,
+      confidence: 0.9
+    }
+  );
+
+  console.log(`✅ Taught Cal lesson for ${taskType} tasks`);
+  console.log(`   "${lesson}"`);
+}
+
+async function teachExample(category, topic, title, codeFile) {
+  if (!category || !topic || !title || !codeFile) {
+    console.error('Usage: cal-teach example <category> <topic> "<title>" <code-file>');
+    process.exit(1);
+  }
+
+  // Read code file
+  const code = await fs.readFile(codeFile, 'utf8');
+
+  const example = {
+    title,
+    code
+  };
+
+  await knowledgeBase.add(category, topic, 'example', JSON.stringify(example));
+
+  console.log(`✅ Taught Cal: ${category}/${topic} example`);
+  console.log(`   Title: "${title}"`);
+  console.log(`   Code: ${code.split('\n').length} lines`);
+}
+
+async function showStats() {
+  console.log('\n=== CAL STATS ===\n');
+
+  // Knowledge base stats
+  const kbCount = await knowledgeBase.count();
+  console.log(`📚 Knowledge Base: ${kbCount} entries`);
+
+  // Learning system stats
+  const stats = await learningSystem.getStats();
+  console.log(`\n🧠 Learning System:`);
+  console.log(`   Total lessons: ${stats.total_lessons}`);
+  console.log(`   Successes: ${stats.successes}`);
+  console.log(`   Failures: ${stats.failures}`);
+  console.log(`   Success rate: ${(stats.success_rate * 100).toFixed(1)}%`);
+  console.log(`   Unique tasks: ${stats.unique_tasks}`);
+  console.log(`   Avg confidence: ${(stats.avg_confidence * 100).toFixed(1)}%`);
+
+  console.log('\n');
+}
+
+async function reflect(periodFlag, period) {
+  console.log('\n=== CAL SELF-REFLECTION ===\n');
+
+  const reflection = new CalSelfReflection({
+    knowledgeBase,
+    learningSystem
+  });
+
+  const actualPeriod = periodFlag === '--period' ? period : '24h';
+
+  const result = await reflection.reflect({ period: actualPeriod });
+
+  const report = reflection.generateReport(result);
+  console.log(report);
+}
+
+async function listKnowledge(category) {
+  if (!category) {
+    console.error('Usage: cal-teach list <category>');
+    process.exit(1);
+  }
+
+  const result = await knowledgeBase.query(category);
+
+  console.log(`\n=== ${category.toUpperCase()} KNOWLEDGE ===\n`);
+
+  if (result.concepts.length > 0) {
+    console.log('📖 CONCEPTS:');
+    result.concepts.forEach(c => console.log(`   - ${c}`));
+    console.log('');
+  }
+
+  if (result.patterns.length > 0) {
+    console.log('✅ PATTERNS:');
+    result.patterns.forEach(p => console.log(`   - ${p}`));
+    console.log('');
+  }
+
+  if (result.antiPatterns.length > 0) {
+    console.log('❌ ANTI-PATTERNS:');
+    result.antiPatterns.forEach(ap => console.log(`   - ${ap}`));
+    console.log('');
+  }
+
+  if (result.examples.length > 0) {
+    console.log(`📝 EXAMPLES: ${result.examples.length}`);
+    result.examples.forEach(ex => {
+      console.log(`   - ${ex.title} (${ex.code.split('\n').length} lines)`);
+    });
+    console.log('');
+  }
+
+  console.log(`Total: ${result.concepts.length + result.patterns.length + result.antiPatterns.length + result.examples.length} entries\n`);
+}
+
+async function searchKnowledge(query) {
+  if (!query) {
+    console.error('Usage: cal-teach search <query>');
+    process.exit(1);
+  }
+
+  const results = await knowledgeBase.search(query);
+
+  console.log(`\n=== SEARCH RESULTS: "${query}" ===\n`);
+
+  if (results.length === 0) {
+    console.log('No results found.\n');
+    return;
+  }
+
+  for (const result of results) {
+    console.log(`${result.category}/${result.topic} [${result.type}]:`);
+
+    if (result.type === 'example') {
+      const example = JSON.parse(result.content);
+      console.log(`   ${example.title}`);
+    } else {
+      console.log(`   ${result.content}`);
+    }
+    console.log('');
+  }
+
+  console.log(`Found ${results.length} results\n`);
+}
+
+function showHelp() {
+  console.log(`
+cal-teach - Teach Cal new concepts, patterns, and lessons
+
+USAGE:
+  cal-teach concept <category> <topic> "<description>"
+  cal-teach pattern <category> <topic> "<pattern>"
+  cal-teach anti-pattern <category> <topic> "<anti-pattern>"
+  cal-teach lesson <task-type> "<lesson>"
+  cal-teach example <category> <topic> "<title>" <code-file>
+  cal-teach stats
+  cal-teach reflect [--period <time>]
+  cal-teach list <category>
+  cal-teach search <query>
+
+EXAMPLES:
+  # Teach a concept
+  cal-teach concept dns recursive "DNS queries follow CNAME chains"
+
+  # Teach a pattern
+  cal-teach pattern tokens counting "Always count tokens before API call"
+
+  # Teach an anti-pattern
+  cal-teach anti-pattern loops infinite "Never use while(true) without break"
+
+  # Teach a lesson from experience
+  cal-teach lesson oauth "Save tokens immediately after exchange"
+
+  # Teach by example
+  cal-teach example oauth authCode "OAuth flow" ./oauth-example.js
+
+  # View Cal's stats
+  cal-teach stats
+
+  # Trigger self-reflection
+  cal-teach reflect --period 7d
+
+  # List knowledge in category
+  cal-teach list dns
+
+  # Search knowledge base
+  cal-teach search "recursive"
+
+CATEGORIES:
+  dns, tokens, oauth, patterns, antiPatterns, etc.
+`);
+}
+
+main();

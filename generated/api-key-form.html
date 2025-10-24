@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CalOS Platform API Key</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; }
+    .field { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>CalOS Platform API Key</h1>
+  <p>Platform API keys (sk-tenant-xxx) that customers use to access CalOS services</p>
+  <form id="schemaForm">
+    <div class="field">
+      <label for="key_id">key_id *</label>
+      <small>Unique identifier for the API key</small>
+      <input type="text" id="key_id" name="key_id" />
+    </div>
+    <div class="field">
+      <label for="key_prefix">key_prefix</label>
+      <small>Public prefix of the key (first 20 chars)</small>
+      <input type="text" id="key_prefix" name="key_prefix" />
+    </div>
+    <div class="field">
+      <label for="key_suffix_last4">key_suffix_last4</label>
+      <small>Last 4 characters of the key (for verification)</small>
+      <input type="text" id="key_suffix_last4" name="key_suffix_last4" />
+    </div>
+    <div class="field">
+      <label for="key_name">key_name *</label>
+      <small>Human-readable name for the key</small>
+      <input type="text" id="key_name" name="key_name" />
+    </div>
+    <div class="field">
+      <label for="description">description</label>
+      <small>Optional description of key purpose</small>
+      <input type="text" id="description" name="description" />
+    </div>
+    <div class="field">
+      <label for="status">status *</label>
+      <small>Current status of the API key</small>
+      <select id="status" name="status">
+        <option value="">Select...</option>
+        <option value="active">active</option>
+        <option value="inactive">inactive</option>
+        <option value="revoked">revoked</option>
+        <option value="expired">expired</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="rate_limit_per_minute">rate_limit_per_minute</label>
+      <small>Maximum requests per minute</small>
+      <input type="number" id="rate_limit_per_minute" name="rate_limit_per_minute" />
+    </div>
+    <div class="field">
+      <label for="rate_limit_per_hour">rate_limit_per_hour</label>
+      <small>Maximum requests per hour</small>
+      <input type="number" id="rate_limit_per_hour" name="rate_limit_per_hour" />
+    </div>
+    <div class="field">
+      <label for="rate_limit_per_day">rate_limit_per_day</label>
+      <small>Maximum requests per day</small>
+      <input type="number" id="rate_limit_per_day" name="rate_limit_per_day" />
+    </div>
+    <div class="field">
+      <label for="total_requests">total_requests</label>
+      <small>Total number of requests made with this key</small>
+      <input type="text" id="total_requests" name="total_requests" />
+    </div>
+    <div class="field">
+      <label for="last_used_at">last_used_at</label>
+      <small>Last time this key was used</small>
+      <input type="text" id="last_used_at" name="last_used_at" />
+    </div>
+    <div class="field">
+      <label for="last_used_ip">last_used_ip</label>
+      <small>IP address of last request</small>
+      <input type="text" id="last_used_ip" name="last_used_ip" />
+    </div>
+    <div class="field">
+      <label for="last_used_endpoint">last_used_endpoint</label>
+      <small>Last API endpoint accessed</small>
+      <input type="text" id="last_used_endpoint" name="last_used_endpoint" />
+    </div>
+    <div class="field">
+      <label for="created_at">created_at *</label>
+      <small>When the key was created</small>
+      <input type="text" id="created_at" name="created_at" />
+    </div>
+    <div class="field">
+      <label for="expires_at">expires_at</label>
+      <small>When the key expires (null = never)</small>
+      <input type="text" id="expires_at" name="expires_at" />
+    </div>
+    <div class="field">
+      <label for="revoked_at">revoked_at</label>
+      <small>When the key was revoked</small>
+      <input type="text" id="revoked_at" name="revoked_at" />
+    </div>
+    <div class="field">
+      <label for="revoked_reason">revoked_reason</label>
+      <small>Reason for revocation</small>
+      <input type="text" id="revoked_reason" name="revoked_reason" />
+    </div>
+    <div class="field">
+      <label for="usage_24h">usage_24h</label>
+      <small>Usage statistics for the last 24 hours</small>
+      <input type="text" id="usage_24h" name="usage_24h" />
+    </div>
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    document.getElementById('schemaForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      console.log('Form data:', data);
+      alert('Form submitted! Check console for data.');
+    });
+  </script>
+</body>
+</html>

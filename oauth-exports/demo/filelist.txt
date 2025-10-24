@@ -1,0 +1,11 @@
+file '/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/oauth-exports/demo/frame-1.png'
+duration 0.5
+file '/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/oauth-exports/demo/frame-2.png'
+duration 0.5
+file '/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/oauth-exports/demo/frame-3.png'
+duration 0.5
+file '/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/oauth-exports/demo/frame-4.png'
+duration 0.5
+file '/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/oauth-exports/demo/frame-5.png'
+duration 0.5
+file '/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router/oauth-exports/demo/frame-5.png'

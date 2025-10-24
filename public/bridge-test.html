@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge Test Suite - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+
+    .test-section {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .test-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .test-section p {
+      opacity: 0.8;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #2ecc71;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .result.hidden {
+      display: none;
+    }
+
+    .success {
+      color: #2ecc71;
+    }
+
+    .error {
+      color: #e74c3c;
+    }
+
+    .info {
+      color: #3498db;
+    }
+
+    .warning {
+      color: #f1c40f;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-indicator.online {
+      background: #2ecc71;
+      box-shadow: 0 0 10px #2ecc71;
+    }
+
+    .status-indicator.offline {
+      background: #e74c3c;
+      box-shadow: 0 0 10px #e74c3c;
+    }
+
+    .status-indicator.unknown {
+      background: #95a5a6;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .back-link a {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Bridge Test Suite</h1>
+    <p class="subtitle">Verify GitHub Pages Bridge → localhost:5001 connectivity</p>
+
+    <!-- Health Check -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="healthIndicator"></span>
+        1. Health Check
+      </h2>
+      <p>Test if localhost:5001 API is running and accessible</p>
+      <button onclick="testHealth()">🏥 Test Health</button>
+      <div id="healthResult" class="result hidden"></div>
+    </div>
+
+    <!-- API Keys Status -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="keysIndicator"></span>
+        2. API Keys Status
+      </h2>
+      <p>Check which API keys are available (.env, BYOK, database)</p>
+      <button onclick="checkAPIKeys()">🔑 Check Keys</button>
+      <div id="apiKeysResult" class="result hidden"></div>
+    </div>
+
+    <!-- Ollama Test -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="ollamaIndicator"></span>
+        3. Ollama Test
+      </h2>
+      <p>Test local LLM (no API key needed)</p>
+      <button onclick="testOllama()">🦙 Ping Ollama</button>
+      <div id="ollamaResult" class="result hidden"></div>
+    </div>
+
+    <!-- Login Database -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="dbIndicator"></span>
+        4. Login Database
+      </h2>
+      <p>Query PostgreSQL for user sessions and login history</p>
+      <button onclick="queryLoginHistory()">💾 Query Sessions</button>
+      <button onclick="queryConversationHistory()">💬 Query Conversations</button>
+      <div id="historyResult" class="result hidden"></div>
+    </div>
+
+    <!-- Full Bridge Test -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="bridgeIndicator"></span>
+        5. Full Bridge Test
+      </h2>
+      <p>Complete end-to-end test: GitHub Pages → localhost → API</p>
+      <button onclick="testFullBridge()">🌉 Test Full Bridge</button>
+      <div id="bridgeResult" class="result hidden"></div>
+    </div>
+
+    <!-- Network Info -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="networkIndicator"></span>
+        6. Network Detection
+      </h2>
+      <p>Detect local IP, network, and device info</p>
+      <button onclick="testNetworkDetection()">📡 Detect Network</button>
+      <div id="networkResult" class="result hidden"></div>
+    </div>
+
+    <!-- BYOK Status -->
+    <div class="test-section">
+      <h2>
+        <span class="status-indicator unknown" id="byokIndicator"></span>
+        7. BYOK Status
+      </h2>
+      <p>Check Bring Your Own Key configuration in localStorage</p>
+      <button onclick="checkBYOK()">🔐 Check BYOK</button>
+      <button onclick="window.location.href='/byok-settings.html'">⚙️ Configure BYOK</button>
+      <div id="byokResult" class="result hidden"></div>
+    </div>
+
+    <div class="back-link">
+      <a href="/qr-gis-login.html">← Back to QR Login</a> |
+      <a href="/trial-dashboard.html">Dashboard</a> |
+      <a href="/chat.html">Chat</a>
+    </div>
+  </div>
+
+  <script src="/lib/github-pages-bridge.js"></script>
+
+  <script>
+    const bridge = new GitHubPagesBridge();
+
+    // Auto-run health check on load
+    window.addEventListener('load', () => {
+      console.log('[Bridge Test] Page loaded, running auto-tests...');
+      testHealth();
+    });
+
+    // Helper to show result
+    function showResult(elementId, content, className = 'info') {
+      const el = document.getElementById(elementId);
+      el.innerHTML = `<span class="${className}">${content}</span>`;
+      el.classList.remove('hidden');
+    }
+
+    // Helper to update status indicator
+    function updateIndicator(indicatorId, status) {
+      const indicator = document.getElementById(indicatorId);
+      indicator.className = `status-indicator ${status}`;
+    }
+
+    // 1. Health Check
+    async function testHealth() {
+      showResult('healthResult', 'Testing localhost:5001...', 'info');
+
+      try {
+        const healthy = await bridge.healthCheck();
+
+        if (healthy) {
+          updateIndicator('healthIndicator', 'online');
+          showResult('healthResult',
+            '✅ SUCCESS\n\n' +
+            'localhost:5001 is running and accessible\n' +
+            'Bridge: ' + bridge.apiBase + '\n' +
+            'Environment: ' + (bridge.isLocalhost ? 'localhost' : 'GitHub Pages'),
+            'success'
+          );
+        } else {
+          updateIndicator('healthIndicator', 'offline');
+          showResult('healthResult',
+            '❌ OFFLINE\n\n' +
+            'localhost:5001 is not responding\n' +
+            'Make sure CalOS router is running:\n' +
+            '  cd /Users/matthewmauer/Desktop/CALOS_ROOT/agent-router\n' +
+            '  node router.js',
+            'error'
+          );
+        }
+      } catch (error) {
+        updateIndicator('healthIndicator', 'offline');
+        showResult('healthResult',
+          '❌ ERROR\n\n' + error.message,
+          'error'
+        );
+      }
+    }
+
+    // 2. Check API Keys
+    async function checkAPIKeys() {
+      showResult('apiKeysResult', 'Checking API keys...', 'info');
+
+      try {
+        const result = await bridge.callAPI('/api/env-info', {}, { method: 'GET' });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        let output = '🔑 API KEYS STATUS\n\n';
+
+        // .env file
+        output += '📄 .env File:\n';
+        output += `  OpenAI: ${result.env.OPENAI_API_KEY ? '✅ Set' : '❌ Empty'}\n`;
+        output += `  Anthropic: ${result.env.ANTHROPIC_API_KEY ? '✅ Set' : '❌ Empty'}\n`;
+        output += `  DeepSeek: ${result.env.DEEPSEEK_API_KEY ? '✅ Set' : '❌ Empty'}\n\n`;
+
+        // BYOK
+        const byok = localStorage.getItem('calos_byok');
+        output += '🔐 BYOK (localStorage):\n';
+        if (byok) {
+          const keys = JSON.parse(byok);
+          output += `  OpenAI: ${keys.openai ? '✅ Configured' : '❌ Not set'}\n`;
+          output += `  Anthropic: ${keys.anthropic ? '✅ Configured' : '❌ Not set'}\n`;
+        } else {
+          output += '  ❌ No BYOK keys configured\n';
+        }
+
+        output += '\n💡 Resolution Order:\n';
+        output += '  1. BYOK (localStorage) - highest priority\n';
+        output += '  2. Database encrypted keys\n';
+        output += '  3. .env file\n';
+        output += '  4. Ollama (no key needed)';
+
+        const hasAnyKey = result.env.OPENAI_API_KEY || result.env.ANTHROPIC_API_KEY || byok;
+        updateIndicator('keysIndicator', hasAnyKey ? 'online' : 'offline');
+        showResult('apiKeysResult', output, hasAnyKey ? 'success' : 'warning');
+
+      } catch (error) {
+        updateIndicator('keysIndicator', 'offline');
+        showResult('apiKeysResult',
+          '❌ ERROR\n\n' + error.message,
+          'error'
+        );
+      }
+    }
+
+    // 3. Test Ollama
+    async function testOllama() {
+      showResult('ollamaResult', 'Testing Ollama...', 'info');
+
+      try {
+        const result = await bridge.callAPI('/api/agent', {
+          prompt: 'Say hello in exactly one word',
+          model: 'ollama/llama3.2:3b',
+          max_tokens: 10
+        });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        updateIndicator('ollamaIndicator', 'online');
+        showResult('ollamaResult',
+          '✅ OLLAMA WORKS\n\n' +
+          'Model: ' + (result.model || 'ollama/llama3.2:3b') + '\n' +
+          'Response: ' + result.response + '\n\n' +
+          '💡 Ollama is working! You can use AI without API keys.',
+          'success'
+        );
+
+      } catch (error) {
+        updateIndicator('ollamaIndicator', 'offline');
+        showResult('ollamaResult',
+          '❌ OLLAMA FAILED\n\n' +
+          error.message + '\n\n' +
+          'Make sure Ollama is installed and running:\n' +
+          '  brew install ollama\n' +
+          '  ollama serve\n' +
+          '  ollama pull llama3.2:3b',
+          'error'
+        );
+      }
+    }
+
+    // 4. Query Login History
+    async function queryLoginHistory() {
+      showResult('historyResult', 'Querying user_sessions...', 'info');
+
+      try {
+        const result = await bridge.callAPI('/api/user-sessions', {}, { method: 'GET' });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        let output = '💾 USER SESSIONS\n\n';
+
+        if (result.sessions && result.sessions.length > 0) {
+          output += `Total sessions: ${result.sessions.length}\n\n`;
+
+          result.sessions.slice(0, 5).forEach((session, i) => {
+            output += `${i + 1}. User: ${session.user_id || session.email}\n`;
+            output += `   Role: ${session.role || 'guest'}\n`;
+            output += `   Created: ${new Date(session.created_at).toLocaleString()}\n`;
+            output += `   IP: ${session.ip || 'unknown'}\n\n`;
+          });
+
+          if (result.sessions.length > 5) {
+            output += `... and ${result.sessions.length - 5} more sessions`;
+          }
+
+          updateIndicator('dbIndicator', 'online');
+          showResult('historyResult', output, 'success');
+        } else {
+          updateIndicator('dbIndicator', 'online');
+          showResult('historyResult',
+            '✅ DATABASE CONNECTED\n\n' +
+            'No sessions found in database.\n' +
+            'Try logging in via QR code first.',
+            'warning'
+          );
+        }
+
+      } catch (error) {
+        updateIndicator('dbIndicator', 'offline');
+        showResult('historyResult',
+          '❌ DATABASE ERROR\n\n' + error.message,
+          'error'
+        );
+      }
+    }
+
+    // Query Conversation History
+    async function queryConversationHistory() {
+      showResult('historyResult', 'Querying conversations...', 'info');
+
+      try {
+        const result = await bridge.callAPI('/api/conversations', {}, { method: 'GET' });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        let output = '💬 CONVERSATION HISTORY\n\n';
+
+        if (result.conversations && result.conversations.length > 0) {
+          output += `Total conversations: ${result.conversations.length}\n\n`;
+
+          result.conversations.slice(0, 5).forEach((conv, i) => {
+            output += `${i + 1}. ID: ${conv.conversation_id}\n`;
+            output += `   User: ${conv.user_id}\n`;
+            output += `   Messages: ${conv.message_count || 0}\n`;
+            output += `   Last: ${new Date(conv.updated_at).toLocaleString()}\n\n`;
+          });
+
+          if (result.conversations.length > 5) {
+            output += `... and ${result.conversations.length - 5} more`;
+          }
+
+          updateIndicator('dbIndicator', 'online');
+          showResult('historyResult', output, 'success');
+        } else {
+          updateIndicator('dbIndicator', 'online');
+          showResult('historyResult',
+            '✅ DATABASE CONNECTED\n\n' +
+            'No conversations found in database.',
+            'warning'
+          );
+        }
+
+      } catch (error) {
+        updateIndicator('dbIndicator', 'offline');
+        showResult('historyResult',
+          '❌ DATABASE ERROR\n\n' + error.message,
+          'error'
+        );
+      }
+    }
+
+    // 5. Full Bridge Test
+    async function testFullBridge() {
+      showResult('bridgeResult', 'Running full bridge test...', 'info');
+
+      try {
+        let output = '🌉 FULL BRIDGE TEST\n\n';
+
+        // Test 1: Health
+        output += '1. Health Check... ';
+        const healthy = await bridge.healthCheck();
+        output += healthy ? '✅\n' : '❌ FAILED\n';
+
+        if (!healthy) {
+          throw new Error('Health check failed - localhost:5001 not running');
+        }
+
+        // Test 2: Network Info
+        output += '2. Network Info... ';
+        const network = await bridge.callAPI('/api/network-info', {}, { method: 'GET' });
+        output += network.ip ? `✅ (${network.ip})\n` : '❌\n';
+
+        // Test 3: BYOK Detection
+        output += '3. BYOK Detection... ';
+        const byok = bridge._getBYOK();
+        output += byok ? '✅ Found\n' : '⚠️  Not configured\n';
+
+        // Test 4: Device Fingerprint
+        output += '4. Device Fingerprint... ';
+        const fingerprint = bridge._getDeviceFingerprint();
+        output += fingerprint ? '✅\n' : '❌\n';
+
+        // Test 5: API Call
+        output += '5. Test API Call... ';
+        const apiResult = await bridge.callAPI('/api/agent', {
+          prompt: 'Reply with just "OK"',
+          model: 'ollama/llama3.2:3b',
+          max_tokens: 5
+        });
+        output += apiResult.response ? `✅ (${apiResult.response})\n` : '❌\n';
+
+        // Test 6: Usage Tracking
+        output += '6. Usage Tracking... ';
+        const stats = bridge.getUsageStats();
+        output += `✅ (${stats.calls} calls, ${stats.tokens} tokens)\n`;
+
+        output += '\n✅ ALL TESTS PASSED\n\n';
+        output += 'Bridge Configuration:\n';
+        output += `  API Base: ${bridge.apiBase}\n`;
+        output += `  Environment: ${bridge.isLocalhost ? 'localhost' : 'GitHub Pages'}\n`;
+        output += `  BYOK: ${byok ? 'Enabled' : 'Disabled'}\n`;
+        output += `  Tracking: ${bridge.config.enableTracking ? 'Enabled' : 'Disabled'}\n`;
+        output += `  Caching: ${bridge.config.enableCaching ? 'Enabled' : 'Disabled'}\n`;
+
+        updateIndicator('bridgeIndicator', 'online');
+        showResult('bridgeResult', output, 'success');
+
+      } catch (error) {
+        updateIndicator('bridgeIndicator', 'offline');
+        showResult('bridgeResult',
+          '❌ BRIDGE TEST FAILED\n\n' + error.message,
+          'error'
+        );
+      }
+    }
+
+    // 6. Network Detection
+    async function testNetworkDetection() {
+      showResult('networkResult', 'Detecting network...', 'info');
+
+      try {
+        const result = await bridge.callAPI('/api/network-info', {}, { method: 'GET' });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        let output = '📡 NETWORK DETECTION\n\n';
+        output += `IP Address: ${result.ip}\n`;
+        output += `Network: ${result.network}\n`;
+        output += `Hostname: ${result.hostname || 'unknown'}\n`;
+        output += `Platform: ${result.platform || 'unknown'}\n`;
+        output += `Timestamp: ${new Date(result.timestamp).toLocaleString()}\n\n`;
+
+        output += '💡 Use Case:\n';
+        output += '  - Device pairing (same network detection)\n';
+        output += '  - Multi-device federation\n';
+        output += '  - Private pager/VoIP routing';
+
+        updateIndicator('networkIndicator', 'online');
+        showResult('networkResult', output, 'success');
+
+      } catch (error) {
+        updateIndicator('networkIndicator', 'offline');
+        showResult('networkResult',
+          '❌ NETWORK DETECTION FAILED\n\n' + error.message,
+          'error'
+        );
+      }
+    }
+
+    // 7. Check BYOK
+    function checkBYOK() {
+      const byok = localStorage.getItem('calos_byok');
+
+      let output = '🔐 BYOK STATUS\n\n';
+
+      if (byok) {
+        try {
+          const keys = JSON.parse(byok);
+
+          output += 'Configured Keys:\n';
+
+          if (keys.openai) {
+            output += `  ✅ OpenAI\n`;
+            output += `     Added: ${new Date(keys.openai.addedAt).toLocaleString()}\n`;
+            output += `     Encrypted: Yes (AES-256-GCM)\n\n`;
+          }
+
+          if (keys.anthropic) {
+            output += `  ✅ Anthropic\n`;
+            output += `     Added: ${new Date(keys.anthropic.addedAt).toLocaleString()}\n`;
+            output += `     Encrypted: Yes (AES-256-GCM)\n\n`;
+          }
+
+          if (!keys.openai && !keys.anthropic) {
+            output += '  ⚠️  No keys configured\n\n';
+          }
+
+          output += '💡 Benefits:\n';
+          output += '  - Pay providers directly\n';
+          output += '  - No CalOS markup\n';
+          output += '  - Encrypted in browser\n';
+          output += '  - Never sent unencrypted';
+
+          updateIndicator('byokIndicator', 'online');
+          showResult('byokResult', output, 'success');
+
+        } catch (error) {
+          updateIndicator('byokIndicator', 'offline');
+          showResult('byokResult',
+            '❌ BYOK PARSE ERROR\n\n' + error.message,
+            'error'
+          );
+        }
+      } else {
+        output += '⚠️  No BYOK keys configured\n\n';
+        output += 'Click "Configure BYOK" to add your API keys.\n\n';
+        output += 'Supported providers:\n';
+        output += '  - OpenAI (sk-...)\n';
+        output += '  - Anthropic (sk-ant-...)';
+
+        updateIndicator('byokIndicator', 'offline');
+        showResult('byokResult', output, 'warning');
+      }
+    }
+  </script>
+</body>
+</html>

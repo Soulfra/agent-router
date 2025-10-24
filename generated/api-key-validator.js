@@ -1,0 +1,216 @@
+/**
+ * Auto-generated validator for CalOS Platform API Key
+ * Generated from: schemas/api-key.schema.json
+ * DO NOT EDIT - regenerate with: node scripts/schema-lock.js generate
+ */
+
+const Ajv = require('ajv');
+const addFormats = require('ajv-formats');
+
+const schema = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calos.ai/schemas/api-key.schema.json",
+  "title": "CalOS Platform API Key",
+  "description": "Platform API keys (sk-tenant-xxx) that customers use to access CalOS services",
+  "type": "object",
+  "required": [
+    "key_id",
+    "key_name",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "key_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the API key"
+    },
+    "key_prefix": {
+      "type": "string",
+      "pattern": "^sk-tenant-[a-f0-9\\-]+-[a-f0-9]$",
+      "description": "Public prefix of the key (first 20 chars)"
+    },
+    "key_suffix_last4": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{4}$",
+      "description": "Last 4 characters of the key (for verification)"
+    },
+    "key_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Human-readable name for the key"
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 500,
+      "description": "Optional description of key purpose"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "revoked",
+        "expired"
+      ],
+      "description": "Current status of the API key"
+    },
+    "rate_limit_per_minute": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 60,
+      "description": "Maximum requests per minute"
+    },
+    "rate_limit_per_hour": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "default": 1000,
+      "description": "Maximum requests per hour"
+    },
+    "rate_limit_per_day": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000,
+      "default": 10000,
+      "description": "Maximum requests per day"
+    },
+    "total_requests": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Total number of requests made with this key"
+    },
+    "last_used_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Last time this key was used"
+    },
+    "last_used_ip": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "ipv4",
+      "description": "IP address of last request"
+    },
+    "last_used_endpoint": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Last API endpoint accessed"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the key was created"
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the key expires (null = never)"
+    },
+    "revoked_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the key was revoked"
+    },
+    "revoked_reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Reason for revocation"
+    },
+    "usage_24h": {
+      "type": "object",
+      "description": "Usage statistics for the last 24 hours",
+      "properties": {
+        "requests_24h": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of requests in last 24 hours"
+        },
+        "tokens_24h": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "description": "Total tokens used in last 24 hours"
+        },
+        "cost_cents_24h": {
+          "type": [
+            "string",
+            "integer"
+          ],
+          "description": "Total cost in cents for last 24 hours"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "key_id": "48b4888a-3edd-4415-9d45-d282ae99f940",
+      "key_prefix": "sk-tenant-e9b9910f-d89c-4a0c-9",
+      "key_suffix_last4": "085a",
+      "key_name": "Production API Key",
+      "description": "Main API key for production environment",
+      "status": "active",
+      "rate_limit_per_minute": 60,
+      "rate_limit_per_hour": 1000,
+      "rate_limit_per_day": 10000,
+      "total_requests": "1523",
+      "last_used_at": "2025-10-14T19:50:50.742Z",
+      "last_used_ip": "192.168.1.87",
+      "last_used_endpoint": "/api/ollama/generate",
+      "created_at": "2025-10-14T19:50:50.742Z",
+      "expires_at": null,
+      "revoked_at": null,
+      "revoked_reason": null,
+      "usage_24h": {
+        "requests_24h": 42,
+        "tokens_24h": "15230",
+        "cost_cents_24h": "125"
+      }
+    }
+  ]
+};
+
+const ajv = new Ajv({ allErrors: true });
+addFormats(ajv);
+const validate = ajv.compile(schema);
+
+function validateApiKey(data) {
+  const valid = validate(data);
+
+  if (!valid) {
+    return {
+      valid: false,
+      errors: validate.errors
+    };
+  }
+
+  return { valid: true };
+}
+
+module.exports = {
+  validateApiKey,
+  schema
+};

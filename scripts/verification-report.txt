@@ -1,0 +1,31 @@
+
+CALOS LESSON SYSTEM VERIFICATION REPORT
+Generated: 2025-10-24T13:43:55.986Z
+======================================================================
+
+SUMMARY:
+  Passed:   6
+  Failed:   0
+  Warnings: 0
+  Pass Rate: 100.0%
+  Status:   READY
+
+STATISTICS:
+  Lessons:      0
+  Labs:         20
+  Docs:         90
+  Total XP:     0
+  Content Size: 253.88 KB
+  Categories:   0
+
+CATEGORY BREAKDOWN:
+
+
+ERRORS:
+  None
+
+RECOMMENDATIONS:
+  ✓ System is ready for deployment
+  ✓ No warnings
+  ⚠ Only 0/31 lessons created
+  ✓ All labs created

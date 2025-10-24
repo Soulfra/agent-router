@@ -1,0 +1,691 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "generated": "2025-10-24T12:16:09.699Z",
+    "rootPath": "/Users/matthewmauer/Desktop/CALOS_ROOT/agent-router",
+    "totalComponents": 13
+  },
+  "components": {
+    "bin:analyze-and-publish": {
+      "id": "bin:analyze-and-publish",
+      "name": "analyze-and-publish.js",
+      "path": "bin/analyze-and-publish.js",
+      "category": "bin",
+      "description": "Analyze and Publish CLI Tool",
+      "size": 10342,
+      "modified": "2025-10-12T22:49:49.664Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/compaction-pipeline",
+        "../lib/github-publisher",
+        "../lib/code-compactor"
+      ],
+      "exports": [],
+      "functions": [
+        "cloneRepo",
+        "loadProject",
+        "main"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:cal-fetch": {
+      "id": "bin:cal-fetch",
+      "name": "cal-fetch.js",
+      "path": "bin/cal-fetch.js",
+      "category": "bin",
+      "description": "CalOS External Data Fetcher CLI",
+      "size": 4522,
+      "modified": "2025-10-11T14:31:37.404Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/external-fetcher"
+      ],
+      "exports": [],
+      "functions": [
+        "main"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:calos-price": {
+      "id": "bin:calos-price",
+      "name": "calos-price.js",
+      "path": "bin/calos-price.js",
+      "category": "bin",
+      "description": "CalOS Price CLI Tool",
+      "size": 7746,
+      "modified": "2025-10-11T15:39:22.845Z",
+      "executable": true,
+      "dependencies": [],
+      "exports": [],
+      "functions": [
+        "fetchPrice",
+        "fetchAllPrices",
+        "main",
+        "formatPrice",
+        "formatChange",
+        "formatTimeAgo",
+        "printTextFormat",
+        "printTableFormat",
+        "printJsonFormat",
+        "printCsvFormat"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:clarity-cli": {
+      "id": "bin:clarity-cli",
+      "name": "clarity-cli.js",
+      "path": "bin/clarity-cli.js",
+      "category": "bin",
+      "description": "Clarity CLI",
+      "size": 15370,
+      "modified": "2025-10-14T14:39:58.535Z",
+      "executable": false,
+      "dependencies": [
+        "../lib/minio-client",
+        "../lib/dependency-mirror",
+        "../lib/url-index",
+        "../lib/clarity-engine"
+      ],
+      "exports": [
+        "default"
+      ],
+      "functions": [
+        "main",
+        "vendorCommand",
+        "analyzeCommand",
+        "listCommand",
+        "reportCommand",
+        "urlsCommand",
+        "risksCommand",
+        "graphCommand",
+        "statsCommand",
+        "criticalCommand"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:compact-and-grade": {
+      "id": "bin:compact-and-grade",
+      "name": "compact-and-grade.js",
+      "path": "bin/compact-and-grade.js",
+      "category": "bin",
+      "description": "Compact and Grade CLI Tool",
+      "size": 6949,
+      "modified": "2025-10-12T21:37:14.279Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/compaction-pipeline",
+        "../lib/code-compactor"
+      ],
+      "exports": [],
+      "functions": [
+        "loadProject",
+        "main"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:generate-code": {
+      "id": "bin:generate-code",
+      "name": "generate-code.js",
+      "path": "bin/generate-code.js",
+      "category": "bin",
+      "description": "Soulfra Code Generator CLI",
+      "size": 5220,
+      "modified": "2025-10-12T19:56:59.721Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/code-generator"
+      ],
+      "exports": [],
+      "functions": [
+        "main",
+        "log",
+        "printUsage"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:index-code": {
+      "id": "bin:index-code",
+      "name": "index-code.js",
+      "path": "bin/index-code.js",
+      "category": "bin",
+      "description": "Code Indexer CLI",
+      "size": 5951,
+      "modified": "2025-10-12T14:49:01.173Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/code-indexer"
+      ],
+      "exports": [],
+      "functions": [
+        "main",
+        "showHelp"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:setup-git-hooks": {
+      "id": "bin:setup-git-hooks",
+      "name": "setup-git-hooks.sh",
+      "path": "bin/setup-git-hooks.sh",
+      "category": "bin",
+      "description": "No description",
+      "size": 3497,
+      "modified": "2025-10-12T19:39:24.259Z",
+      "executable": true,
+      "dependencies": [],
+      "exports": [],
+      "functions": [],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:soulfra-identity": {
+      "id": "bin:soulfra-identity",
+      "name": "soulfra-identity.js",
+      "path": "bin/soulfra-identity.js",
+      "category": "bin",
+      "description": "Soulfra Identity CLI Tool",
+      "size": 15335,
+      "modified": "2025-10-12T19:50:01.171Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/soulfra-identity"
+      ],
+      "exports": [],
+      "functions": [
+        "log",
+        "getDefaultIdentityPath",
+        "loadIdentity",
+        "saveIdentity",
+        "cmdCreate",
+        "cmdShow",
+        "cmdProve",
+        "cmdVerify",
+        "cmdAuth",
+        "cmdReputation"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:test-bot-detection": {
+      "id": "bin:test-bot-detection",
+      "name": "test-bot-detection.js",
+      "path": "bin/test-bot-detection.js",
+      "category": "bin",
+      "description": "Test Bot Detection System",
+      "size": 12280,
+      "modified": "2025-10-12T20:41:55.892Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/soulfra-identity",
+        "../lib/bot-detector",
+        "../lib/rate-limiter",
+        "../lib/multi-llm-router"
+      ],
+      "exports": [],
+      "functions": [
+        "main",
+        "log"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:test-domain-contexts": {
+      "id": "bin:test-domain-contexts",
+      "name": "test-domain-contexts.js",
+      "path": "bin/test-domain-contexts.js",
+      "category": "bin",
+      "description": "Test Domain Contexts & Routing Strategies",
+      "size": 13136,
+      "modified": "2025-10-12T21:01:49.179Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/multi-llm-router"
+      ],
+      "exports": [],
+      "functions": [
+        "testDomainContext",
+        "testRoutingStrategy",
+        "testParameterVariations",
+        "testFallbackMechanism",
+        "main",
+        "log",
+        "to"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:test-multi-llm-router": {
+      "id": "bin:test-multi-llm-router",
+      "name": "test-multi-llm-router.js",
+      "path": "bin/test-multi-llm-router.js",
+      "category": "bin",
+      "description": "Test Multi-LLM Router",
+      "size": 6086,
+      "modified": "2025-10-12T20:16:36.252Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/multi-llm-router"
+      ],
+      "exports": [],
+      "functions": [
+        "main",
+        "log",
+        "to"
+      ],
+      "status": "unknown",
+      "verified": null
+    },
+    "bin:verify-audit": {
+      "id": "bin:verify-audit",
+      "name": "verify-audit.js",
+      "path": "bin/verify-audit.js",
+      "category": "bin",
+      "description": "Soulfra Audit Verification Tool",
+      "size": 4845,
+      "modified": "2025-10-12T19:46:22.229Z",
+      "executable": true,
+      "dependencies": [
+        "../lib/soulfra-signer"
+      ],
+      "exports": [],
+      "functions": [
+        "log",
+        "verifyAuditFile",
+        "findAuditFiles",
+        "formatTimestamp",
+        "main"
+      ],
+      "status": "unknown",
+      "verified": null
+    }
+  },
+  "categories": {
+    "agents": [],
+    "libs": [],
+    "bin": [
+      "bin:analyze-and-publish",
+      "bin:cal-fetch",
+      "bin:calos-price",
+      "bin:clarity-cli",
+      "bin:compact-and-grade",
+      "bin:generate-code",
+      "bin:index-code",
+      "bin:setup-git-hooks",
+      "bin:soulfra-identity",
+      "bin:test-bot-detection",
+      "bin:test-domain-contexts",
+      "bin:test-multi-llm-router",
+      "bin:verify-audit"
+    ],
+    "tests": [],
+    "config": []
+  },
+  "dependencies": {
+    "bin:analyze-and-publish": {
+      "requires": [
+        "../lib/compaction-pipeline",
+        "../lib/github-publisher",
+        "../lib/code-compactor"
+      ],
+      "requiredBy": []
+    },
+    "bin:cal-fetch": {
+      "requires": [
+        "../lib/external-fetcher"
+      ],
+      "requiredBy": []
+    },
+    "bin:calos-price": {
+      "requires": [],
+      "requiredBy": []
+    },
+    "bin:clarity-cli": {
+      "requires": [
+        "../lib/minio-client",
+        "../lib/dependency-mirror",
+        "../lib/url-index",
+        "../lib/clarity-engine"
+      ],
+      "requiredBy": []
+    },
+    "bin:compact-and-grade": {
+      "requires": [
+        "../lib/compaction-pipeline",
+        "../lib/code-compactor"
+      ],
+      "requiredBy": []
+    },
+    "bin:generate-code": {
+      "requires": [
+        "../lib/code-generator"
+      ],
+      "requiredBy": []
+    },
+    "bin:index-code": {
+      "requires": [
+        "../lib/code-indexer"
+      ],
+      "requiredBy": []
+    },
+    "bin:setup-git-hooks": {
+      "requires": [],
+      "requiredBy": []
+    },
+    "bin:soulfra-identity": {
+      "requires": [
+        "../lib/soulfra-identity"
+      ],
+      "requiredBy": []
+    },
+    "bin:test-bot-detection": {
+      "requires": [
+        "../lib/soulfra-identity",
+        "../lib/bot-detector",
+        "../lib/rate-limiter",
+        "../lib/multi-llm-router"
+      ],
+      "requiredBy": []
+    },
+    "bin:test-domain-contexts": {
+      "requires": [
+        "../lib/multi-llm-router"
+      ],
+      "requiredBy": []
+    },
+    "bin:test-multi-llm-router": {
+      "requires": [
+        "../lib/multi-llm-router"
+      ],
+      "requiredBy": []
+    },
+    "bin:verify-audit": {
+      "requires": [
+        "../lib/soulfra-signer"
+      ],
+      "requiredBy": []
+    }
+  },
+  "health": {
+    "verification": {
+      "commands": {
+        "echo test": {
+          "command": "echo",
+          "args": [
+            "test"
+          ],
+          "testCount": 2,
+          "passCount": 2,
+          "failCount": 0,
+          "lastSuccess": "2025-10-13T12:36:18.655Z",
+          "lastFailure": null,
+          "recentResults": [
+            {
+              "command": "echo",
+              "args": [
+                "test"
+              ],
+              "testId": "echo test",
+              "timestamp": "2025-10-13T12:36:18.655Z",
+              "duration": 9,
+              "success": true,
+              "exitCode": 0,
+              "stdout": "test\n",
+              "stderr": "",
+              "error": null,
+              "checks": {
+                "exists": true,
+                "executable": true,
+                "noErrors": true,
+                "hasOutput": true,
+                "performanceOk": true
+              }
+            },
+            {
+              "command": "echo",
+              "args": [
+                "test"
+              ],
+              "testId": "echo test",
+              "timestamp": "2025-10-13T12:35:24.252Z",
+              "duration": 10,
+              "success": true,
+              "exitCode": 0,
+              "stdout": "test\n",
+              "stderr": "",
+              "error": null,
+              "checks": {
+                "exists": true,
+                "executable": true,
+                "noErrors": true,
+                "hasOutput": true,
+                "performanceOk": true
+              }
+            }
+          ]
+        },
+        "nonexistentcommand12345": {
+          "command": "nonexistentcommand12345",
+          "args": [],
+          "testCount": 2,
+          "passCount": 0,
+          "failCount": 2,
+          "lastSuccess": null,
+          "lastFailure": "2025-10-13T12:36:18.664Z",
+          "recentResults": [
+            {
+              "command": "nonexistentcommand12345",
+              "args": [],
+              "testId": "nonexistentcommand12345",
+              "timestamp": "2025-10-13T12:36:18.664Z",
+              "duration": 0,
+              "success": false,
+              "exitCode": null,
+              "stdout": "",
+              "stderr": "",
+              "error": "Command not found: nonexistentcommand12345",
+              "checks": {
+                "exists": false,
+                "executable": false,
+                "noErrors": false,
+                "hasOutput": false,
+                "performanceOk": false
+              }
+            },
+            {
+              "command": "nonexistentcommand12345",
+              "args": [],
+              "testId": "nonexistentcommand12345",
+              "timestamp": "2025-10-13T12:35:24.263Z",
+              "duration": 0,
+              "success": false,
+              "exitCode": null,
+              "stdout": "",
+              "stderr": "",
+              "error": "Command not found: nonexistentcommand12345",
+              "checks": {
+                "exists": false,
+                "executable": false,
+                "noErrors": false,
+                "hasOutput": false,
+                "performanceOk": false
+              }
+            }
+          ]
+        },
+        "echo integration-test": {
+          "command": "echo",
+          "args": [
+            "integration-test"
+          ],
+          "testCount": 2,
+          "passCount": 2,
+          "failCount": 0,
+          "lastSuccess": "2025-10-13T12:36:18.817Z",
+          "lastFailure": null,
+          "recentResults": [
+            {
+              "command": "echo",
+              "args": [
+                "integration-test"
+              ],
+              "testId": "echo integration-test",
+              "timestamp": "2025-10-13T12:36:18.817Z",
+              "duration": 6,
+              "success": true,
+              "exitCode": 0,
+              "stdout": "integration-test\n",
+              "stderr": "",
+              "error": null,
+              "checks": {
+                "exists": true,
+                "executable": true,
+                "noErrors": true,
+                "hasOutput": true,
+                "performanceOk": true
+              }
+            },
+            {
+              "command": "echo",
+              "args": [
+                "integration-test"
+              ],
+              "testId": "echo integration-test",
+              "timestamp": "2025-10-13T12:35:24.602Z",
+              "duration": 5,
+              "success": true,
+              "exitCode": 0,
+              "stdout": "integration-test\n",
+              "stderr": "",
+              "error": null,
+              "checks": {
+                "exists": true,
+                "executable": true,
+                "noErrors": true,
+                "hasOutput": true,
+                "performanceOk": true
+              }
+            }
+          ]
+        }
+      },
+      "lastUpdate": "2025-10-13T12:36:18.823Z",
+      "totalTests": 6,
+      "totalPassed": 4,
+      "totalFailed": 2
+    },
+    "learning": {
+      "commands": {
+        "test-command arg1": {
+          "command": "test-command",
+          "args": [
+            "arg1"
+          ],
+          "qValue": 1.2000000000000002,
+          "observations": 1,
+          "successes": 1,
+          "failures": 0,
+          "avgDuration": 100,
+          "contextPerformance": {
+            "os:darwin": {
+              "observations": 1,
+              "successes": 1,
+              "failures": 0,
+              "avgReward": 12
+            }
+          },
+          "lastObserved": "2025-10-13T12:36:18.677Z"
+        },
+        "test-command-fail": {
+          "command": "test-command-fail",
+          "args": [],
+          "qValue": -0.30000000000000004,
+          "observations": 1,
+          "successes": 0,
+          "failures": 1,
+          "avgDuration": 50,
+          "contextPerformance": {
+            "os:darwin": {
+              "observations": 1,
+              "successes": 0,
+              "failures": 1,
+              "avgReward": -3
+            }
+          },
+          "lastObserved": "2025-10-13T12:36:18.689Z"
+        },
+        "app-status-Finder": {
+          "command": "app-status-Finder",
+          "args": [],
+          "qValue": -0.30000000000000004,
+          "observations": 1,
+          "successes": 0,
+          "failures": 1,
+          "avgDuration": 117,
+          "contextPerformance": {
+            "os:darwin|arch:arm64|node:v18.20.8|time:morning": {
+              "observations": 1,
+              "successes": 0,
+              "failures": 1,
+              "avgReward": -3
+            }
+          },
+          "lastObserved": "2025-10-13T12:36:18.816Z"
+        },
+        "echo integration-test": {
+          "command": "echo",
+          "args": [
+            "integration-test"
+          ],
+          "qValue": 1.2000000000000002,
+          "observations": 1,
+          "successes": 1,
+          "failures": 0,
+          "avgDuration": 6,
+          "contextPerformance": {
+            "os:darwin|arch:arm64|node:v18.20.8|time:morning": {
+              "observations": 1,
+              "successes": 1,
+              "failures": 0,
+              "avgReward": 12
+            }
+          },
+          "lastObserved": "2025-10-13T12:36:18.823Z"
+        }
+      },
+      "contexts": {
+        "os:darwin": {
+          "context": {
+            "os": "darwin"
+          },
+          "totalObservations": 2,
+          "successRate": 0.5
+        },
+        "os:darwin|arch:arm64|node:v18.20.8|time:morning": {
+          "context": {
+            "os": "darwin",
+            "arch": "arm64",
+            "node": "v18.20.8",
+            "timeOfDay": "morning"
+          },
+          "totalObservations": 2,
+          "successRate": 0.5
+        }
+      },
+      "alternatives": {},
+      "fixStrategies": {},
+      "metadata": {
+        "version": "1.0",
+        "created": "2025-10-13T12:36:18.676Z",
+        "totalObservations": 4,
+        "totalSuccesses": 2,
+        "totalFailures": 2
+      }
+    }
+  }
+}

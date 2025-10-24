@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' ws: wss:;">
   <title>CalOS - AI Builder Workshop</title>
 
   <!-- External Libraries -->
@@ -86,7 +87,7 @@
       flex: 1;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: 40% 40% 20%;
+      grid-template-rows: 35% 35% 15% 15%;
       gap: 1rem;
       padding: 1rem;
       overflow: hidden;
@@ -433,19 +434,8 @@
 
   <!-- Main Container -->
   <div class="container">
-    <!-- Spec Viewer -->
-    <div class="panel" id="spec-viewer">
-      <div class="panel-header">
-        <span>📄 Specification</span>
-        <span id="spec-progress">0%</span>
-      </div>
-      <div class="panel-content" id="spec-content">
-        <p style="color: var(--text-dark); opacity: 0.6;">Loading specification...</p>
-      </div>
-    </div>
-
-    <!-- Task Queue -->
-    <div class="panel" id="task-queue">
+    <!-- Task Queue (full width) -->
+    <div class="panel" id="task-queue" style="grid-column: 1 / 4; grid-row: 1 / 3;">
       <div class="panel-header">
         <span>📋 Task Queue</span>
         <span id="task-count">0 / 0</span>
@@ -455,62 +445,34 @@
       </div>
     </div>
 
-    <!-- Terminal -->
-    <div class="panel" id="terminal-panel">
+    <!-- Debug Whiteboard -->
+    <div class="panel" id="whiteboard" style="grid-column: 1 / 4; grid-row: 3; background: #fff; display: block;">
       <div class="panel-header">
-        <span>💻 Terminal</span>
-        <span id="terminal-model">Model: deepseek-coder:33b</span>
+        <span>📝 Debug Whiteboard</span>
+        <button onclick="clearWhiteboard()" style="background: none; border: 1px solid white; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Clear</button>
       </div>
-      <div class="panel-content" style="padding: 0;">
-        <div id="terminal"></div>
-      </div>
-    </div>
-
-    <!-- Code Viewer -->
-    <div class="panel" id="code-viewer">
-      <div class="panel-header">
-        <span>📝 Code Viewer</span>
-        <span id="current-file">No file selected</span>
-      </div>
-      <div class="panel-content" style="padding: 0;">
-        <pre id="code-content"><code>// Generated code will appear here...</code></pre>
-      </div>
-    </div>
-
-    <!-- Test Results -->
-    <div class="panel" id="test-results">
-      <div class="panel-header">
-        <span>🧪 Test Results</span>
-        <span id="test-summary">0 passed, 0 failed</span>
-      </div>
-      <div class="panel-content" id="test-list">
-        <p style="color: var(--text-dark); opacity: 0.6;">Tests will appear here after implementation...</p>
-      </div>
-    </div>
-
-    <!-- Comments -->
-    <div class="panel" id="comments">
-      <div class="panel-header">
-        <span>💬 Teacher Comments</span>
-        <span id="comment-count">0 comments</span>
-      </div>
-      <div class="panel-content" id="comment-list">
-        <div class="comment-input">
-          <select id="comment-type">
-            <option value="suggestion">💡 Suggestion</option>
-            <option value="issue">⚠️ Issue</option>
-            <option value="approved">✅ Approved</option>
-            <option value="needs_revision">🔄 Needs Revision</option>
-          </select>
-          <textarea id="comment-text" placeholder="Add a comment for the model..."></textarea>
-          <button onclick="addComment()">Send</button>
-        </div>
-        <div id="comments-display"></div>
+      <div class="panel-content" style="overflow-y: auto; max-height: 100%; background: #f8f9fa; padding: 0;">
+        <table id="whiteboard-table" style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 11px;">
+          <thead style="position: sticky; top: 0; background: #343a40; color: white; z-index: 10;">
+            <tr>
+              <th style="padding: 8px; text-align: left; width: 100px; border-bottom: 2px solid #dee2e6;">Timestamp</th>
+              <th style="padding: 8px; text-align: left; width: 120px; border-bottom: 2px solid #dee2e6;">Event Type</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #dee2e6;">Message</th>
+            </tr>
+          </thead>
+          <tbody id="whiteboard-body">
+            <tr style="background: #e9ecef;">
+              <td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 10px; color: #6c757d;">--:--:--</td>
+              <td style="padding: 8px; border-bottom: 1px solid #dee2e6; color: #6c757d;">INIT</td>
+              <td style="padding: 8px; border-bottom: 1px solid #dee2e6; color: #6c757d;">Whiteboard ready - click Start Build to see logs</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <!-- Controls -->
-    <div id="controls">
+    <div id="controls" style="grid-row: 4 !important;">
       <button class="control-btn btn-start" id="btn-start" onclick="startBuild()">
         <span>▶</span> Start Build
       </button>
@@ -519,6 +481,9 @@
       </button>
       <button class="control-btn btn-resume" id="btn-resume" onclick="resumeBuild()" disabled>
         <span>🔄</span> Resume
+      </button>
+      <button class="control-btn" id="btn-export" onclick="exportProject()" disabled style="background: #00b894; color: white;">
+        <span>💾</span> Download Project
       </button>
       <div class="progress-container">
         <div class="progress-bar" id="progress-bar" style="width: 0%;">0%</div>
@@ -543,6 +508,7 @@
       status: 'idle', // idle, building, testing, paused, complete, failed
       tasks: [],
       currentTask: null,
+      sessionId: null,  // Build session ID from API
       testResults: [],
       comments: [],
       progress: 0,
@@ -550,44 +516,130 @@
       terminal: null
     };
 
+    // Whiteboard logger (visible debug output with table structure)
+    function logToWhiteboard(msg, type = 'INFO') {
+      const tbody = document.getElementById('whiteboard-body');
+      if (!tbody) return;
+
+      const timestamp = new Date().toLocaleTimeString();
+      const row = tbody.insertRow();
+
+      // Alternate row colors
+      row.style.background = tbody.rows.length % 2 === 0 ? '#ffffff' : '#f8f9fa';
+
+      // Event type colors
+      const typeColors = {
+        'INIT': '#6c757d',
+        'INFO': '#0d6efd',
+        'API': '#198754',
+        'SUCCESS': '#28a745',
+        'ERROR': '#dc3545',
+        'WARNING': '#ffc107',
+        'WEBSOCKET': '#6f42c1',
+        'TERMINAL': '#fd7e14'
+      };
+
+      const color = typeColors[type] || '#212529';
+
+      // Timestamp cell
+      const cell1 = row.insertCell();
+      cell1.style.padding = '8px';
+      cell1.style.borderBottom = '1px solid #dee2e6';
+      cell1.style.fontSize = '10px';
+      cell1.style.color = '#6c757d';
+      cell1.textContent = timestamp;
+
+      // Type cell
+      const cell2 = row.insertCell();
+      cell2.style.padding = '8px';
+      cell2.style.borderBottom = '1px solid #dee2e6';
+      cell2.style.fontWeight = 'bold';
+      cell2.style.color = color;
+      cell2.textContent = type;
+
+      // Message cell
+      const cell3 = row.insertCell();
+      cell3.style.padding = '8px';
+      cell3.style.borderBottom = '1px solid #dee2e6';
+      cell3.style.wordBreak = 'break-word';
+      cell3.textContent = msg;
+
+      // Auto-scroll to bottom
+      const panel = tbody.closest('.panel-content');
+      if (panel) panel.scrollTop = panel.scrollHeight;
+
+      console.log(`[${type}] ${msg}`);
+    }
+
+    function clearWhiteboard() {
+      const tbody = document.getElementById('whiteboard-body');
+      if (tbody) {
+        tbody.innerHTML = '<tr style="background: #e9ecef;"><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 10px; color: #6c757d;">--:--:--</td><td style="padding: 8px; border-bottom: 1px solid #dee2e6; color: #6c757d;">INIT</td><td style="padding: 8px; border-bottom: 1px solid #dee2e6; color: #6c757d;">Whiteboard cleared</td></tr>';
+      }
+    }
+
     // Initialize Terminal
     function initTerminal() {
-      state.terminal = new Terminal({
-        cursorBlink: true,
-        theme: {
-          background: '#1e1e1e',
-          foreground: '#d4d4d4',
-          cursor: '#ffffff'
-        },
-        fontSize: 13,
-        fontFamily: 'Monaco, Menlo, "Courier New", monospace'
-      });
+      try {
+        logToWhiteboard('Initializing Terminal...', 'INIT');
 
-      state.terminal.open(document.getElementById('terminal'));
-      state.terminal.writeln('🏗️  AI Builder Workshop Terminal');
-      state.terminal.writeln('─'.repeat(80));
-      state.terminal.writeln('Ready. Click "Start Build" to begin.\n');
+        if (typeof Terminal === 'undefined') {
+          throw new Error('Terminal library (xterm.js) not loaded');
+        }
+
+        state.terminal = new Terminal({
+          cursorBlink: true,
+          theme: {
+            background: '#1e1e1e',
+            foreground: '#d4d4d4',
+            cursor: '#ffffff'
+          },
+          fontSize: 13,
+          fontFamily: 'Monaco, Menlo, "Courier New", monospace'
+        });
+
+        state.terminal.open(document.getElementById('terminal'));
+        state.terminal.writeln('🏗️  AI Builder Workshop Terminal');
+        state.terminal.writeln('─'.repeat(80));
+        state.terminal.writeln('Ready. Click "Start Build" to begin.\n');
+
+        logToWhiteboard('Terminal initialized successfully', 'SUCCESS');
+      } catch (error) {
+        logToWhiteboard(`Terminal init failed: ${error.message}`, 'ERROR');
+        logToWhiteboard('Using whiteboard fallback mode', 'WARNING');
+
+        // Create fallback terminal that logs to whiteboard
+        state.terminal = {
+          writeln: (msg) => logToWhiteboard(msg, 'TERMINAL'),
+          write: (msg) => logToWhiteboard(msg, 'TERMINAL')
+        };
+      }
     }
 
     // Initialize WebSocket
     function initWebSocket() {
+      logToWhiteboard('Initializing WebSocket...', 'INIT');
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      state.ws = new WebSocket(`${protocol}//${window.location.host}/ws/builder`);
+      state.ws = new WebSocket(`${protocol}//${window.location.host}`);
 
       state.ws.onopen = () => {
+        logToWhiteboard('Connected to build server', 'WEBSOCKET');
         state.terminal.writeln('✓ Connected to build server');
       };
 
       state.ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        logToWhiteboard(`Received ${data.type} message`, 'WEBSOCKET');
         handleWebSocketMessage(data);
       };
 
       state.ws.onerror = (error) => {
+        logToWhiteboard(`WebSocket error: ${error}`, 'ERROR');
         state.terminal.writeln(`❌ WebSocket error: ${error}`);
       };
 
       state.ws.onclose = () => {
+        logToWhiteboard('Disconnected from build server', 'WARNING');
         state.terminal.writeln('⚠️  Disconnected from build server');
       };
     }
@@ -595,21 +647,33 @@
     // Handle WebSocket Messages
     function handleWebSocketMessage(data) {
       switch(data.type) {
+        case 'builder_terminal':
         case 'terminal':
           state.terminal.writeln(data.message);
           break;
+        case 'builder_file_written':
         case 'file_written':
           state.terminal.writeln(`✓ Wrote: ${data.path}`);
           showCodeFile(data.path, data.content);
           break;
+        case 'builder_test_result':
         case 'test_result':
           addTestResult(data.result);
           break;
+        case 'builder_task_update':
         case 'task_update':
           updateTask(data.taskId, data.status);
           break;
+        case 'builder_progress':
         case 'progress':
           updateProgress(data.percent);
+          break;
+        case 'connection':
+          // Server connection acknowledgment
+          console.log('Connected:', data.message);
+          break;
+        default:
+          // Ignore other message types (chat, workspace, etc)
           break;
       }
     }
@@ -637,20 +701,28 @@
     // Start Build
     async function startBuild() {
       try {
+        logToWhiteboard('START BUILD CLICKED', 'INFO');
+        logToWhiteboard('Updating status to building...', 'INFO');
         updateStatus('building', '🔨', 'Building...');
+
         state.terminal.writeln('\n🔨 Starting build process...');
         state.terminal.writeln('─'.repeat(80));
 
+        logToWhiteboard('Calling API: POST /api/builder/start', 'API');
         const response = await fetch('/api/builder/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'deepseek-coder:33b' })
+          body: JSON.stringify({ model: 'llama3.2:3b' })
         });
 
+        logToWhiteboard(`API Response: ${response.status} ${response.statusText}`, 'API');
         const data = await response.json();
+        logToWhiteboard(`Data received: ${JSON.stringify(data).substring(0, 100)}...`, 'API');
 
         if (data.status === 'ok') {
+          state.sessionId = data.sessionId;  // Store session ID
           state.tasks = data.tasks;
+          logToWhiteboard(`Loaded ${data.tasks.length} tasks (session: ${data.sessionId})`, 'SUCCESS');
           renderTasks();
           state.terminal.writeln(`✓ Loaded ${data.tasks.length} tasks`);
 
@@ -658,12 +730,15 @@
           document.getElementById('btn-start').disabled = true;
           document.getElementById('btn-pause').disabled = false;
 
+          logToWhiteboard('Starting task implementation...', 'INFO');
           // Start implementing tasks
           await implementNextTask();
         } else {
           throw new Error(data.error || 'Failed to start build');
         }
       } catch (error) {
+        logToWhiteboard(`Build start failed: ${error.message}`, 'ERROR');
+        if (error.stack) logToWhiteboard(`Stack: ${error.stack.substring(0, 200)}`, 'ERROR');
         state.terminal.writeln(`❌ Error: ${error.message}`);
         updateStatus('failed', '❌', 'Failed');
       }
@@ -688,8 +763,12 @@
 
       try {
         const taskId = state.tasks.indexOf(nextTask);
+        logToWhiteboard(`Calling Ollama for task ${taskId}: ${nextTask.description}`, 'API');
+
         const response = await fetch(`/api/builder/implement/${taskId}`, {
-          method: 'POST'
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: state.sessionId })  // Pass session ID
         });
 
         const data = await response.json();
@@ -697,6 +776,15 @@
         if (data.status === 'ok') {
           nextTask.status = 'completed';
           state.terminal.writeln(`✓ Completed: ${data.result.files.join(', ')}`);
+
+          // Log generated code to whiteboard
+          if (data.result.code) {
+            const codePreview = data.result.code.substring(0, 150).replace(/\n/g, ' ');
+            logToWhiteboard(`Generated: ${codePreview}...`, 'SUCCESS');
+          }
+
+          // Enable export button after first file is generated
+          document.getElementById('btn-export').disabled = false;
 
           // Update progress
           const completed = state.tasks.filter(t => t.status === 'completed').length;
@@ -854,6 +942,31 @@
       implementNextTask();
     }
 
+    // Export Project
+    async function exportProject() {
+      if (!state.sessionId) {
+        alert('No active build session');
+        return;
+      }
+
+      try {
+        logToWhiteboard(`Exporting project (session: ${state.sessionId})`, 'INFO');
+
+        // Build export URL with user preferences
+        const domain = window.location.hostname || 'localhost';
+        const exportUrl = `/api/builder/export/${state.sessionId}?format=txt&domain=${domain}`;
+
+        // Trigger download
+        window.location.href = exportUrl;
+
+        logToWhiteboard('Project exported successfully!', 'SUCCESS');
+        state.terminal.writeln('✓ Project downloaded');
+      } catch (error) {
+        logToWhiteboard(`Export failed: ${error.message}`, 'ERROR');
+        state.terminal.writeln(`❌ Export error: ${error.message}`);
+      }
+    }
+
     // Save Checkpoint
     function saveCheckpoint() {
       const checkpoint = {
@@ -918,7 +1031,7 @@ ${'='.repeat(80)}
     window.addEventListener('DOMContentLoaded', () => {
       initTerminal();
       initWebSocket();
-      loadSpec();
+      // Removed loadSpec() - file doesn't exist and panel is hidden
     });
   </script>
 </body>

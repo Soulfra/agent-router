@@ -1,0 +1,490 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-23T04:00:00Z",
+  "totalBrands": 12,
+  "owner": {
+    "name": "Matthew Mauer",
+    "email": "matt@soulfra.com",
+    "github": "Soulfra"
+  },
+  "brands": [
+    {
+      "id": 1,
+      "domain": "soulfra.com",
+      "name": "Soulfra",
+      "tagline": "Universal Identity Without KYC",
+      "tier": "foundation",
+      "launchOrder": 1,
+      "type": "identity",
+      "status": "deployed",
+      "tools": ["auth-system", "sso-setup", "ed25519-crypto", "passkey-auth"],
+      "ollamaModels": ["soulfra-model"],
+      "colors": {
+        "primary": "#3498db",
+        "secondary": "#2ecc71",
+        "accent": "#e74c3c"
+      },
+      "features": [
+        "Universal login for all 12 brands",
+        "No KYC required",
+        "Ed25519 key pairs",
+        "Zero-knowledge proofs"
+      ],
+      "revenue": "SaaS ($10/mo per user across all brands)",
+      "dependencies": [],
+      "github": {
+        "repo": "Soulfra/soulfra.github.io",
+        "url": "https://github.com/Soulfra/soulfra.github.io",
+        "status": "deployed"
+      },
+      "godaddy": {
+        "domain": "soulfra.com",
+        "status": "registered",
+        "registrar": "GoDaddy",
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": "@soulfra",
+        "discord": "https://discord.gg/soulfra"
+      }
+    },
+    {
+      "id": 2,
+      "domain": "calriven.com",
+      "name": "Calriven",
+      "tagline": "AI Agent Operating System",
+      "tier": "foundation",
+      "launchOrder": 2,
+      "type": "platform",
+      "status": "planned",
+      "tools": ["agent-registry", "multi-llm-router", "agent-selector", "elo-system"],
+      "ollamaModels": ["calos-model", "calos-expert"],
+      "colors": {
+        "primary": "#667eea",
+        "secondary": "#764ba2",
+        "accent": "#61dafb"
+      },
+      "features": [
+        "AI agent marketplace",
+        "Multi-model routing",
+        "ELO-based selection",
+        "Skill progression system"
+      ],
+      "revenue": "Platform fee (30% of agent transactions)",
+      "dependencies": [],
+      "github": {
+        "repo": "Soulfra/calriven.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "calriven.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 3,
+      "domain": "deathtodata.com",
+      "name": "DeathToData",
+      "tagline": "Search Engine Philosophy",
+      "tier": "foundation",
+      "launchOrder": 3,
+      "type": "content",
+      "status": "planned",
+      "tools": ["search-engine", "content-indexer", "philosophy-db", "knowledge-graph"],
+      "ollamaModels": ["deathtodata-model"],
+      "colors": {
+        "primary": "#e74c3c",
+        "secondary": "#c0392b",
+        "accent": "#f39c12"
+      },
+      "features": [
+        "Philosophical search",
+        "Cross-brand content discovery",
+        "Knowledge graph",
+        "Anti-data-hoarding stance"
+      ],
+      "revenue": "Ads + Premium search ($5/mo)",
+      "dependencies": [],
+      "github": {
+        "repo": "Soulfra/deathtodata.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "deathtodata.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 4,
+      "domain": "finishthisidea.com",
+      "name": "FinishThisIdea",
+      "tagline": "Project Completion Service",
+      "tier": "business",
+      "launchOrder": 4,
+      "type": "productivity",
+      "status": "planned",
+      "tools": ["project-tracker", "ai-assistant", "payment-processing", "milestone-system"],
+      "ollamaModels": ["llama3.2:3b", "codellama:7b"],
+      "colors": {
+        "primary": "#4CAF50",
+        "secondary": "#45a049",
+        "accent": "#FFC107"
+      },
+      "features": [
+        "AI helps finish abandoned projects",
+        "Milestone tracking",
+        "Freelancer marketplace",
+        "Escrow payments"
+      ],
+      "revenue": "Service fee (20% of project value)",
+      "dependencies": ["soulfra.com", "calriven.com"],
+      "github": {
+        "repo": "Soulfra/finishthisidea.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "finishthisidea.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 5,
+      "domain": "finishthisrepo.com",
+      "name": "FinishThisRepo",
+      "tagline": "Code Completion Marketplace",
+      "tier": "business",
+      "launchOrder": 5,
+      "type": "development",
+      "status": "planned",
+      "tools": ["github-integration", "code-analyzer", "bounty-system", "pr-reviewer"],
+      "ollamaModels": ["codellama:7b-code", "codellama:7b-instruct"],
+      "colors": {
+        "primary": "#24292e",
+        "secondary": "#0366d6",
+        "accent": "#28a745"
+      },
+      "features": [
+        "Finish incomplete GitHub repos",
+        "Code bounties",
+        "AI code review",
+        "Auto-PR generation"
+      ],
+      "revenue": "Bounty fee (15% of bounty value)",
+      "dependencies": ["soulfra.com", "calriven.com"],
+      "github": {
+        "repo": "Soulfra/finishthisrepo.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "finishthisrepo.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 6,
+      "domain": "ipomyagent.com",
+      "name": "IPOMyAgent",
+      "tagline": "AI Agent Marketplace",
+      "tier": "business",
+      "launchOrder": 6,
+      "type": "marketplace",
+      "status": "planned",
+      "tools": ["agent-marketplace", "revenue-sharing", "ipo-simulation", "investor-dashboard"],
+      "ollamaModels": ["calos-expert", "llama3.2:3b"],
+      "colors": {
+        "primary": "#9C27B0",
+        "secondary": "#7B1FA2",
+        "accent": "#E91E63"
+      },
+      "features": [
+        "List AI agents for sale",
+        "Fractional ownership",
+        "IPO simulation",
+        "Revenue sharing"
+      ],
+      "revenue": "Listing fee ($50) + Transaction fee (10%)",
+      "dependencies": ["soulfra.com", "calriven.com"],
+      "github": {
+        "repo": "Soulfra/ipomyagent.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "ipomyagent.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 7,
+      "domain": "hollowtown.com",
+      "name": "HollowTown",
+      "tagline": "Virtual World Platform",
+      "tier": "creative",
+      "launchOrder": 7,
+      "type": "gaming",
+      "status": "planned",
+      "tools": ["sprite-manager", "game-engine", "multiplayer-sync", "virtual-economy"],
+      "ollamaModels": ["soulfra-model", "visual-expert"],
+      "colors": {
+        "primary": "#8B4513",
+        "secondary": "#A0522D",
+        "accent": "#FFD700"
+      },
+      "features": [
+        "Virtual town builder",
+        "Multiplayer gaming",
+        "NFT-based assets",
+        "In-game economy"
+      ],
+      "revenue": "In-game purchases + Land sales",
+      "dependencies": ["soulfra.com"],
+      "github": {
+        "repo": "Soulfra/hollowtown.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "hollowtown.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 8,
+      "domain": "coldstartkit.com",
+      "name": "ColdStartKit",
+      "tagline": "Startup Launch Templates",
+      "tier": "creative",
+      "launchOrder": 8,
+      "type": "templates",
+      "status": "planned",
+      "tools": ["template-generator", "deployment-wizard", "analytics-setup", "growth-toolkit"],
+      "ollamaModels": ["llama3.2:3b", "publishing-model"],
+      "colors": {
+        "primary": "#00BCD4",
+        "secondary": "#0097A7",
+        "accent": "#FF5722"
+      },
+      "features": [
+        "Launch starter kits",
+        "One-click deployment",
+        "Growth playbooks",
+        "Template marketplace"
+      ],
+      "revenue": "Template sales ($49-$499) + Pro tier ($29/mo)",
+      "dependencies": ["soulfra.com"],
+      "github": {
+        "repo": "Soulfra/coldstartkit.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "coldstartkit.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 9,
+      "domain": "brandaidkit.com",
+      "name": "BrandAidKit",
+      "tagline": "Complete Brand Creation Platform",
+      "tier": "creative",
+      "launchOrder": 9,
+      "type": "branding",
+      "status": "planned",
+      "tools": ["brand-presentation-generator", "icon-generator", "sprite-manager", "gif-renderer", "multi-brand-poster", "qr-generator"],
+      "ollamaModels": ["visual-expert", "soulfra-model", "publishing-model"],
+      "colors": {
+        "primary": "#FF6B6B",
+        "secondary": "#4ECDC4",
+        "accent": "#FFE66D"
+      },
+      "features": [
+        "Logo generation",
+        "Mascot creation",
+        "Brand guidelines",
+        "Social media kit",
+        "Website templates"
+      ],
+      "revenue": "Brand package sales ($199-$999) + Monthly design subscription ($49/mo)",
+      "dependencies": ["soulfra.com", "calriven.com", "deathtodata.com"],
+      "github": {
+        "repo": "Soulfra/brandaidkit.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "brandaidkit.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 10,
+      "domain": "dealordelete.com",
+      "name": "DealOrDelete",
+      "tagline": "Decision Making Tool",
+      "tier": "additional",
+      "launchOrder": 10,
+      "type": "productivity",
+      "status": "planned",
+      "tools": ["decision-matrix", "ai-advisor", "voting-system"],
+      "ollamaModels": ["llama3.2:3b"],
+      "colors": {
+        "primary": "#FF9800",
+        "secondary": "#F57C00",
+        "accent": "#FFC107"
+      },
+      "features": [
+        "AI-powered decisions",
+        "Team voting",
+        "Decision tracking"
+      ],
+      "revenue": "Freemium ($0-$19/mo)",
+      "dependencies": ["soulfra.com"],
+      "github": {
+        "repo": "Soulfra/dealordelete.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "dealordelete.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 11,
+      "domain": "saveorsink.com",
+      "name": "SaveOrSink",
+      "tagline": "System Rescue Service",
+      "tier": "additional",
+      "launchOrder": 11,
+      "type": "technical",
+      "status": "planned",
+      "tools": ["system-monitor", "auto-recovery", "backup-system"],
+      "ollamaModels": ["calos-expert"],
+      "colors": {
+        "primary": "#2196F3",
+        "secondary": "#1976D2",
+        "accent": "#FFC107"
+      },
+      "features": [
+        "Auto-recovery",
+        "System monitoring",
+        "Disaster recovery"
+      ],
+      "revenue": "Service fee ($99-$499/incident)",
+      "dependencies": ["soulfra.com", "calriven.com"],
+      "github": {
+        "repo": "Soulfra/saveorsink.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "saveorsink.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    },
+    {
+      "id": 12,
+      "domain": "cringeproof.com",
+      "name": "CringeProof",
+      "tagline": "Social Content Optimizer",
+      "tier": "additional",
+      "launchOrder": 12,
+      "type": "social",
+      "status": "planned",
+      "tools": ["content-analyzer", "cringe-detector", "improvement-suggester"],
+      "ollamaModels": ["soulfra-model", "llama3.2:3b"],
+      "colors": {
+        "primary": "#E91E63",
+        "secondary": "#C2185B",
+        "accent": "#FF4081"
+      },
+      "features": [
+        "Cringe detection",
+        "Content improvement",
+        "Social optimization"
+      ],
+      "revenue": "Subscription ($9/mo) + API access",
+      "dependencies": ["soulfra.com"],
+      "github": {
+        "repo": "Soulfra/cringeproof.github.io",
+        "url": null,
+        "status": "planned"
+      },
+      "godaddy": {
+        "domain": "cringeproof.com",
+        "status": "available",
+        "registrar": null,
+        "expiresAt": null
+      },
+      "social": {
+        "twitter": null,
+        "discord": null
+      }
+    }
+  ]
+}

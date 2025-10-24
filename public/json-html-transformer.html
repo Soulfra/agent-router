@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON→HTML Transformer | CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 30px;
+      opacity: 0.8;
+    }
+    .controls {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #667eea;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .btn.active {
+      background: #667eea;
+      color: white;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    textarea {
+      width: 100%;
+      height: 400px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      padding: 15px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .preview {
+      background: white;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      min-height: 400px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .preview iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      border-radius: 4px;
+      background: white;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .error {
+      background: rgba(255, 0, 0, 0.2);
+      border-left: 4px solid #ff0000;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 12px;
+      color: #ffcccc;
+      font-size: 13px;
+    }
+    .code-block {
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 JSON→HTML Transformer</h1>
+    <p class="subtitle">Live schema-driven code generation</p>
+
+    <div class="controls">
+      <button class="btn" onclick="loadExample('api-key')">Load API Key Schema</button>
+      <button class="btn" onclick="generateHTML()">🎨 Generate HTML</button>
+      <button class="btn" onclick="generateDocs()">📝 Generate Docs</button>
+      <button class="btn" onclick="generateValidator()">✅ Generate Validator</button>
+      <button class="btn" onclick="clearAll()">🗑 Clear</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="schemaSize">0</div>
+        <div class="stat-label">Schema Size (KB)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="propertyCount">0</div>
+        <div class="stat-label">Properties</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="requiredCount">0</div>
+        <div class="stat-label">Required Fields</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="outputSize">0</div>
+        <div class="stat-label">Output Size (KB)</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-title">
+          📥 Input: JSON Schema
+          <select id="modeSelector" onchange="updateMode()" style="padding: 5px; border-radius: 4px;">
+            <option value="html">HTML Form</option>
+            <option value="docs">Markdown Docs</option>
+            <option value="validator">JS Validator</option>
+          </select>
+        </div>
+        <textarea id="schemaInput" placeholder="Paste your JSON Schema here..."></textarea>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          📤 Output: <span id="outputType">HTML Form</span>
+          <button class="btn" onclick="copyOutput()" style="padding: 5px 15px; font-size: 12px;">📋 Copy</button>
+        </div>
+        <div id="outputPanel">
+          <div class="code-block" id="codeOutput"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">👁 Live Preview</div>
+      <div class="preview">
+        <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'html';
+    let currentSchema = null;
+
+    // Auto-transform on input
+    document.getElementById('schemaInput').addEventListener('input', debounce(() => {
+      parseSchema();
+      transform();
+    }, 500));
+
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    async function loadExample(type) {
+      try {
+        const response = await fetch(`/schemas/${type}.schema.json`);
+        const schema = await response.json();
+        document.getElementById('schemaInput').value = JSON.stringify(schema, null, 2);
+        parseSchema();
+        transform();
+      } catch (error) {
+        showError(`Failed to load example: ${error.message}`);
+      }
+    }
+
+    function parseSchema() {
+      try {
+        const input = document.getElementById('schemaInput').value;
+        if (!input.trim()) {
+          updateStats(null);
+          return null;
+        }
+
+        currentSchema = JSON.parse(input);
+        updateStats(currentSchema);
+        return currentSchema;
+      } catch (error) {
+        showError(`Invalid JSON: ${error.message}`);
+        return null;
+      }
+    }
+
+    function updateStats(schema) {
+      if (!schema) {
+        document.getElementById('schemaSize').textContent = '0';
+        document.getElementById('propertyCount').textContent = '0';
+        document.getElementById('requiredCount').textContent = '0';
+        return;
+      }
+
+      const sizeKB = (JSON.stringify(schema).length / 1024).toFixed(2);
+      document.getElementById('schemaSize').textContent = sizeKB;
+      document.getElementById('propertyCount').textContent = Object.keys(schema.properties || {}).length;
+      document.getElementById('requiredCount').textContent = (schema.required || []).length;
+    }
+
+    function updateMode() {
+      currentMode = document.getElementById('modeSelector').value;
+      const labels = {
+        html: 'HTML Form',
+        docs: 'Markdown Docs',
+        validator: 'JS Validator'
+      };
+      document.getElementById('outputType').textContent = labels[currentMode];
+      transform();
+    }
+
+    function generateHTML() {
+      currentMode = 'html';
+      document.getElementById('modeSelector').value = 'html';
+      updateMode();
+    }
+
+    function generateDocs() {
+      currentMode = 'docs';
+      document.getElementById('modeSelector').value = 'docs';
+      updateMode();
+    }
+
+    function generateValidator() {
+      currentMode = 'validator';
+      document.getElementById('modeSelector').value = 'validator';
+      updateMode();
+    }
+
+    function transform() {
+      const schema = parseSchema();
+      if (!schema) return;
+
+      let output = '';
+
+      switch (currentMode) {
+        case 'html':
+          output = generateHTMLForm(schema);
+          updatePreview(output);
+          break;
+        case 'docs':
+          output = generateAPIDocs(schema);
+          break;
+        case 'validator':
+          output = generateValidatorCode(schema);
+          break;
+      }
+
+      document.getElementById('codeOutput').textContent = output;
+      const sizeKB = (output.length / 1024).toFixed(2);
+      document.getElementById('outputSize').textContent = sizeKB;
+    }
+
+    function generateHTMLForm(schema) {
+      let html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>${schema.title || 'Form'}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; background: #f5f5f5; }
+    .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .field { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+    input, select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 2px solid #ddd; border-radius: 4px; font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; }
+    button { padding: 12px 30px; background: #667eea; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; font-weight: 600; }
+    button:hover { background: #5568d3; }
+    small { color: #666; font-size: 12px; }
+    .required { color: #ff0000; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${schema.title || 'Form'}</h1>
+    <p>${schema.description || ''}</p>
+    <form id="schemaForm">
+`;
+
+      for (const [fieldName, fieldSchema] of Object.entries(schema.properties || {})) {
+        const required = schema.required?.includes(fieldName) ? '<span class="required">*</span>' : '';
+        const description = fieldSchema.description || '';
+
+        html += `      <div class="field">
+        <label for="${fieldName}">${fieldName} ${required}</label>
+        <small>${description}</small>
+`;
+
+        if (fieldSchema.enum) {
+          html += `        <select id="${fieldName}" name="${fieldName}">
+          <option value="">Select...</option>
+${fieldSchema.enum.map(val => `          <option value="${val}">${val}</option>`).join('\n')}
+        </select>
+`;
+        } else if (fieldSchema.type === 'boolean') {
+          html += `        <input type="checkbox" id="${fieldName}" name="${fieldName}" />
+`;
+        } else if (fieldSchema.type === 'integer' || fieldSchema.type === 'number') {
+          html += `        <input type="number" id="${fieldName}" name="${fieldName}" />
+`;
+        } else {
+          html += `        <input type="text" id="${fieldName}" name="${fieldName}" placeholder="${description}" />
+`;
+        }
+
+        html += `      </div>
+`;
+      }
+
+      html += `      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      document.getElementById('schemaForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        alert('Form submitted! Check console for data.');
+        console.log('Form data:', data);
+      });
+    </script>
+  </div>
+</body>
+</html>`;
+
+      return html;
+    }
+
+    function generateAPIDocs(schema) {
+      let docs = `# ${schema.title || 'API Documentation'}
+
+${schema.description || ''}
+
+## Schema
+
+\`\`\`json
+${JSON.stringify(schema, null, 2)}
+\`\`\`
+
+## Properties
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+`;
+
+      for (const [fieldName, fieldSchema] of Object.entries(schema.properties || {})) {
+        const type = Array.isArray(fieldSchema.type) ? fieldSchema.type.join(', ') : (fieldSchema.type || 'unknown');
+        const required = schema.required?.includes(fieldName) ? 'Yes' : 'No';
+        const description = fieldSchema.description || '';
+        docs += `| ${fieldName} | ${type} | ${required} | ${description} |\n`;
+      }
+
+      if (schema.examples && schema.examples.length > 0) {
+        docs += `\n## Example\n\n\`\`\`json\n${JSON.stringify(schema.examples[0], null, 2)}\n\`\`\`\n`;
+      }
+
+      return docs;
+    }
+
+    function generateValidatorCode(schema) {
+      const schemaName = schema.title?.replace(/\s+/g, '') || 'Schema';
+
+      return `/**
+ * Auto-generated validator for ${schema.title || 'schema'}
+ * DO NOT EDIT - regenerate with JSON→HTML transformer
+ */
+
+const Ajv = require('ajv');
+const addFormats = require('ajv-formats');
+
+const schema = ${JSON.stringify(schema, null, 2)};
+
+const ajv = new Ajv({ allErrors: true });
+addFormats(ajv);
+const validate = ajv.compile(schema);
+
+function validate${schemaName}(data) {
+  const valid = validate(data);
+
+  if (!valid) {
+    return {
+      valid: false,
+      errors: validate.errors
+    };
+  }
+
+  return { valid: true };
+}
+
+module.exports = {
+  validate${schemaName},
+  schema
+};`;
+    }
+
+    function updatePreview(html) {
+      const iframe = document.getElementById('previewFrame');
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(html);
+      doc.close();
+    }
+
+    function copyOutput() {
+      const output = document.getElementById('codeOutput').textContent;
+      navigator.clipboard.writeText(output).then(() => {
+        alert('Copied to clipboard!');
+      });
+    }
+
+    function clearAll() {
+      document.getElementById('schemaInput').value = '';
+      document.getElementById('codeOutput').textContent = '';
+      updateStats(null);
+      document.getElementById('outputSize').textContent = '0';
+    }
+
+    function showError(message) {
+      const outputPanel = document.getElementById('outputPanel');
+      outputPanel.innerHTML = `<div class="error">❌ ${message}</div>`;
+    }
+  </script>
+</body>
+</html>

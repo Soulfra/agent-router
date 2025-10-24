@@ -1,0 +1,465 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://calos.local/schema/v1",
+  "title": "CalOS Schema Standard v1",
+  "description": "Privacy-first, zero-dependency schema for CalOS platform. NOT tied to external standards (Apache, JSON-LD, OpenAPI, etc). Own your schema.",
+
+  "version": "1.0.0",
+  "philosophy": {
+    "privacy": "All PII must be encrypted at rest",
+    "dependencies": "Zero external schema dependencies",
+    "ownership": "You own this schema, not a foundation or vendor",
+    "local": "Designed for localhost/self-hosted, not cloud SaaS"
+  },
+
+  "definitions": {
+    "User": {
+      "type": "object",
+      "description": "User identity (privacy-first)",
+      "required": ["userId"],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique user ID (not email!)",
+          "pattern": "^[a-zA-Z0-9_-]{8,64}$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "privacy": "ENCRYPT",
+          "description": "User email (encrypted at rest)"
+        },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "Project": {
+      "type": "object",
+      "description": "GitHub Pages project or standalone app",
+      "required": ["projectName", "ownerId"],
+      "properties": {
+        "projectName": {
+          "type": "string",
+          "description": "Project identifier (slug)",
+          "pattern": "^[a-z0-9-]+$",
+          "minLength": 3,
+          "maxLength": 100
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "User ID of project owner"
+        },
+        "githubPagesUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://.*\\.github\\.io/?.*$"
+        },
+        "databaseName": {
+          "type": "string",
+          "description": "Optional separate database (NULL = shared)",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["trial", "pro", "enterprise"],
+          "default": "trial"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "suspended", "archived"],
+          "default": "active"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "RPGPlayer": {
+      "type": "object",
+      "description": "Player progression (GameBoy/NES RPG style)",
+      "required": ["userId", "level", "xp"],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "User ID"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "default": 1
+        },
+        "xp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99,
+          "description": "Current XP in level (0-99, 100 = level up)"
+        },
+        "totalXp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lifetime XP (for leaderboard)"
+        },
+        "stats": {
+          "type": "object",
+          "description": "GameBoy RPG stats",
+          "properties": {
+            "hp": { "type": "integer", "minimum": 1, "default": 20 },
+            "mp": { "type": "integer", "minimum": 0, "default": 10 },
+            "atk": { "type": "integer", "minimum": 1, "default": 5 },
+            "def": { "type": "integer", "minimum": 1, "default": 5 },
+            "speed": { "type": "integer", "minimum": 1, "default": 5 }
+          }
+        },
+        "achievements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Array of achievement IDs"
+        },
+        "inventory": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Item" },
+          "description": "Items collected"
+        }
+      }
+    },
+
+    "Quest": {
+      "type": "object",
+      "description": "RPG quest/mission",
+      "required": ["questId", "name", "questType"],
+      "properties": {
+        "questId": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string"
+        },
+        "questType": {
+          "type": "string",
+          "enum": ["achievement", "daily", "weekly", "monthly"]
+        },
+        "xpReward": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "itemReward": {
+          "$ref": "#/definitions/Item"
+        },
+        "requirements": {
+          "type": "object",
+          "description": "Requirements to complete quest",
+          "additionalProperties": { "type": "integer" }
+        }
+      }
+    },
+
+    "Item": {
+      "type": "object",
+      "description": "Game item (card, badge, etc)",
+      "required": ["itemId", "itemType", "rarity"],
+      "properties": {
+        "itemId": {
+          "type": "string"
+        },
+        "itemType": {
+          "type": "string",
+          "enum": ["card", "badge", "achievement", "consumable"]
+        },
+        "rarity": {
+          "type": "string",
+          "enum": ["common", "rare", "epic", "legendary", "mythic"]
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Emoji or icon"
+        }
+      }
+    },
+
+    "Card": {
+      "type": "object",
+      "description": "Engineering card (Cards Against Humanity style)",
+      "required": ["cardId", "packId", "rarity"],
+      "properties": {
+        "cardId": {
+          "type": "string",
+          "description": "Unique card ID (hash of pack:prompt:response)"
+        },
+        "packId": {
+          "type": "string",
+          "description": "Culture pack ID (e.g. 'anti-patterns', '2000s-engineering')"
+        },
+        "rarity": {
+          "type": "string",
+          "enum": ["common", "rare", "epic", "legendary", "mythic"]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Card prompt (e.g. 'This code has ___')"
+        },
+        "response": {
+          "type": "string",
+          "description": "Card response (e.g. 'God object with 5000 lines')"
+        },
+        "teachingTool": {
+          "type": "boolean",
+          "default": false,
+          "description": "Is this for educational purposes?"
+        }
+      }
+    },
+
+    "UsageEvent": {
+      "type": "object",
+      "description": "API usage tracking event",
+      "required": ["userId", "provider", "model", "endpoint"],
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "deviceFingerprint": {
+          "type": "string",
+          "privacy": "HASH",
+          "description": "Hashed device fingerprint (not raw)"
+        },
+        "clientIp": {
+          "type": "string",
+          "privacy": "HASH",
+          "description": "Hashed IP address (not raw IP)"
+        },
+        "origin": {
+          "type": "string",
+          "description": "GitHub Pages URL"
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "API endpoint called"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["openai", "anthropic", "deepseek", "ollama", "system"]
+        },
+        "model": {
+          "type": "string"
+        },
+        "keySource": {
+          "type": "string",
+          "enum": ["byok", "system"],
+          "description": "BYOK (user's key) or system key"
+        },
+        "promptTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completionTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "costCents": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cost in cents (USD)"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "statusCode": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "APIKey": {
+      "type": "object",
+      "description": "BYOK API key (per project or user)",
+      "required": ["provider", "encryptedKey"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["openai", "anthropic", "deepseek", "ollama"]
+        },
+        "encryptedKey": {
+          "type": "string",
+          "privacy": "ENCRYPTED",
+          "description": "AES-256-GCM encrypted key"
+        },
+        "encryptionIv": {
+          "type": "string",
+          "privacy": "METADATA",
+          "description": "Initialization vector for encryption"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "User-friendly label"
+        },
+        "isActive": {
+          "type": "boolean",
+          "default": true
+        },
+        "lastUsedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "MCPTool": {
+      "type": "object",
+      "description": "MCP server tool definition",
+      "required": ["name", "description", "inputSchema", "handler"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$",
+          "description": "Tool name (snake_case)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Tool description"
+        },
+        "inputSchema": {
+          "type": "object",
+          "description": "JSON Schema for tool input"
+        },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "externalCalls": {
+              "type": "boolean",
+              "default": false,
+              "description": "Does this tool make external calls?"
+            },
+            "telemetry": {
+              "type": "boolean",
+              "default": false,
+              "description": "Does this tool send telemetry?"
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "privacy": {
+    "description": "Privacy-first schema annotations",
+    "levels": {
+      "ENCRYPT": "Must be encrypted at rest (AES-256-GCM)",
+      "HASH": "Must be hashed (SHA-256, not reversible)",
+      "METADATA": "Non-sensitive metadata (IV, salt)",
+      "PUBLIC": "Public data (no encryption needed)"
+    },
+    "rules": [
+      "Email addresses: ENCRYPT",
+      "IP addresses: HASH",
+      "Device fingerprints: HASH",
+      "API keys: ENCRYPT",
+      "Passwords: HASH (bcrypt, argon2)",
+      "User IDs: PUBLIC (non-reversible)",
+      "Achievements: PUBLIC",
+      "XP/Levels: PUBLIC"
+    ]
+  },
+
+  "database": {
+    "description": "Database conventions",
+    "naming": {
+      "tables": "snake_case (e.g. rpg_players, usage_events)",
+      "columns": "snake_case (e.g. user_id, created_at)",
+      "indexes": "idx_<table>_<columns> (e.g. idx_rpg_players_user)"
+    },
+    "timestamps": {
+      "created_at": "TIMESTAMPTZ DEFAULT NOW()",
+      "updated_at": "TIMESTAMPTZ DEFAULT NOW()"
+    },
+    "privacy": {
+      "pii_columns": "Prefix with 'encrypted_' or 'hashed_'",
+      "audit_logs": "Track all access to PII data"
+    }
+  },
+
+  "api": {
+    "description": "API conventions",
+    "versioning": "URL-based (/api/v1/...)",
+    "authentication": {
+      "headers": ["X-User-ID", "X-API-Key"],
+      "privacy": "NO session tokens in URLs (use headers only)"
+    },
+    "responses": {
+      "success": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "const": true },
+          "data": { "type": "object" }
+        }
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "const": false },
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "privacy": {
+      "no_tracking": "NO tracking pixels, NO analytics in API responses",
+      "cors": "Only localhost origins for MCP servers"
+    }
+  },
+
+  "zero_dependencies": {
+    "description": "This schema has zero external dependencies",
+    "not_using": [
+      "Apache standards",
+      "JSON-LD",
+      "OpenAPI 3.0",
+      "GraphQL SDL",
+      "Protobuf",
+      "Avro"
+    ],
+    "using": [
+      "JSON Schema Draft 7 (widely supported)",
+      "Pure JSON (no external refs)"
+    ]
+  },
+
+  "license": {
+    "schema": "MIT",
+    "description": "This schema is MIT licensed. Use freely, own your implementation."
+  }
+}

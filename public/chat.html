@@ -490,31 +490,42 @@
     // Initialize
     async function init() {
       try {
-        // Load models
-        const response = await fetch(`${API_BASE}/api/tags`);
+        // Load models from unified API
+        const response = await fetch(`${API_BASE}/api/chat/models`);
         const data = await response.json();
 
         elements.modelSelector.innerHTML = '';
-        data.models.forEach(model => {
-          const option = document.createElement('option');
-          option.value = model.name;
-          option.textContent = model.name;
-          elements.modelSelector.appendChild(option);
-        });
 
-        // Select calos-expert if available, otherwise first model
-        const savedModel = localStorage.getItem('selectedModel');
-        const hasCalosExpert = data.models.some(m => m.name === 'calos-expert');
+        // Add models grouped by provider
+        if (data.providers && data.providers.length > 0) {
+          data.providers.forEach(provider => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = provider.provider.toUpperCase();
 
-        if (hasCalosExpert) {
-          currentModel = 'calos-expert';
-          elements.modelSelector.value = currentModel;
-        } else if (savedModel && data.models.some(m => m.name === savedModel)) {
-          currentModel = savedModel;
-          elements.modelSelector.value = currentModel;
+            provider.models.forEach(model => {
+              const option = document.createElement('option');
+              option.value = model.name;
+              option.textContent = model.display || model.name;
+              optgroup.appendChild(option);
+            });
+
+            elements.modelSelector.appendChild(optgroup);
+          });
+
+          // Select saved model or default
+          const savedModel = localStorage.getItem('selectedModel');
+          const firstModel = data.providers[0].models[0].name;
+
+          if (savedModel) {
+            currentModel = savedModel;
+            elements.modelSelector.value = currentModel;
+          } else {
+            currentModel = firstModel;
+            elements.modelSelector.value = currentModel;
+          }
         } else {
-          currentModel = data.models[0].name;
-          elements.modelSelector.value = currentModel;
+          // No providers available
+          throw new Error('No LLM providers available');
         }
 
         elements.status.classList.add('connected');
@@ -523,12 +534,12 @@
         elements.messageInput.focus();
 
         // Show welcome message
-        addMessage('ai', `Hello! I'm your CalOS AI assistant. I can help you with:\n\n• **Architecture & System Design**\n• **Authentication** (JWT, OAuth2, MFA)\n• **Real-Time Messaging** (WebSocket)\n• **Database Design** (PostgreSQL, Redis)\n• **Search** (Full-text, Semantic, Hybrid)\n• **Logging & Monitoring**\n• **Testing & Deployment**\n\nAsk me anything about building production software!`);
+        addMessage('ai', `Hello! I'm Cal, your CALOS AI assistant.\n\n**Available Providers:**\n${data.providers.map(p => `• ${p.provider.toUpperCase()}: ${p.models.length} models`).join('\n')}\n\nI can help you with:\n• Multi-LLM routing & integration\n• Code generation & debugging\n• System architecture & design\n• API integration (OpenAI, Anthropic, DeepSeek)\n\nAsk me anything!`);
 
       } catch (error) {
-        showError('Failed to connect to Ollama. Make sure it\'s running on port 11434.');
+        showError('Failed to load models. Check that your API keys are set in .env');
         elements.status.classList.remove('connected');
-        elements.loading.textContent = 'Ollama not available';
+        elements.loading.textContent = 'No providers available';
       }
     }
 
@@ -548,25 +559,36 @@
       scrollToBottom();
 
       try {
-        const response = await fetch(`${API_BASE}/api/ollama/generate`, {
+        // Get current domain for branded responses
+        const domain = window.location.hostname;
+
+        const response = await fetch(`${API_BASE}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: currentModel,
             prompt: message,
-            stream: false
+            domain: domain,
+            maxTokens: 2000,
+            temperature: 0.7
           })
         });
 
-        if (!response.ok) throw new Error('Failed to generate response');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to generate response');
+        }
 
         const data = await response.json();
 
         // Hide typing indicator
         elements.typingIndicator.classList.remove('show');
 
-        // Add AI response
+        // Add AI response (with provider info)
         addMessage('ai', data.response);
+
+        // Log provider info to console
+        console.log(`[Chat] Provider: ${data.provider}, Model: ${data.model}, Latency: ${data.latency}ms`);
 
       } catch (error) {
         elements.typingIndicator.classList.remove('show');

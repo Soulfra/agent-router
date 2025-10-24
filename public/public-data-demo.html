@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Data API Demo - CalOS</title>
+
+  <!-- Load polyfills FIRST (before any other scripts) -->
+  <script src="/lib/browser-polyfills.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .data-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .data-section h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .data-row {
+      padding: 12px;
+      margin-bottom: 10px;
+      background: white;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .data-label {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .data-value {
+      color: #222;
+      font-family: 'Courier New', monospace;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .info-box h2 {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .info-box p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.3s;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+      font-style: italic;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌐 Public Data API Demo</h1>
+    <p class="subtitle">ipconfig.io-style API built from top to bottom with our servers</p>
+
+    <div class="info-box" id="quick-info">
+      <h2>Your Information</h2>
+      <p id="quick-summary">Loading...</p>
+    </div>
+
+    <div class="data-section">
+      <h2>API Endpoints</h2>
+      <button onclick="testFullAPI()">GET /api/public-data</button>
+      <button onclick="testIPOnly()">GET /api/public-data/ip</button>
+      <button onclick="testUserAgent()">GET /api/public-data/user-agent</button>
+      <div class="code-block" id="api-result" style="display:none;"></div>
+    </div>
+
+    <div class="data-section" id="request-section" style="display:none;">
+      <h2>Request Information</h2>
+      <div id="request-data"></div>
+    </div>
+
+    <div class="data-section" id="browser-section" style="display:none;">
+      <h2>Browser & Device</h2>
+      <div id="browser-data"></div>
+    </div>
+
+    <div class="data-section" id="geo-section" style="display:none;">
+      <h2>Geolocation</h2>
+      <div id="geo-data"></div>
+    </div>
+
+    <div class="data-section" id="features-section" style="display:none;">
+      <h2>Features & Headers</h2>
+      <div id="features-data"></div>
+    </div>
+
+    <div class="data-section">
+      <h2>What This API Does</h2>
+      <div class="grid">
+        <div class="data-row">
+          <span class="data-label">IP Detection</span>
+          <span class="badge">✓ Active</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Geolocation</span>
+          <span class="badge">✓ Active</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Browser Detection</span>
+          <span class="badge">✓ Active</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Device Type</span>
+          <span class="badge">✓ Active</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Feature Detection</span>
+          <span class="badge">✓ Active</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Analytics Logging</span>
+          <span class="badge">✓ Active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Auto-load full API data on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        testFullAPI();
+      } catch (error) {
+        console.error('[PublicData] Auto-load failed:', error);
+        document.getElementById('quick-summary').textContent = 'Click a button to test the API';
+      }
+    });
+
+    function testFullAPI() {
+      var resultEl = document.getElementById('api-result');
+      resultEl.style.display = 'block';
+      resultEl.textContent = 'Loading...';
+      resultEl.style.background = '#282c34';
+      resultEl.style.color = '#abb2bf';
+
+      fetch('/api/public-data')
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(function(data) {
+          resultEl.textContent = JSON.stringify(data, null, 2);
+          resultEl.style.background = '#d4edda';
+          resultEl.style.color = '#155724';
+          displayParsedData(data);
+        })
+        .catch(function(error) {
+          console.error('[PublicData] Fetch error:', error);
+          resultEl.textContent = 'Error: ' + error.message;
+          resultEl.style.background = '#f8d7da';
+          resultEl.style.color = '#721c24';
+          document.getElementById('quick-summary').textContent = 'Error loading data. Check console.';
+        });
+    }
+
+    function testIPOnly() {
+      var resultEl = document.getElementById('api-result');
+      resultEl.style.display = 'block';
+      resultEl.textContent = 'Loading...';
+
+      fetch('/api/public-data/ip')
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+          }
+          return response.text();
+        })
+        .then(function(data) {
+          resultEl.textContent = 'Your IP: ' + data;
+          resultEl.style.background = '#d4edda';
+          resultEl.style.color = '#155724';
+        })
+        .catch(function(error) {
+          resultEl.textContent = 'Error: ' + error.message;
+          resultEl.style.background = '#f8d7da';
+          resultEl.style.color = '#721c24';
+        });
+    }
+
+    function testUserAgent() {
+      var resultEl = document.getElementById('api-result');
+      resultEl.style.display = 'block';
+      resultEl.textContent = 'Loading...';
+
+      fetch('/api/public-data/user-agent')
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+          }
+          return response.text();
+        })
+        .then(function(data) {
+          resultEl.textContent = 'Your User Agent: ' + data;
+          resultEl.style.background = '#d4edda';
+          resultEl.style.color = '#155724';
+        })
+        .catch(function(error) {
+          resultEl.textContent = 'Error: ' + error.message;
+          resultEl.style.background = '#f8d7da';
+          resultEl.style.color = '#721c24';
+        });
+    }
+
+    function displayParsedData(data) {
+      // Quick summary
+      var summary = data.request.ip + ' • ' + data.browser.name + ' ' + data.browser.version + ' • ' + data.device.type;
+      if (data.geolocation && data.geolocation.city) {
+        summary += ' • ' + data.geolocation.city + ', ' + data.geolocation.country;
+      }
+      document.getElementById('quick-summary').textContent = summary;
+
+      // Request data
+      var requestSection = document.getElementById('request-section');
+      requestSection.style.display = 'block';
+      var requestData = document.getElementById('request-data');
+      requestData.innerHTML =
+        '<div class="data-row"><span class="data-label">IP Address</span><span class="data-value">' + data.request.ip + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Protocol</span><span class="data-value">' + data.request.protocol + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Secure (HTTPS)</span><span class="data-value">' + (data.request.secure ? 'Yes' : 'No') + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Host</span><span class="data-value">' + data.request.host + '</span></div>';
+
+      // Browser data
+      var browserSection = document.getElementById('browser-section');
+      browserSection.style.display = 'block';
+      var browserData = document.getElementById('browser-data');
+      browserData.innerHTML =
+        '<div class="data-row"><span class="data-label">Browser</span><span class="data-value">' + data.browser.name + ' ' + data.browser.version + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Operating System</span><span class="data-value">' + data.browser.os + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Device Type</span><span class="data-value">' + data.device.type + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Mobile</span><span class="data-value">' + (data.device.mobile ? 'Yes' : 'No') + '</span></div>' +
+        '<div class="data-row"><span class="data-label">User Agent</span><span class="data-value" style="font-size:11px;">' + data.browser.userAgent + '</span></div>';
+
+      // Geolocation data
+      var geoSection = document.getElementById('geo-section');
+      if (data.geolocation) {
+        geoSection.style.display = 'block';
+        var geoData = document.getElementById('geo-data');
+        geoData.innerHTML =
+          '<div class="data-row"><span class="data-label">Country</span><span class="data-value">' + (data.geolocation.country || 'Unknown') + '</span></div>' +
+          '<div class="data-row"><span class="data-label">Region</span><span class="data-value">' + (data.geolocation.region || 'Unknown') + '</span></div>' +
+          '<div class="data-row"><span class="data-label">City</span><span class="data-value">' + (data.geolocation.city || 'Unknown') + '</span></div>' +
+          '<div class="data-row"><span class="data-label">Timezone</span><span class="data-value">' + (data.geolocation.timezone || 'Unknown') + '</span></div>' +
+          '<div class="data-row"><span class="data-label">ISP</span><span class="data-value">' + (data.geolocation.isp || 'Unknown') + '</span></div>' +
+          '<div class="data-row"><span class="data-label">Coordinates</span><span class="data-value">' + (data.geolocation.lat ? data.geolocation.lat + ', ' + data.geolocation.lon : 'Unknown') + '</span></div>';
+      } else {
+        geoSection.style.display = 'block';
+        var geoData = document.getElementById('geo-data');
+        geoData.innerHTML = '<div class="data-row"><span class="data-label">Status</span><span class="data-value">No geolocation data available (localhost or private IP)</span></div>';
+      }
+
+      // Features data
+      var featuresSection = document.getElementById('features-section');
+      featuresSection.style.display = 'block';
+      var featuresData = document.getElementById('features-data');
+      featuresData.innerHTML =
+        '<div class="data-row"><span class="data-label">Accept Encoding</span><span class="data-value">' + (data.features.acceptEncoding.join(', ') || 'None') + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Accept Language</span><span class="data-value">' + data.features.acceptLanguage + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Do Not Track</span><span class="data-value">' + (data.features.dnt ? 'Enabled' : 'Disabled') + '</span></div>' +
+        '<div class="data-row"><span class="data-label">Connection</span><span class="data-value">' + data.features.connection + '</span></div>';
+    }
+  </script>
+</body>
+</html>

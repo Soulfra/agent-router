@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG XP System Lab - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%;
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .player-card {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .player-name {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .xp-bar {
+      width: 100%;
+      height: 30px;
+      background: #0a0a15;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #45a049);
+      transition: width 1s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .level-badge {
+      display: inline-block;
+      background: #ffd700;
+      color: #0f0f23;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .animation-container {
+      text-align: center;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    @keyframes levelUp {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes sparkle {
+      0%, 100% {
+        opacity: 0;
+        transform: scale(0);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .level-up-text {
+      font-size: 48px;
+      color: #ffd700;
+      animation: levelUp 1s ease-out;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
+
+    .sparkle {
+      display: inline-block;
+      font-size: 24px;
+      animation: sparkle 0.8s infinite;
+    }
+
+    .achievement-badge {
+      background: #764ba2;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin: 5px;
+      display: inline-block;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>RPG XP & Leveling System</h1>
+  <p class="subtitle">Interactive lab for awarding XP and triggering level-up animations</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- Player Stats -->
+  <div class="section">
+    <h2>Player Profile</h2>
+    <div id="player-card" class="player-card">
+      <div class="player-name">Loading...</div>
+      <div class="stat-row">
+        <span>Level:</span>
+        <span class="level-badge" id="player-level">1</span>
+      </div>
+      <div class="stat-row">
+        <span>Total XP:</span>
+        <span id="player-total-xp">0</span>
+      </div>
+      <div class="xp-bar">
+        <div class="xp-fill" id="xp-fill" style="width: 0%">
+          <span id="xp-text">0 / 100</span>
+        </div>
+      </div>
+    </div>
+    <button onclick="refreshPlayerStats()">Refresh Stats</button>
+  </div>
+
+  <!-- Award XP -->
+  <div class="section">
+    <h2>Award Experience Points</h2>
+
+    <div class="input-group">
+      <label>User ID:</label>
+      <input type="text" id="user-id" placeholder="e.g., demo-user" value="demo-user">
+    </div>
+
+    <div class="input-group">
+      <label>XP Amount:</label>
+      <input type="number" id="xp-amount" placeholder="10-500" value="50" min="1" max="1000">
+    </div>
+
+    <div class="input-group">
+      <label>Reason:</label>
+      <input type="text" id="xp-reason" placeholder="Why are they getting XP?" value="Completed lab exercise">
+    </div>
+
+    <button onclick="awardXP()">Award XP</button>
+
+    <h3 style="color: #764ba2; margin-top: 20px; margin-bottom: 10px;">Quick Actions</h3>
+    <div class="button-grid">
+      <button onclick="awardQuickXP(10)">+10 XP (Small)</button>
+      <button onclick="awardQuickXP(25)">+25 XP (Medium)</button>
+      <button onclick="awardQuickXP(50)">+50 XP (Large)</button>
+      <button onclick="awardQuickXP(100)">+100 XP (Huge)</button>
+      <button onclick="awardQuickXP(500)">+500 XP (Legendary)</button>
+      <button onclick="resetPlayer()">Reset Player</button>
+    </div>
+  </div>
+
+  <!-- Animation Area -->
+  <div class="section" id="animation-section" style="display: none;">
+    <h2>Level Up!</h2>
+    <div class="animation-container" id="animation-container">
+      <!-- Animations appear here -->
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="section">
+    <h2>Event Log</h2>
+    <pre class="output" id="output">Award XP to see events...</pre>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+    let currentPlayer = null;
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Call MCP tool
+    async function callMCP(toolName, input) {
+      const response = await fetch(`${MCP_URL}/mcp/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: toolName, input })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Tool call failed');
+      return data.result;
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+      }
+    }
+
+    // Update player card UI
+    function updatePlayerCard(player) {
+      currentPlayer = player;
+
+      const playerCard = document.getElementById('player-card');
+      const xpPercentage = (player.xp / 100) * 100;
+
+      playerCard.querySelector('.player-name').textContent = player.userId;
+      document.getElementById('player-level').textContent = player.level;
+      document.getElementById('player-total-xp').textContent = player.totalXp;
+
+      const xpFill = document.getElementById('xp-fill');
+      xpFill.style.width = xpPercentage + '%';
+      document.getElementById('xp-text').textContent = `${player.xp} / 100`;
+    }
+
+    // Refresh player stats
+    async function refreshPlayerStats() {
+      try {
+        const userId = document.getElementById('user-id').value;
+        const result = await callMCP('rpg_get_player', { userId });
+
+        updatePlayerCard(result);
+        log(`Player stats refreshed for ${userId}`, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Award XP with animation
+    async function awardXP() {
+      try {
+        const userId = document.getElementById('user-id').value;
+        const amount = parseInt(document.getElementById('xp-amount').value);
+        const reason = document.getElementById('xp-reason').value;
+
+        const result = await callMCP('rpg_award_xp', {
+          userId,
+          amount,
+          reason
+        });
+
+        // Update player card
+        updatePlayerCard(result);
+
+        // Show level up animation if leveled up
+        if (result.leveledUp) {
+          showLevelUpAnimation(result);
+        }
+
+        // Log the event
+        let logMessage = `✨ Awarded ${result.awarded} XP to ${userId}\n`;
+        logMessage += `Reason: ${reason}\n\n`;
+        logMessage += `Level: ${result.level}\n`;
+        logMessage += `XP: ${result.xp}/100\n`;
+        logMessage += `Total XP: ${result.totalXp}\n`;
+
+        if (result.leveledUp) {
+          logMessage += `\n🎊 LEVEL UP! Gained ${result.levelsGained} level(s)!\n`;
+        }
+
+        if (result.achievements && result.achievements.length > 0) {
+          logMessage += `\nAchievements: ${result.achievements.length}\n`;
+        }
+
+        log(logMessage, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Quick XP award
+    async function awardQuickXP(amount) {
+      document.getElementById('xp-amount').value = amount;
+      document.getElementById('xp-reason').value = `Quick award: ${amount} XP`;
+      await awardXP();
+    }
+
+    // Show level up animation
+    function showLevelUpAnimation(result) {
+      const section = document.getElementById('animation-section');
+      const container = document.getElementById('animation-container');
+
+      section.style.display = 'block';
+
+      container.innerHTML = `
+        <div class="level-up-text">
+          <span class="sparkle">✨</span>
+          LEVEL UP!
+          <span class="sparkle">✨</span>
+        </div>
+        <div style="font-size: 64px; margin: 20px 0;">
+          ${result.level}
+        </div>
+        <div style="font-size: 18px; color: #4caf50;">
+          Gained ${result.levelsGained} level(s)!
+        </div>
+      `;
+
+      // Hide animation after 3 seconds
+      setTimeout(() => {
+        section.style.display = 'none';
+      }, 3000);
+    }
+
+    // Reset player to level 1
+    async function resetPlayer() {
+      if (!confirm('Reset player to level 1? This will clear all XP and achievements.')) {
+        return;
+      }
+
+      try {
+        const userId = document.getElementById('user-id').value;
+
+        // Award negative XP to reset (if the tool supports it)
+        // Otherwise, this is just a demo
+        const result = {
+          userId,
+          level: 1,
+          xp: 0,
+          totalXp: 0,
+          achievements: [],
+          newPlayer: true
+        };
+
+        updatePlayerCard(result);
+        log('Player reset to level 1 (demo only - actual reset requires backend support)', 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Check status and load player on load
+    window.addEventListener('load', async () => {
+      await checkServerStatus();
+      await refreshPlayerStats();
+    });
+  </script>
+</body>
+</html>

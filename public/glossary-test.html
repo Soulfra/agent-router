@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glossary Diagnostic Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #00ffff;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #2a2a2a;
+      border: 2px solid #444;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #00ffff;
+      border-bottom: 2px solid #444;
+      padding-bottom: 10px;
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin: 5px 0;
+      background: #1a1a1a;
+      border-radius: 4px;
+      border-left: 4px solid #666;
+    }
+
+    .test-item.success {
+      border-left-color: #00ff00;
+      background: #0a2a0a;
+    }
+
+    .test-item.error {
+      border-left-color: #ff0000;
+      background: #2a0a0a;
+    }
+
+    .test-item.pending {
+      border-left-color: #ffaa00;
+      background: #2a2a0a;
+    }
+
+    .status {
+      font-size: 24px;
+      margin-right: 15px;
+      min-width: 30px;
+    }
+
+    .label {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .details {
+      font-size: 12px;
+      color: #888;
+      font-family: monospace;
+    }
+
+    .error-msg {
+      color: #ff6666;
+      font-size: 12px;
+      margin-top: 5px;
+      font-family: monospace;
+    }
+
+    .success-msg {
+      color: #66ff66;
+      font-size: 12px;
+      margin-top: 5px;
+      font-family: monospace;
+    }
+
+    pre {
+      background: #0a0a0a;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      color: #00ff00;
+      margin-top: 10px;
+    }
+
+    .button {
+      background: #00ffff;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+
+    .button:hover {
+      background: #00cccc;
+    }
+
+    .buttons {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 CALOS Glossary Diagnostic Test</h1>
+  <p class="subtitle">Testing all components to find what's broken...</p>
+
+  <div class="buttons">
+    <button class="button" onclick="runAllTests()">▶ Run All Tests</button>
+    <button class="button" onclick="location.href='/publishing-glossary.html'">→ Open Glossary Page</button>
+  </div>
+
+  <div class="section">
+    <h2>1. JavaScript Files</h2>
+    <div id="js-tests"></div>
+  </div>
+
+  <div class="section">
+    <h2>2. CSS Files</h2>
+    <div id="css-tests"></div>
+  </div>
+
+  <div class="section">
+    <h2>3. JavaScript Classes</h2>
+    <div id="class-tests"></div>
+  </div>
+
+  <div class="section">
+    <h2>4. API Endpoints</h2>
+    <div id="api-tests"></div>
+  </div>
+
+  <div class="section">
+    <h2>5. Browser Console Log</h2>
+    <pre id="console-log"></pre>
+  </div>
+
+  <!-- Load dependencies -->
+  <script src="/lib/d3.v7.min.js"></script>
+  <script src="/lib/theme-manager.js"></script>
+  <script src="/lib/d3-graph-viewer.js"></script>
+
+  <script>
+    const logs = [];
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+
+    // Capture console output
+    console.log = function(...args) {
+      logs.push('[LOG] ' + args.join(' '));
+      updateConsoleLog();
+      originalConsoleLog.apply(console, args);
+    };
+
+    console.error = function(...args) {
+      logs.push('[ERROR] ' + args.join(' '));
+      updateConsoleLog();
+      originalConsoleError.apply(console, args);
+    };
+
+    console.warn = function(...args) {
+      logs.push('[WARN] ' + args.join(' '));
+      updateConsoleLog();
+      originalConsoleWarn.apply(console, args);
+    };
+
+    function updateConsoleLog() {
+      document.getElementById('console-log').textContent = logs.join('\n');
+    }
+
+    function addTest(containerId, label, status, details = '') {
+      const container = document.getElementById(containerId);
+      const item = document.createElement('div');
+      item.className = `test-item ${status}`;
+
+      const emoji = status === 'success' ? '✅' : status === 'error' ? '❌' : '⏳';
+      const detailsHtml = details ? `<div class="${status}-msg">${details}</div>` : '';
+
+      item.innerHTML = `
+        <div class="status">${emoji}</div>
+        <div class="label">
+          ${label}
+          ${detailsHtml}
+        </div>
+      `;
+
+      container.appendChild(item);
+    }
+
+    async function testJavaScriptFile(url, name) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const size = response.headers.get('content-length');
+          addTest('js-tests', `${name}`, 'success', `${url} (${(size / 1024).toFixed(1)}KB)`);
+          return true;
+        } else {
+          addTest('js-tests', `${name}`, 'error', `HTTP ${response.status}: ${response.statusText}`);
+          return false;
+        }
+      } catch (error) {
+        addTest('js-tests', `${name}`, 'error', error.message);
+        return false;
+      }
+    }
+
+    async function testCSSFile(url, name) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const size = response.headers.get('content-length');
+          addTest('css-tests', `${name}`, 'success', `${url} (${(size / 1024).toFixed(1)}KB)`);
+          return true;
+        } else {
+          addTest('css-tests', `${name}`, 'error', `HTTP ${response.status}: ${response.statusText}`);
+          return false;
+        }
+      } catch (error) {
+        addTest('css-tests', `${name}`, 'error', error.message);
+        return false;
+      }
+    }
+
+    function testClass(className, globalName) {
+      if (typeof window[globalName] === 'function') {
+        addTest('class-tests', `${className} class`, 'success', `window.${globalName} is defined`);
+        return true;
+      } else {
+        addTest('class-tests', `${className} class`, 'error', `window.${globalName} is undefined`);
+        return false;
+      }
+    }
+
+    async function testAPIEndpoint(url, name) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            const info = data.nodes ? `${data.nodes.length} nodes, ${data.edges.length} edges` : 'success';
+            addTest('api-tests', `${name}`, 'success', `${url} → ${info}`);
+            return true;
+          } else {
+            addTest('api-tests', `${name}`, 'error', `API returned success:false - ${data.error || 'unknown error'}`);
+            return false;
+          }
+        } else {
+          const text = await response.text();
+          const preview = text.substring(0, 100).replace(/\n/g, ' ');
+          addTest('api-tests', `${name}`, 'error', `HTTP ${response.status}: ${preview}`);
+          return false;
+        }
+      } catch (error) {
+        addTest('api-tests', `${name}`, 'error', error.message);
+        return false;
+      }
+    }
+
+    async function runAllTests() {
+      console.log('🚀 Starting diagnostic tests...');
+
+      // Clear previous results
+      document.getElementById('js-tests').innerHTML = '';
+      document.getElementById('css-tests').innerHTML = '';
+      document.getElementById('class-tests').innerHTML = '';
+      document.getElementById('api-tests').innerHTML = '';
+
+      // Test JavaScript files
+      console.log('Testing JavaScript files...');
+      await testJavaScriptFile('/lib/d3.v7.min.js', 'D3.js v7');
+      await testJavaScriptFile('/lib/theme-manager.js', 'ThemeManager');
+      await testJavaScriptFile('/lib/d3-graph-viewer.js', 'D3GraphViewer');
+
+      // Test CSS files
+      console.log('Testing CSS files...');
+      await testCSSFile('/styles/themes.css', 'Theme CSS');
+      await testCSSFile('/styles/glossary.css', 'Glossary CSS');
+
+      // Test classes
+      console.log('Testing JavaScript classes...');
+      testClass('D3GraphViewer', 'D3GraphViewer');
+      testClass('ThemeManager', 'ThemeManager');
+      testClass('d3 (D3.js library)', 'd3');
+
+      // Test API endpoints
+      console.log('Testing API endpoints...');
+      await testAPIEndpoint('/api/glossary/graph/content-publishing-system', 'Content Publishing System Graph');
+      await testAPIEndpoint('/api/glossary/network/content-publishing-system', 'Network View');
+      await testAPIEndpoint('/api/glossary/combined', 'Combined Graph');
+
+      console.log('✅ All tests complete!');
+    }
+
+    // Auto-run tests on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('Page loaded, running tests...');
+      setTimeout(runAllTests, 100);
+    });
+  </script>
+</body>
+</html>

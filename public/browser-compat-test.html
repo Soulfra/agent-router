@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Compatibility Test - CalOS</title>
+
+  <!-- Load polyfills FIRST (before any other scripts) -->
+  <script src="/lib/browser-polyfills.js"></script>
+
+  <!-- Load compatibility checker -->
+  <script src="/lib/browser-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .test-section h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .test-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      background: white;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .test-item.pass {
+      border-left: 4px solid #28a745;
+    }
+
+    .test-item.fail {
+      border-left: 4px solid #dc3545;
+    }
+
+    .test-item.warning {
+      border-left: 4px solid #ffc107;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .badge.pass {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge.fail {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .badge.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .browser-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .browser-info h2 {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .browser-info p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌐 Browser Compatibility Test</h1>
+    <p class="subtitle">Testing support for IE, Netscape, AOL, Opera, Safari, Chrome, Firefox, and other browsers</p>
+
+    <div class="browser-info" id="browser-info">
+      <h2>Your Browser</h2>
+      <p id="browser-details">Detecting...</p>
+    </div>
+
+    <div class="test-section">
+      <h2>ES5 Features (Required)</h2>
+      <div id="es5-tests"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>ES6 Features (Recommended)</h2>
+      <div id="es6-tests"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>DOM Features</h2>
+      <div id="dom-tests"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>API Features</h2>
+      <div id="api-tests"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test API Call (CORS)</h2>
+      <button onclick="testAPICall()">Test GET /api/matching/find</button>
+      <div class="code-block" id="api-result" style="display:none;margin-top:15px;"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Recommended Browsers</h2>
+      <div class="feature-grid">
+        <div class="test-item pass">
+          <span>Chrome 49+</span>
+          <span class="badge pass">✓ Fully Supported</span>
+        </div>
+        <div class="test-item pass">
+          <span>Firefox 44+</span>
+          <span class="badge pass">✓ Fully Supported</span>
+        </div>
+        <div class="test-item pass">
+          <span>Safari 10+</span>
+          <span class="badge pass">✓ Fully Supported</span>
+        </div>
+        <div class="test-item pass">
+          <span>Edge 79+ (Chromium)</span>
+          <span class="badge pass">✓ Fully Supported</span>
+        </div>
+        <div class="test-item warning">
+          <span>Opera 36+</span>
+          <span class="badge warning">⚠ Supported</span>
+        </div>
+        <div class="test-item fail">
+          <span>Internet Explorer (any)</span>
+          <span class="badge fail">✗ Not Supported</span>
+        </div>
+        <div class="test-item fail">
+          <span>Netscape Navigator</span>
+          <span class="badge fail">✗ Not Supported</span>
+        </div>
+        <div class="test-item fail">
+          <span>AOL Explorer</span>
+          <span class="badge fail">✗ Not Supported</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Display browser info
+    (function() {
+      var browser = window.BrowserCompat ? window.BrowserCompat.detectBrowser() : { name: 'Unknown', version: 0, isSupported: false };
+      var detailsEl = document.getElementById('browser-details');
+      var status = browser.isSupported ? '✅ Supported' : '⚠️ Limited Support';
+      detailsEl.innerHTML = '<strong>' + browser.name + ' ' + browser.version + '</strong> — ' + status;
+    })();
+
+    // Test ES5 features
+    (function() {
+      var tests = [
+        { name: 'Array.isArray', test: function() { return typeof Array.isArray === 'function'; } },
+        { name: 'Array.prototype.forEach', test: function() { return typeof Array.prototype.forEach === 'function'; } },
+        { name: 'Array.prototype.map', test: function() { return typeof Array.prototype.map === 'function'; } },
+        { name: 'Array.prototype.filter', test: function() { return typeof Array.prototype.filter === 'function'; } },
+        { name: 'Array.prototype.indexOf', test: function() { return typeof Array.prototype.indexOf === 'function'; } },
+        { name: 'Object.keys', test: function() { return typeof Object.keys === 'function'; } },
+        { name: 'Object.create', test: function() { return typeof Object.create === 'function'; } },
+        { name: 'String.prototype.trim', test: function() { return typeof String.prototype.trim === 'function'; } },
+        { name: 'JSON.parse', test: function() { return typeof JSON !== 'undefined' && typeof JSON.parse === 'function'; } },
+        { name: 'JSON.stringify', test: function() { return typeof JSON !== 'undefined' && typeof JSON.stringify === 'function'; } }
+      ];
+
+      var container = document.getElementById('es5-tests');
+      tests.forEach(function(t) {
+        var result = t.test();
+        var div = document.createElement('div');
+        div.className = 'test-item ' + (result ? 'pass' : 'fail');
+        div.innerHTML = '<span>' + t.name + '</span><span class="badge ' + (result ? 'pass' : 'fail') + '">' + (result ? '✓ Available' : '✗ Missing') + '</span>';
+        container.appendChild(div);
+      });
+    })();
+
+    // Test ES6 features
+    (function() {
+      var tests = [
+        { name: 'Promise', test: function() { return typeof Promise === 'function'; } },
+        { name: 'fetch', test: function() { return typeof fetch === 'function'; } },
+        { name: 'Object.assign', test: function() { return typeof Object.assign === 'function'; } },
+        { name: 'Array.from', test: function() { return typeof Array.from === 'function'; } },
+        { name: 'Array.prototype.find', test: function() { return typeof Array.prototype.find === 'function'; } },
+        { name: 'String.prototype.includes', test: function() { return typeof String.prototype.includes === 'function'; } },
+        { name: 'String.prototype.startsWith', test: function() { return typeof String.prototype.startsWith === 'function'; } },
+        { name: 'Arrow functions', test: function() { try { eval('() => {}'); return true; } catch (e) { return false; } } }
+      ];
+
+      var container = document.getElementById('es6-tests');
+      tests.forEach(function(t) {
+        var result = t.test();
+        var div = document.createElement('div');
+        div.className = 'test-item ' + (result ? 'pass' : 'warning');
+        div.innerHTML = '<span>' + t.name + '</span><span class="badge ' + (result ? 'pass' : 'warning') + '">' + (result ? '✓ Available' : '⚠ Polyfilled') + '</span>';
+        container.appendChild(div);
+      });
+    })();
+
+    // Test DOM features
+    (function() {
+      var tests = [
+        { name: 'querySelector', test: function() { return typeof document.querySelector === 'function'; } },
+        { name: 'querySelectorAll', test: function() { return typeof document.querySelectorAll === 'function'; } },
+        { name: 'addEventListener', test: function() { return typeof document.addEventListener === 'function'; } },
+        { name: 'classList', test: function() { return 'classList' in document.createElement('div'); } },
+        { name: 'CustomEvent', test: function() { return typeof CustomEvent === 'function'; } },
+        { name: 'localStorage', test: function() { return typeof localStorage !== 'undefined'; } },
+        { name: 'sessionStorage', test: function() { return typeof sessionStorage !== 'undefined'; } }
+      ];
+
+      var container = document.getElementById('dom-tests');
+      tests.forEach(function(t) {
+        var result = t.test();
+        var div = document.createElement('div');
+        div.className = 'test-item ' + (result ? 'pass' : 'warning');
+        div.innerHTML = '<span>' + t.name + '</span><span class="badge ' + (result ? 'pass' : 'warning') + '">' + (result ? '✓ Available' : '⚠ Limited') + '</span>';
+        container.appendChild(div);
+      });
+    })();
+
+    // Test API features
+    (function() {
+      var tests = [
+        { name: 'XMLHttpRequest', test: function() { return typeof XMLHttpRequest === 'function'; } },
+        { name: 'CORS Support', test: function() { return 'withCredentials' in new XMLHttpRequest(); } },
+        { name: 'WebSockets', test: function() { return typeof WebSocket !== 'undefined'; } },
+        { name: 'Service Worker', test: function() { return 'serviceWorker' in navigator; } },
+        { name: 'IndexedDB', test: function() { return 'indexedDB' in window; } }
+      ];
+
+      var container = document.getElementById('api-tests');
+      tests.forEach(function(t) {
+        var result = t.test();
+        var div = document.createElement('div');
+        div.className = 'test-item ' + (result ? 'pass' : 'warning');
+        div.innerHTML = '<span>' + t.name + '</span><span class="badge ' + (result ? 'pass' : 'warning') + '">' + (result ? '✓ Available' : '⚠ Not Available') + '</span>';
+        container.appendChild(div);
+      });
+    })();
+
+    // Test API call
+    function testAPICall() {
+      var resultEl = document.getElementById('api-result');
+      resultEl.style.display = 'block';
+      resultEl.textContent = 'Loading...';
+      resultEl.style.background = '#282c34';
+      resultEl.style.color = '#abb2bf';
+
+      fetch('/api/matching/find?mode=inclusion&limit=5&demo=true')
+        .then(function(response) {
+          if (!response.ok) {
+            return response.text().then(function(text) {
+              throw new Error('HTTP ' + response.status + ': ' + text);
+            });
+          }
+          return response.json();
+        })
+        .then(function(data) {
+          resultEl.textContent = JSON.stringify(data, null, 2);
+          resultEl.style.background = '#d4edda';
+          resultEl.style.color = '#155724';
+        })
+        .catch(function(error) {
+          resultEl.textContent = 'Error: ' + error.message;
+          resultEl.style.background = '#f8d7da';
+          resultEl.style.color = '#721c24';
+        });
+    }
+  </script>
+</body>
+</html>

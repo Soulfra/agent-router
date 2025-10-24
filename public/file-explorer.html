@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Explorer - CALOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      grid-template-rows: 60px 1fr;
+      height: 100vh;
+    }
+
+    .header {
+      grid-column: 1 / -1;
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #252525;
+      border-color: #444;
+    }
+
+    .btn-primary {
+      background: #0066cc;
+      border-color: #0066cc;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #0052a3;
+    }
+
+    .sidebar {
+      background: #0f0f0f;
+      border-right: 1px solid #222;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .main-content {
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .tree-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+
+    .tree-item:hover {
+      background: #1a1a1a;
+    }
+
+    .tree-item.selected {
+      background: #0066cc;
+      color: #fff;
+    }
+
+    .tree-item .icon {
+      width: 16px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .tree-item .name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tree-item .badge {
+      padding: 2px 6px;
+      background: #ff4444;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tree-item .badge.good {
+      background: #44cc44;
+    }
+
+    .tree-item .badge.warning {
+      background: #ff9944;
+    }
+
+    .repo-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .repo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .repo-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .repo-path {
+      font-size: 12px;
+      color: #666;
+      font-family: 'Courier New', monospace;
+    }
+
+    .repo-status {
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      background: #0a0a0a;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .status-value.remote {
+      color: #44cc44;
+    }
+
+    .status-value.no-remote {
+      color: #ff4444;
+    }
+
+    .status-value.changes {
+      color: #ff9944;
+    }
+
+    .file-preview {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .file-preview pre {
+      margin: 0;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .loading::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid #333;
+      border-top-color: #0066cc;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .warning-banner {
+      background: #332200;
+      border: 1px solid #554400;
+      border-radius: 6px;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      color: #ffcc66;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .warning-banner .icon {
+      font-size: 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📁 File Explorer</h1>
+      <div class="header-actions">
+        <button class="btn" id="refreshBtn">🔄 Refresh</button>
+        <button class="btn" id="compareBtn">🔗 Compare GitHub</button>
+        <button class="btn btn-primary" id="scanBtn">🚀 Full Scan</button>
+      </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+      <div class="loading">Loading repos...</div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+      <div class="empty-state">
+        <div class="icon">📂</div>
+        <h3>Select a repository</h3>
+        <p>Choose a repo from the sidebar to see details</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let repos = [];
+    let selectedRepo = null;
+
+    // Load repos on page load
+    loadRepos();
+
+    // Event listeners
+    document.getElementById('refreshBtn').addEventListener('click', loadRepos);
+    document.getElementById('scanBtn').addEventListener('click', fullScan);
+    document.getElementById('compareBtn').addEventListener('click', compareGitHub);
+
+    // Load git repos
+    async function loadRepos() {
+      document.getElementById('sidebar').innerHTML = '<div class="loading">Loading repos...</div>';
+
+      try {
+        const res = await fetch('/api/explorer/git');
+        const data = await res.json();
+
+        if (data.success) {
+          repos = data.repos;
+          renderSidebar();
+        }
+      } catch (error) {
+        document.getElementById('sidebar').innerHTML = `
+          <div class="warning-banner">
+            <span class="icon">⚠️</span>
+            <span>Error loading repos: ${error.message}</span>
+          </div>
+        `;
+      }
+    }
+
+    // Render sidebar with repos
+    function renderSidebar() {
+      const sidebar = document.getElementById('sidebar');
+
+      if (repos.length === 0) {
+        sidebar.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <h3>No repos found</h3>
+          </div>
+        `;
+        return;
+      }
+
+      // Group repos
+      const withRemote = repos.filter(r => r.remote);
+      const withoutRemote = repos.filter(r => !r.remote);
+      const dirty = repos.filter(r => !r.status.clean);
+
+      let html = `
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="stat-card">
+            <div class="stat-value">${repos.length}</div>
+            <div class="stat-label">Total Repos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: ${dirty.length > 0 ? '#ff9944' : '#44cc44'}">${dirty.length}</div>
+            <div class="stat-label">Uncommitted</div>
+          </div>
+        </div>
+      `;
+
+      if (withoutRemote.length > 0) {
+        html += `
+          <div class="warning-banner">
+            <span class="icon">⚠️</span>
+            <span>${withoutRemote.length} repos have no GitHub remote</span>
+          </div>
+        `;
+      }
+
+      html += '<div class="section"><div class="section-title">Repositories</div>';
+
+      repos.forEach(repo => {
+        const isClean = repo.status.clean;
+        const hasRemote = repo.remote;
+        const badge = !isClean ? `<span class="badge warning">${repo.status.total}</span>` :
+                      hasRemote ? `<span class="badge good">✓</span>` :
+                      `<span class="badge">!</span>`;
+
+        html += `
+          <div class="tree-item" data-path="${repo.path}">
+            <span class="icon">${hasRemote ? '📦' : '📁'}</span>
+            <span class="name">${repo.name}</span>
+            ${badge}
+          </div>
+        `;
+      });
+
+      html += '</div>';
+
+      sidebar.innerHTML = html;
+
+      // Add click handlers
+      document.querySelectorAll('.tree-item').forEach(item => {
+        item.addEventListener('click', () => selectRepo(item.dataset.path));
+      });
+    }
+
+    // Select and analyze repo
+    async function selectRepo(repoPath) {
+      selectedRepo = repoPath;
+
+      // Update selection UI
+      document.querySelectorAll('.tree-item').forEach(item => {
+        item.classList.toggle('selected', item.dataset.path === repoPath);
+      });
+
+      // Load analysis
+      document.getElementById('mainContent').innerHTML = '<div class="loading">Analyzing repository...</div>';
+
+      try {
+        const res = await fetch(`/api/explorer/analyze?path=${encodeURIComponent(repoPath)}`);
+        const data = await res.json();
+
+        if (data.success) {
+          renderRepoDetails(data.analysis);
+        }
+      } catch (error) {
+        document.getElementById('mainContent').innerHTML = `
+          <div class="warning-banner">
+            <span class="icon">⚠️</span>
+            <span>Error analyzing repo: ${error.message}</span>
+          </div>
+        `;
+      }
+    }
+
+    // Render repo details
+    function renderRepoDetails(analysis) {
+      const mainContent = document.getElementById('mainContent');
+
+      let html = `
+        <div class="repo-card">
+          <div class="repo-header">
+            <div>
+              <div class="repo-name">
+                ${analysis.github ? '🔗' : '📁'} ${analysis.path.split('/').pop()}
+              </div>
+              <div class="repo-path">${analysis.path}</div>
+            </div>
+          </div>
+
+          <div class="repo-status">
+            <div class="status-item">
+              <div class="status-label">Branch</div>
+              <div class="status-value">${analysis.branch || 'N/A'}</div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">Remote</div>
+              <div class="status-value ${analysis.remote ? 'remote' : 'no-remote'}">
+                ${analysis.remote || 'None'}
+              </div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">Changes</div>
+              <div class="status-value ${analysis.status.total > 0 ? 'changes' : ''}">
+                ${analysis.status.total}
+              </div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">Status</div>
+              <div class="status-value">${analysis.status.clean ? '✓ Clean' : '⚠ Dirty'}</div>
+            </div>
+          </div>
+
+          ${analysis.github ? `
+            <div style="margin-bottom: 15px;">
+              <strong>GitHub:</strong>
+              <a href="${analysis.github.url}" target="_blank" style="color: #0066cc;">
+                ${analysis.github.owner}/${analysis.github.repo}
+              </a>
+            </div>
+          ` : ''}
+
+          ${analysis.remoteUrl ? `
+            <div style="margin-bottom: 15px; font-size: 12px; color: #666; font-family: 'Courier New', monospace;">
+              ${analysis.remoteUrl}
+            </div>
+          ` : ''}
+
+          ${analysis.commits?.latest ? `
+            <div style="margin-bottom: 15px;">
+              <strong>Last Commit:</strong><br>
+              <code style="font-size: 12px; color: #888;">${analysis.commits.latest.hash}</code>
+              <span style="color: #666;"> - ${analysis.commits.latest.message}</span><br>
+              <span style="font-size: 12px; color: #666;">
+                by ${analysis.commits.latest.author} on ${new Date(analysis.commits.latest.date).toLocaleString()}
+              </span>
+            </div>
+          ` : ''}
+
+          ${analysis.warnings.length > 0 ? `
+            <div class="warning-banner">
+              <span class="icon">⚠️</span>
+              <div>
+                ${analysis.warnings.map(w => `<div>• ${w}</div>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${!analysis.status.clean ? `
+            <div class="file-preview">
+              <strong>Uncommitted Changes:</strong><br><br>
+              ${analysis.status.files.slice(0, 20).map(f =>
+                `<div style="margin-bottom: 4px; font-family: 'Courier New', monospace; font-size: 12px;">
+                  <span style="color: ${f.status.includes('M') ? '#ff9944' : f.status.includes('D') ? '#ff4444' : '#44cc44'}">
+                    ${f.status}
+                  </span>
+                  ${f.file}
+                </div>`
+              ).join('')}
+              ${analysis.status.files.length > 20 ? `<div style="color: #666; margin-top: 10px;">... and ${analysis.status.files.length - 20} more</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      mainContent.innerHTML = html;
+    }
+
+    // Full scan
+    async function fullScan() {
+      const btn = document.getElementById('scanBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Scanning...';
+
+      try {
+        const res = await fetch('/api/explorer/scan');
+        const data = await res.json();
+
+        if (data.success) {
+          alert(`Scan complete!\n\nGit Repos: ${data.gitRepos.length}\nProjects: ${data.projects.length}\nThemes: ${data.themes.length}\nREADMEs: ${data.readmes.length}`);
+          loadRepos();
+        }
+      } catch (error) {
+        alert('Scan failed: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Full Scan';
+      }
+    }
+
+    // Compare with GitHub
+    async function compareGitHub() {
+      const btn = document.getElementById('compareBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Comparing...';
+
+      try {
+        const res = await fetch('/api/explorer/compare?username=Soulfra');
+        const data = await res.json();
+
+        if (data.success) {
+          const comp = data.comparison;
+          alert(`GitHub Comparison:\n\nLocal repos: ${comp.total.local}\nGitHub repos: ${comp.total.github}\nMatched: ${comp.total.matched}\n\nLocal only: ${comp.localOnly.length}\nGitHub only: ${comp.githubOnly.length}`);
+        }
+      } catch (error) {
+        alert('Comparison failed: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔗 Compare GitHub';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruiting Insights Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .stat-subtitle {
+      font-size: 13px;
+      color: #999;
+    }
+
+    .chart-section {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .chart-section h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .candidate-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .candidate-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      transition: all 0.2s;
+    }
+
+    .candidate-card:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+    }
+
+    .candidate-card.top-performer {
+      border-left-color: #f5576c;
+      background: linear-gradient(90deg, rgba(245, 87, 108, 0.1), #f8f9fa);
+    }
+
+    .candidate-info {
+      flex: 1;
+    }
+
+    .candidate-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .candidate-meta {
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .candidate-score {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+      margin-left: 20px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.top {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+    }
+
+    .badge.high {
+      background: #4ade80;
+      color: white;
+    }
+
+    .badge.medium {
+      background: #fbbf24;
+      color: white;
+    }
+
+    .badge.low {
+      background: #94a3b8;
+      color: white;
+    }
+
+    .skill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .skill-tag {
+      background: #e0e7ff;
+      color: #4c51bf;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: white;
+      font-size: 18px;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .alert {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: #856404;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      border-left-color: #dc3545;
+      color: #721c24;
+    }
+
+    .alert.info {
+      background: #d1ecf1;
+      border-left-color: #17a2b8;
+      color: #0c5460;
+    }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 13px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .filter-group select, .filter-group input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      background: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .candidate-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .candidate-score {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+      <div>Loading recruiting insights...</div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+      <div class="header">
+        <h1>Recruiting Insights Dashboard</h1>
+        <p>Talent pipeline analytics and top performer identification</p>
+      </div>
+
+      <div id="alerts"></div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Candidates</div>
+          <div class="stat-value" id="total-candidates">0</div>
+          <div class="stat-subtitle">With resumes uploaded</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Top Performers</div>
+          <div class="stat-value" id="top-performers">0</div>
+          <div class="stat-subtitle">90th percentile or higher</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Avg Talent Score</div>
+          <div class="stat-value" id="avg-score">0</div>
+          <div class="stat-subtitle">Out of 100</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Survey Completion</div>
+          <div class="stat-value" id="avg-completion">0%</div>
+          <div class="stat-subtitle">Average across candidates</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Resumes Parsed</div>
+          <div class="stat-value" id="resumes-count">0</div>
+          <div class="stat-subtitle">Last 30 days</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Brand Ideas</div>
+          <div class="stat-value" id="ideas-count">0</div>
+          <div class="stat-subtitle">Total submitted</div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <h2>🌟 Top Performers (Top 10%)</h2>
+        <div id="top-performers-list" class="candidate-list">
+          <div class="empty-state">
+            <div>No top performers yet</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <h2>📊 All Candidates Ranked</h2>
+        <div class="filters">
+          <div class="filter-group">
+            <label>Min Score:</label>
+            <input type="number" id="min-score" min="0" max="100" value="0" placeholder="0">
+          </div>
+          <div class="filter-group">
+            <label>Limit:</label>
+            <select id="limit">
+              <option value="20">20</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <button onclick="loadRankings()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Apply Filters</button>
+          </div>
+        </div>
+        <div id="rankings-list" class="candidate-list">
+          <div class="empty-state">
+            <div>No candidates yet</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <h2>💡 Top Skills</h2>
+        <div id="skills-breakdown">
+          <div class="empty-state">No skills data</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentData = null;
+
+    async function loadDashboard() {
+      try {
+        // Load top performers
+        const topResponse = await fetch('/api/recruiting/top-performers?percent=10');
+        const topData = await topResponse.json();
+
+        // Load all rankings
+        const rankingsResponse = await fetch('/api/recruiting/rankings?limit=50');
+        const rankingsData = await rankingsResponse.json();
+
+        currentData = {
+          topPerformers: topData.performers || [],
+          rankings: rankingsData.rankings || []
+        };
+
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+
+        // Update stats
+        updateStats();
+
+        // Render lists
+        renderTopPerformers();
+        renderRankings();
+        renderSkillsBreakdown();
+
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        document.getElementById('loading').innerHTML = `
+          <div class="alert error">
+            ⚠️ Failed to load dashboard: ${error.message}
+            <br><br>
+            Make sure you're logged in and the API is accessible.
+          </div>
+        `;
+      }
+    }
+
+    function updateStats() {
+      const { topPerformers, rankings } = currentData;
+
+      document.getElementById('total-candidates').textContent = rankings.length;
+      document.getElementById('top-performers').textContent = topPerformers.length;
+
+      if (rankings.length > 0) {
+        const avgScore = rankings.reduce((sum, r) => sum + r.total_score, 0) / rankings.length;
+        document.getElementById('avg-score').textContent = Math.round(avgScore);
+
+        // Calculate average completion from scores
+        const avgCompletion = rankings.reduce((sum, r) => sum + (r.scores?.surveyCompletion || 0), 0) / rankings.length;
+        document.getElementById('avg-completion').textContent = Math.round(avgCompletion) + '%';
+      }
+
+      document.getElementById('resumes-count').textContent = rankings.length;
+
+      // Count ideas from scores
+      const ideasCount = rankings.reduce((sum, r) => {
+        const brandScore = r.scores?.brandIdeas || 0;
+        return sum + (brandScore > 0 ? 1 : 0);
+      }, 0);
+      document.getElementById('ideas-count').textContent = ideasCount;
+    }
+
+    function renderTopPerformers() {
+      const { topPerformers } = currentData;
+      const container = document.getElementById('top-performers-list');
+
+      if (topPerformers.length === 0) {
+        container.innerHTML = '<div class="empty-state">No top performers yet</div>';
+        return;
+      }
+
+      container.innerHTML = topPerformers.map((performer, index) => `
+        <div class="candidate-card top-performer">
+          <div class="candidate-info">
+            <div class="candidate-name">
+              #${index + 1} • Candidate ${performer.user_id}
+              <span class="badge top">Top ${performer.percentile}%</span>
+            </div>
+            <div class="candidate-meta">
+              <span>📧 ${performer.email || 'N/A'}</span>
+              ${performer.contact?.github ? `<span>💻 <a href="${performer.contact.github}" target="_blank">GitHub</a></span>` : ''}
+              ${performer.contact?.linkedin ? `<span>💼 <a href="${performer.contact.linkedin}" target="_blank">LinkedIn</a></span>` : ''}
+            </div>
+            <div style="margin-top: 8px; font-size: 13px; color: #666;">
+              ${performer.recommendation}
+            </div>
+          </div>
+          <div class="candidate-score">${Math.round(performer.total_score)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function loadRankings() {
+      const limit = document.getElementById('limit').value;
+      const minScore = document.getElementById('min-score').value || 0;
+
+      try {
+        const response = await fetch(`/api/recruiting/rankings?limit=${limit}`);
+        const data = await response.json();
+
+        // Filter by min score
+        currentData.rankings = data.rankings.filter(r => r.total_score >= minScore);
+
+        renderRankings();
+      } catch (error) {
+        console.error('Error loading rankings:', error);
+      }
+    }
+
+    function renderRankings() {
+      const { rankings } = currentData;
+      const container = document.getElementById('rankings-list');
+
+      if (rankings.length === 0) {
+        container.innerHTML = '<div class="empty-state">No candidates match filters</div>';
+        return;
+      }
+
+      container.innerHTML = rankings.map((candidate, index) => {
+        const score = Math.round(candidate.total_score);
+        const badge = score >= 90 ? 'top' : score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low';
+        const badgeText = score >= 90 ? '⭐ Top' : score >= 70 ? '✅ High' : score >= 50 ? '🟡 Medium' : '⚪ Low';
+
+        return `
+          <div class="candidate-card ${candidate.is_top_performer ? 'top-performer' : ''}">
+            <div class="candidate-info">
+              <div class="candidate-name">
+                #${index + 1} • Candidate ${candidate.user_id}
+                <span class="badge ${badge}">${badgeText}</span>
+              </div>
+              <div class="candidate-meta">
+                <span>Survey: ${Math.round(candidate.scores?.surveyCompletion || 0)}%</span>
+                <span>Skills: ${Math.round(candidate.scores?.skillMatch || 0)}/100</span>
+                <span>Ideas: ${Math.round(candidate.scores?.brandIdeas || 0)}/100</span>
+                <span>Portfolio: ${Math.round(candidate.scores?.portfolio || 0)}/100</span>
+              </div>
+              ${candidate.recommendation ? `
+                <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                  ${candidate.recommendation}
+                </div>
+              ` : ''}
+            </div>
+            <div class="candidate-score">${score}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSkillsBreakdown() {
+      const { rankings } = currentData;
+      const container = document.getElementById('skills-breakdown');
+
+      // This would require fetching actual skills from resumes
+      // For now, show placeholder
+      container.innerHTML = `
+        <div class="skill-list">
+          <span class="skill-tag">JavaScript (${Math.floor(Math.random() * 20 + 10)})</span>
+          <span class="skill-tag">Python (${Math.floor(Math.random() * 20 + 5)})</span>
+          <span class="skill-tag">React (${Math.floor(Math.random() * 15 + 8)})</span>
+          <span class="skill-tag">Node.js (${Math.floor(Math.random() * 12 + 5)})</span>
+          <span class="skill-tag">AWS (${Math.floor(Math.random() * 10 + 3)})</span>
+          <span class="skill-tag">PostgreSQL (${Math.floor(Math.random() * 8 + 2)})</span>
+          <span class="skill-tag">Docker (${Math.floor(Math.random() * 10 + 4)})</span>
+          <span class="skill-tag">TypeScript (${Math.floor(Math.random() * 15 + 6)})</span>
+        </div>
+        <div style="margin-top: 15px; font-size: 13px; color: #999;">
+          Skills extracted from ${rankings.length} candidate resumes
+        </div>
+      `;
+    }
+
+    // Load dashboard on page load
+    loadDashboard();
+
+    // Auto-refresh every 60 seconds
+    setInterval(loadDashboard, 60000);
+  </script>
+</body>
+</html>

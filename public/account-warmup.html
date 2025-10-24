@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Warmup - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .auth-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      margin: 0 auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .auth-container.hidden {
+      display: none;
+    }
+
+    .main-content {
+      display: none;
+    }
+
+    .main-content.visible {
+      display: block;
+    }
+
+    .phase-progress {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .phase-title {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .phase-description {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar-container {
+      background: rgba(255, 255, 255, 0.2);
+      height: 30px;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #00b894, #00d2ff);
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .requirements-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .requirement-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .requirement-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .requirement-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .authenticity-score {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .score-circle {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #00b894 0%,
+        #00b894 var(--score-percent),
+        rgba(255, 255, 255, 0.2) var(--score-percent),
+        rgba(255, 255, 255, 0.2) 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .score-inner {
+      width: 160px;
+      height: 160px;
+      background: rgba(102, 126, 234, 0.8);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-value {
+      font-size: 48px;
+      font-weight: bold;
+    }
+
+    .score-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .recommended-tasks {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .task-item {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .task-description {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+      background: #00b894;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .error {
+      background: #e74c3c;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+    }
+
+    .phases-list {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .phase-dot {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      position: relative;
+    }
+
+    .phase-dot.active {
+      background: linear-gradient(135deg, #00b894, #00d2ff);
+      box-shadow: 0 0 20px rgba(0, 184, 148, 0.5);
+    }
+
+    .phase-dot.completed {
+      background: #00b894;
+    }
+
+    .phase-name {
+      font-size: 10px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔥 Account Warmup</h1>
+      <p>TikTok-style account warming system</p>
+    </div>
+
+    <!-- Authentication Container -->
+    <div class="auth-container" id="auth-container">
+      <h2 style="margin-bottom: 20px;">Login to Continue</h2>
+      <div id="auth-error" class="error" style="display: none;"></div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit" class="btn btn-primary btn-full">Login</button>
+      </form>
+    </div>
+
+    <!-- Main Content (hidden until authenticated) -->
+    <div class="main-content" id="main-content">
+      <!-- Phase Progression -->
+      <div class="phases-list" id="phases-list">
+        <div class="phase-dot">
+          <span>👀</span>
+          <div class="phase-name">Observer</div>
+        </div>
+        <div class="phase-dot">
+          <span>🙋</span>
+          <div class="phase-name">Participant</div>
+        </div>
+        <div class="phase-dot">
+          <span>✍️</span>
+          <div class="phase-name">Contributor</div>
+        </div>
+        <div class="phase-dot">
+          <span>⭐</span>
+          <div class="phase-name">Expert</div>
+        </div>
+      </div>
+
+      <!-- Current Phase -->
+      <div class="phase-progress">
+        <div class="phase-title" id="phase-title">Loading...</div>
+        <div class="phase-description" id="phase-description"></div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar" style="width: 0%;">0%</div>
+        </div>
+
+        <div class="requirements-grid" id="requirements-grid">
+          <div class="loading">Loading requirements...</div>
+        </div>
+
+        <button class="btn btn-success btn-full" onclick="checkAdvancement()" style="margin-top: 20px;">
+          Check Advancement
+        </button>
+      </div>
+
+      <!-- Authenticity Score -->
+      <div class="authenticity-score">
+        <h2 style="text-align: center; margin-bottom: 20px;">🛡️ Authenticity Score</h2>
+
+        <div class="score-circle" id="score-circle" style="--score-percent: 0%">
+          <div class="score-inner">
+            <div class="score-value" id="authenticity-value">-</div>
+            <div class="score-label">Authenticity</div>
+          </div>
+        </div>
+
+        <div class="requirements-grid">
+          <div class="requirement-card">
+            <div class="requirement-value" id="session-regularity">-</div>
+            <div class="requirement-label">Session Regularity</div>
+          </div>
+          <div class="requirement-card">
+            <div class="requirement-value" id="activity-diversity">-</div>
+            <div class="requirement-label">Activity Diversity</div>
+          </div>
+          <div class="requirement-card">
+            <div class="requirement-value" id="quality-consistency">-</div>
+            <div class="requirement-label">Quality Consistency</div>
+          </div>
+          <div class="requirement-card">
+            <div class="requirement-value" id="timing-realism">-</div>
+            <div class="requirement-label">Timing Realism</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Tasks -->
+      <div class="recommended-tasks">
+        <h2 style="margin-bottom: 20px;">📋 Recommended Tasks for Your Phase</h2>
+        <div id="tasks-list">
+          <div class="loading">Loading tasks...</div>
+        </div>
+      </div>
+
+      <button class="btn btn-danger btn-full" onclick="handleLogout()">Logout</button>
+    </div>
+  </div>
+
+  <script src="/lib/calos-auth.js"></script>
+  <script src="/lib/analytics.js"></script>
+  <script>
+    // ========================================================================
+    // Authentication Handlers
+    // ========================================================================
+
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        await CalAuth.login(email, password);
+
+        // Hide auth, show main content
+        document.getElementById('auth-container').classList.add('hidden');
+        document.getElementById('main-content').classList.add('visible');
+
+        // Load data
+        await loadWarmupStatus();
+        await loadAuthenticityScore();
+        await loadRecommendedTasks();
+
+        Analytics.track('warmup_login', { email });
+      } catch (error) {
+        document.getElementById('auth-error').textContent = error.message;
+        document.getElementById('auth-error').style.display = 'block';
+      }
+    }
+
+    async function handleLogout() {
+      await CalAuth.logout();
+      location.reload();
+    }
+
+    // ========================================================================
+    // Data Loading
+    // ========================================================================
+
+    async function loadWarmupStatus() {
+      try {
+        const status = await CalAuth.getWarmupStatus();
+
+        if (!status.campaign) {
+          // No active campaign - prompt to start one
+          if (confirm('No active warmup campaign. Start one now?')) {
+            const deviceId = CalAuth.getDeviceId();
+            await CalAuth.startWarmup(deviceId);
+            await loadWarmupStatus(); // Reload
+          }
+          return;
+        }
+
+        const { campaign, currentPhase, progress } = status;
+
+        // Update phase title
+        document.getElementById('phase-title').textContent =
+          `${currentPhase.icon} ${currentPhase.displayName}`;
+        document.getElementById('phase-description').textContent =
+          currentPhase.description;
+
+        // Update progress bar
+        const progressPercent = progress.percentComplete || 0;
+        document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+        document.getElementById('progress-bar').textContent = `${Math.round(progressPercent)}%`;
+
+        // Update requirements
+        const reqGrid = document.getElementById('requirements-grid');
+        reqGrid.innerHTML = '';
+
+        const requirements = [
+          { label: 'Sessions', current: progress.sessionsCompleted || 0, required: currentPhase.requirements.minSessions },
+          { label: 'Actions', current: progress.actionsCompleted || 0, required: currentPhase.requirements.minActions },
+          { label: 'Tasks', current: progress.tasksCompleted || 0, required: currentPhase.requirements.minTasksCompleted },
+          { label: 'Streak', current: progress.currentStreak || 0, required: currentPhase.requirements.minStreak }
+        ];
+
+        requirements.forEach(req => {
+          const card = document.createElement('div');
+          card.className = 'requirement-card';
+          card.innerHTML = `
+            <div class="requirement-value">${req.current} / ${req.required}</div>
+            <div class="requirement-label">${req.label}</div>
+          `;
+          reqGrid.appendChild(card);
+        });
+
+        // Update phase dots
+        updatePhaseDots(currentPhase.phaseName);
+
+      } catch (error) {
+        console.error('Failed to load warmup status:', error);
+        document.getElementById('phase-title').textContent = 'Error loading status';
+      }
+    }
+
+    function updatePhaseDots(currentPhase) {
+      const phases = ['observer', 'participant', 'contributor', 'expert'];
+      const currentIndex = phases.indexOf(currentPhase);
+
+      const dots = document.querySelectorAll('.phase-dot');
+      dots.forEach((dot, index) => {
+        dot.classList.remove('active', 'completed');
+        if (index < currentIndex) {
+          dot.classList.add('completed');
+        } else if (index === currentIndex) {
+          dot.classList.add('active');
+        }
+      });
+    }
+
+    async function loadAuthenticityScore() {
+      try {
+        const auth = await CalAuth.getAuthenticityScore();
+
+        const score = Math.round(auth.score * 100);
+        document.getElementById('authenticity-value').textContent = score;
+        document.getElementById('score-circle').style.setProperty('--score-percent', `${score}%`);
+
+        document.getElementById('session-regularity').textContent =
+          Math.round((auth.factors.sessionRegularity || 0) * 100);
+        document.getElementById('activity-diversity').textContent =
+          Math.round((auth.factors.activityDiversity || 0) * 100);
+        document.getElementById('quality-consistency').textContent =
+          Math.round((auth.factors.qualityConsistency || 0) * 100);
+        document.getElementById('timing-realism').textContent =
+          Math.round((auth.factors.timingRealism || 0) * 100);
+
+      } catch (error) {
+        console.error('Failed to load authenticity score:', error);
+      }
+    }
+
+    async function loadRecommendedTasks() {
+      try {
+        const response = await CalAuth.getWarmupTasks(5);
+        const tasks = response.tasks || [];
+
+        const tasksList = document.getElementById('tasks-list');
+        tasksList.innerHTML = '';
+
+        if (tasks.length === 0) {
+          tasksList.innerHTML = '<div class="loading">No recommended tasks right now.</div>';
+          return;
+        }
+
+        tasks.forEach(task => {
+          const item = document.createElement('div');
+          item.className = 'task-item';
+          item.innerHTML = `
+            <div class="task-info">
+              <div class="task-title">${task.taskData.title || 'Untitled Task'}</div>
+              <div class="task-description">${task.taskData.description || 'No description'}</div>
+            </div>
+            <button class="btn btn-primary" onclick="claimTask(${task.id})">
+              🎁 ${task.baseXpReward} XP
+            </button>
+          `;
+          tasksList.appendChild(item);
+        });
+
+      } catch (error) {
+        console.error('Failed to load recommended tasks:', error);
+      }
+    }
+
+    // ========================================================================
+    // Actions
+    // ========================================================================
+
+    async function checkAdvancement() {
+      try {
+        const result = await CalAuth.checkWarmupAdvancement();
+
+        if (result.advanced) {
+          alert(`🎉 Congratulations! You've advanced to ${result.newPhase}!`);
+          await loadWarmupStatus();
+          await loadAuthenticityScore();
+          await loadRecommendedTasks();
+        } else {
+          alert(`Not ready to advance yet. Keep completing tasks and activities!`);
+        }
+
+        Analytics.track('warmup_advancement_check', { advanced: result.advanced });
+      } catch (error) {
+        alert('Failed to check advancement: ' + error.message);
+      }
+    }
+
+    async function claimTask(taskId) {
+      try {
+        await CalAuth.claimTask(taskId);
+        alert('Task claimed! Complete it and submit your work.');
+        await loadRecommendedTasks();
+        Analytics.track('warmup_task_claimed', { taskId });
+      } catch (error) {
+        alert('Failed to claim task: ' + error.message);
+      }
+    }
+
+    // ========================================================================
+    // Initialize
+    // ========================================================================
+
+    async function init() {
+      // Check if already authenticated
+      if (CalAuth.isAuthenticated()) {
+        document.getElementById('auth-container').classList.add('hidden');
+        document.getElementById('main-content').classList.add('visible');
+
+        await loadWarmupStatus();
+        await loadAuthenticityScore();
+        await loadRecommendedTasks();
+      }
+    }
+
+    // Wait for CalAuth to initialize
+    setTimeout(init, 100);
+
+    Analytics.track('warmup_page_loaded');
+  </script>
+</body>
+</html>

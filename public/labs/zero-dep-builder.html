@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero-Dependency Builder - CalOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Monaco', 'Courier New', monospace; max-width: 1400px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e0e0e0; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .section { background: #1a1a2e; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a3e; }
+    .section h2 { color: #764ba2; margin-bottom: 15px; font-size: 18px; }
+    button { padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+    .editor-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .code-editor { background: #0a0a15; padding: 15px; border-radius: 5px; font-family: inherit; font-size: 13px; }
+    textarea { width: 100%; height: 400px; background: #000; border: 1px solid #2a2a3e; border-radius: 5px; color: #e0e0e0; font-family: 'Monaco', monospace; font-size: 13px; padding: 15px; resize: vertical; }
+    .preview { width: 100%; height: 400px; background: white; border: 1px solid #2a2a3e; border-radius: 5px; }
+    .component-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .component-btn { padding: 15px 10px; background: #0a0a15; border: 1px solid #2a2a3e; border-radius: 5px; cursor: pointer; text-align: center; font-size: 12px; transition: all 0.2s; }
+    .component-btn:hover { border-color: #667eea; background: #1a1a2e; }
+    .component-icon { font-size: 24px; margin-bottom: 5px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+    .tab { padding: 10px 20px; background: #0a0a15; border-radius: 5px; cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+  <h1>Zero-Dependency UI Builder</h1>
+  <p class="subtitle">Build UI components with vanilla HTML/CSS/JS - no npm required</p>
+
+  <div class="section">
+    <h2>Component Library</h2>
+    <div class="component-picker">
+      <div class="component-btn" onclick="addComponent('button')">
+        <div class="component-icon">🔘</div>
+        <div>Button</div>
+      </div>
+      <div class="component-btn" onclick="addComponent('card')">
+        <div class="component-icon">📇</div>
+        <div>Card</div>
+      </div>
+      <div class="component-btn" onclick="addComponent('form')">
+        <div class="component-icon">📝</div>
+        <div>Form</div>
+      </div>
+      <div class="component-btn" onclick="addComponent('table')">
+        <div class="component-icon">📊</div>
+        <div>Table</div>
+      </div>
+      <div class="component-btn" onclick="addComponent('modal')">
+        <div class="component-icon">🪟</div>
+        <div>Modal</div>
+      </div>
+      <div class="component-btn" onclick="addComponent('tabs')">
+        <div class="component-icon">📑</div>
+        <div>Tabs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('html')">HTML</div>
+      <div class="tab" onclick="switchTab('css')">CSS</div>
+      <div class="tab" onclick="switchTab('js')">JavaScript</div>
+    </div>
+
+    <div class="tab-content active" id="tab-html">
+      <textarea id="html-editor"><!-- Add components from the library above -->
+<div style="padding: 20px; background: #f0f0f0;">
+  <h1>Welcome to Zero-Dep Builder</h1>
+  <p>Select a component to get started!</p>
+</div></textarea>
+    </div>
+
+    <div class="tab-content" id="tab-css">
+      <textarea id="css-editor">/* Your custom CSS */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}</textarea>
+    </div>
+
+    <div class="tab-content" id="tab-js">
+      <textarea id="js-editor">// Your custom JavaScript
+console.log('Zero-dep builder loaded!');
+
+function handleClick() {
+  alert('Button clicked!');
+}</textarea>
+    </div>
+
+    <div style="margin-top: 15px;">
+      <button onclick="updatePreview()">Update Preview</button>
+      <button onclick="downloadHTML()">Download HTML</button>
+      <button onclick="copyToClipboard()">Copy HTML</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Live Preview</h2>
+    <iframe id="preview" class="preview"></iframe>
+  </div>
+
+  <script>
+    const COMPONENTS = {
+      button: `
+<button class="button" onclick="handleClick()">
+  Click Me!
+</button>
+`,
+      card: `
+<div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px;">
+  <h3 style="margin: 0 0 10px 0;">Card Title</h3>
+  <p style="color: #666;">This is a card component. Add your content here.</p>
+  <button class="button">Action</button>
+</div>
+`,
+      form: `
+<form style="background: white; padding: 20px; border-radius: 10px; max-width: 400px;">
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Name:</label>
+    <input type="text" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email:</label>
+    <input type="email" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+  </div>
+  <button type="submit" class="button">Submit</button>
+</form>
+`,
+      table: `
+<table style="width: 100%; border-collapse: collapse; background: white;">
+  <thead>
+    <tr style="background: #667eea; color: white;">
+      <th style="padding: 12px; text-align: left;">Name</th>
+      <th style="padding: 12px; text-align: left;">Email</th>
+      <th style="padding: 12px; text-align: left;">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #eee;">
+      <td style="padding: 12px;">John Doe</td>
+      <td style="padding: 12px;">john@example.com</td>
+      <td style="padding: 12px;">Active</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #eee;">
+      <td style="padding: 12px;">Jane Smith</td>
+      <td style="padding: 12px;">jane@example.com</td>
+      <td style="padding: 12px;">Inactive</td>
+    </tr>
+  </tbody>
+</table>
+`,
+      modal: `
+<div id="modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; max-width: 500px;">
+    <h2 style="margin: 0 0 15px 0;">Modal Title</h2>
+    <p>This is a modal dialog. Click outside to close.</p>
+    <button class="button" onclick="document.getElementById('modal').style.display='none'">Close</button>
+  </div>
+</div>
+<button class="button" onclick="document.getElementById('modal').style.display='block'">Open Modal</button>
+`,
+      tabs: `
+<div style="background: white; padding: 20px; border-radius: 10px;">
+  <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee;">
+    <button class="tab-btn active" onclick="showTab(1)" style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid #667eea; cursor: pointer;">Tab 1</button>
+    <button class="tab-btn" onclick="showTab(2)" style="padding: 10px 20px; background: none; border: none; cursor: pointer;">Tab 2</button>
+    <button class="tab-btn" onclick="showTab(3)" style="padding: 10px 20px; background: none; border: none; cursor: pointer;">Tab 3</button>
+  </div>
+  <div id="tab-1" class="tab-panel">Content for Tab 1</div>
+  <div id="tab-2" class="tab-panel" style="display: none;">Content for Tab 2</div>
+  <div id="tab-3" class="tab-panel" style="display: none;">Content for Tab 3</div>
+</div>
+`
+    };
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    function addComponent(type) {
+      const html = document.getElementById('html-editor');
+      html.value += '\n\n' + COMPONENTS[type];
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const html = document.getElementById('html-editor').value;
+      const css = document.getElementById('css-editor').value;
+      const js = document.getElementById('js-editor').value;
+
+      const fullHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>${css}</style>
+</head>
+<body>
+  ${html}
+  <script>${js}<\/script>
+</body>
+</html>
+      `;
+
+      const iframe = document.getElementById('preview');
+      iframe.srcdoc = fullHTML;
+    }
+
+    function downloadHTML() {
+      const html = document.getElementById('html-editor').value;
+      const css = document.getElementById('css-editor').value;
+      const js = document.getElementById('js-editor').value;
+
+      const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero-Dep Component</title>
+  <style>
+${css}
+  </style>
+</head>
+<body>
+${html}
+
+  <script>
+${js}
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'component.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function copyToClipboard() {
+      const html = document.getElementById('html-editor').value;
+      navigator.clipboard.writeText(html).then(() => {
+        alert('HTML copied to clipboard!');
+      });
+    }
+
+    // Initial preview
+    window.addEventListener('load', updatePreview);
+  </script>
+</body>
+</html>

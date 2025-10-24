@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CalOS</title>
+  <link rel="stylesheet" href="widgets/world-clock.css">
+  <link rel="stylesheet" href="widgets/system-status.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Main container */
+    #main {
+      padding: 20px;
+      height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+    .view.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Status bar */
+    #statusBar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      font-size: 11px;
+      justify-content: space-between;
+    }
+
+    #statusBar .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #444;
+    }
+    .status-dot.connected { background: #0f0; }
+
+    /* Agent Panel */
+    #agentPanel {
+      background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    #agentPanel h2 {
+      margin-bottom: 15px;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    #userInput {
+      flex: 1;
+      background: #0a0a0a;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 12px;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+    }
+
+    #userInput:focus {
+      border-color: #0080ff;
+      box-shadow: 0 0 0 2px rgba(0, 128, 255, 0.2);
+    }
+
+    button {
+      background: #0080ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 12px 24px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #0066cc;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* Agent selection */
+    .agent-selector {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .agent-btn {
+      background: #222;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 2px solid #333;
+      transition: all 0.2s;
+    }
+
+    .agent-btn.selected {
+      border-color: #0080ff;
+      background: #0a2540;
+    }
+
+    /* Chat logs */
+    #chatLogs {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 3px solid #333;
+    }
+
+    .message.user {
+      background: #1a1a1a;
+      border-left-color: #0080ff;
+    }
+
+    .message.agent {
+      background: #141414;
+      border-left-color: #00ff80;
+    }
+
+    .message .timestamp {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .message .content {
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .message .agent-name {
+      font-weight: bold;
+      color: #0080ff;
+      margin-bottom: 8px;
+    }
+
+    /* Terminal view */
+    #terminalView {
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .terminal-line {
+      margin-bottom: 5px;
+    }
+
+    /* Projects view */
+    #projectsList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .project-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .project-card:hover {
+      border-color: #0080ff;
+      transform: translateY(-2px);
+    }
+
+    .project-card h3 {
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .project-card p {
+      color: #888;
+      font-size: 13px;
+    }
+
+    /* Dock */
+    #dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: rgba(30, 30, 30, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding: 0 20px;
+    }
+
+    .dock-btn {
+      background: #222;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      border: 2px solid #333;
+      transition: all 0.2s;
+      padding: 5px;
+    }
+
+    .dock-btn:hover {
+      border-color: #0080ff;
+      transform: translateY(-3px);
+    }
+
+    .dock-btn.active {
+      border-color: #0080ff;
+      background: #0a2540;
+    }
+
+    .dock-btn-icon {
+      font-size: 20px;
+    }
+
+    .dock-btn-label {
+      font-size: 9px;
+      text-align: center;
+    }
+
+    /* Loading indicator */
+    .loading {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #333;
+      border-top-color: #0080ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Image Gallery */
+    .image-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      overflow: hidden;
+    }
+
+    .image-card:hover {
+      border-color: #0080ff;
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0, 128, 255, 0.2);
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .image-card h3 {
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Swiper Card */
+    .swiper-card {
+      background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+      border: 2px solid #333;
+      border-radius: 20px;
+      padding: 40px;
+      width: 450px;
+      max-width: 90vw;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .swiper-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #0080ff 0%, #00ff88 100%);
+    }
+
+    .swiper-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 15px 50px rgba(0, 128, 255, 0.3);
+    }
+
+    .swiper-card.swipe-left {
+      animation: swipeLeftAnim 0.4s ease-out;
+    }
+
+    .swiper-card.swipe-right {
+      animation: swipeRightAnim 0.4s ease-out;
+    }
+
+    @keyframes swipeLeftAnim {
+      0% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-150%) rotate(-30deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes swipeRightAnim {
+      0% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(150%) rotate(30deg);
+        opacity: 0;
+      }
+    }
+
+    .swiper-card-name {
+      font-size: 36px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .swiper-card-email {
+      font-size: 18px;
+      color: #0080ff;
+      margin-bottom: 5px;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .swiper-card-phone {
+      font-size: 16px;
+      color: #00ff88;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .swiper-card-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+    }
+
+    .swiper-card-info-item {
+      text-align: center;
+    }
+
+    .swiper-card-info-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .swiper-card-info-value {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .swiper-card-score {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #0080ff 0%, #00ff88 100%);
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 128, 255, 0.4);
+    }
+
+    .match-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .match-card:hover {
+      border-color: #0080ff;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 128, 255, 0.2);
+    }
+
+    .match-card-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .match-card-email {
+      font-size: 14px;
+      color: #0080ff;
+      margin-bottom: 4px;
+    }
+
+    .match-card-phone {
+      font-size: 13px;
+      color: #00ff88;
+      margin-bottom: 4px;
+    }
+
+    .match-card-domain {
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <!-- Status Bar -->
+  <div id="statusBar">
+    <div class="status-item">
+      <span class="status-dot" id="wsStatus"></span>
+      <span id="wsStatusText">Connecting...</span>
+    </div>
+    <div class="status-item">
+      <span id="systemTime"></span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main" style="margin-top: 30px;">
+    <!-- Chat View -->
+    <div id="chatView" class="view active">
+      <div id="agentPanel">
+        <h2>💬 Cal Agent Console</h2>
+        <div class="input-row">
+          <input type="text" id="userInput" placeholder="Ask Cal anything..." />
+          <button onclick="sendCommand()" id="sendBtn">Send</button>
+        </div>
+        <div class="agent-selector" id="agentSelector">
+          <div class="agent-btn selected" data-agent="gpt4">GPT-4</div>
+          <div class="agent-btn" data-agent="claude">Claude</div>
+          <div class="agent-btn" data-agent="deepseek">DeepSeek</div>
+        </div>
+      </div>
+      <div id="chatLogs"></div>
+    </div>
+
+    <!-- Terminal View -->
+    <div id="terminalView" class="view">
+      <div style="color: #0f0; margin-bottom: 10px;">CalOS Terminal - Connected to Script Toolkit</div>
+      <div id="terminalOutput">Connecting to script-toolkit bridge...</div>
+    </div>
+
+    <!-- Projects View -->
+    <div id="projectsView" class="view">
+      <h2 style="margin-bottom: 20px; color: #fff;">📁 Projects</h2>
+      <div id="projectsList">
+        <div class="project-card" onclick="alert('Project management coming soon!')">
+          <h3>New Project</h3>
+          <p>Create a new project from template</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settingsView" class="view">
+      <h2 style="margin-bottom: 20px; color: #fff;">⚙️ Settings</h2>
+      <div style="background: #1a1a1a; padding: 20px; border-radius: 10px;">
+        <p>API Keys and configuration can be managed in:</p>
+        <code style="color: #0080ff;">/agent-router/.env</code>
+      </div>
+    </div>
+
+    <!-- Widgets View -->
+    <div id="widgetsView" class="view">
+      <h2 style="margin-bottom: 20px; color: #fff;">🌍 Widgets</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px;">
+        <div id="world-clock-widget"></div>
+        <div id="system-status-widget"></div>
+        <div id="crypto-prices-widget"></div>
+        <div id="stock-ticker-widget"></div>
+      </div>
+    </div>
+
+    <!-- Gallery View -->
+    <div id="galleryView" class="view">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: #fff; margin: 0;">🖼️ IIIF Gallery</h2>
+        <button onclick="showUploadModal()" style="background: #0080ff; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">+ Upload Image</button>
+      </div>
+      <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; text-align: center; color: #888;">
+          <p>No images yet. Upload your first image!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swiper View -->
+    <div id="swiperView" class="view">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: #fff; margin: 0;">🃏 Profile Swiper</h2>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="showSwiperStats()" style="background: #333; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">📊 Stats</button>
+          <button onclick="exportMatches()" style="background: #0080ff; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">⬇️ Export</button>
+        </div>
+      </div>
+
+      <!-- Stats Panel -->
+      <div id="swiperStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;">
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
+          <div style="color: #888; font-size: 12px; margin-bottom: 5px;">Total Swipes</div>
+          <div id="statTotalSwipes" style="color: #fff; font-size: 28px; font-weight: bold;">0</div>
+        </div>
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
+          <div style="color: #888; font-size: 12px; margin-bottom: 5px;">Matches</div>
+          <div id="statMatches" style="color: #0f0; font-size: 28px; font-weight: bold;">0</div>
+        </div>
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
+          <div style="color: #888; font-size: 12px; margin-bottom: 5px;">Rejected</div>
+          <div id="statRejected" style="color: #f44; font-size: 28px; font-weight: bold;">0</div>
+        </div>
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
+          <div style="color: #888; font-size: 12px; margin-bottom: 5px;">Accept Rate</div>
+          <div id="statAcceptRate" style="color: #0080ff; font-size: 28px; font-weight: bold;">0%</div>
+        </div>
+      </div>
+
+      <!-- Swipe Card Container -->
+      <div id="swiperContainer" style="display: flex; justify-content: center; align-items: center; min-height: 500px; position: relative;">
+        <div id="swiperCard" class="swiper-card" style="display: none;">
+          <!-- Card content will be dynamically loaded -->
+        </div>
+        <div id="swiperLoading" style="color: #888; font-size: 18px;">
+          Loading profiles...
+        </div>
+      </div>
+
+      <!-- Swipe Controls -->
+      <div style="display: flex; justify-content: center; gap: 30px; margin-top: 30px;">
+        <button onclick="swipeLeft()" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #ff4444 0%, #ff0000 100%); border: none; color: white; font-size: 40px; cursor: pointer; box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4); transition: all 0.2s;">✕</button>
+        <button onclick="swipeRight()" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); border: none; color: white; font-size: 40px; cursor: pointer; box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4); transition: all 0.2s;">♥</button>
+      </div>
+
+      <!-- Keyboard Hints -->
+      <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+        Press ← to reject or → to accept • Click card to see more details
+      </div>
+
+      <!-- Matches Tab -->
+      <div style="margin-top: 40px; padding-top: 40px; border-top: 1px solid #333;">
+        <h3 style="color: #fff; margin-bottom: 20px;">💚 Your Matches (<span id="matchCount">0</span>)</h3>
+        <div id="matchesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+          <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; text-align: center; color: #888;">
+            <p>No matches yet. Start swiping!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dock -->
+  <div id="dock">
+    <div class="dock-btn active" onclick="switchView('chatView', this)">
+      <div class="dock-btn-icon">💬</div>
+      <div class="dock-btn-label">Chat</div>
+    </div>
+    <div class="dock-btn" onclick="switchView('terminalView', this)">
+      <div class="dock-btn-icon">⌨️</div>
+      <div class="dock-btn-label">Terminal</div>
+    </div>
+    <div class="dock-btn" onclick="switchView('projectsView', this)">
+      <div class="dock-btn-icon">📁</div>
+      <div class="dock-btn-label">Projects</div>
+    </div>
+    <div class="dock-btn" onclick="switchView('settingsView', this)">
+      <div class="dock-btn-icon">⚙️</div>
+      <div class="dock-btn-label">Settings</div>
+    </div>
+    <div class="dock-btn" onclick="switchView('widgetsView', this)">
+      <div class="dock-btn-icon">🌍</div>
+      <div class="dock-btn-label">Widgets</div>
+    </div>
+    <div class="dock-btn" onclick="switchView('galleryView', this); loadGallery();">
+      <div class="dock-btn-icon">🖼️</div>
+      <div class="dock-btn-label">Gallery</div>
+    </div>
+    <div class="dock-btn" onclick="switchView('swiperView', this); initSwiper();">
+      <div class="dock-btn-icon">🃏</div>
+      <div class="dock-btn-label">Swiper</div>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div id="uploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 30px; max-width: 500px; width: 90%;">
+      <h2 style="color: #fff; margin-top: 0;">Upload Image</h2>
+      <form id="uploadForm" onsubmit="event.preventDefault(); handleUpload();">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; color: #888; margin-bottom: 5px;">Image File</label>
+          <input type="file" id="imageFile" accept="image/*" required style="width: 100%; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 5px; color: #fff;">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; color: #888; margin-bottom: 5px;">Title</label>
+          <input type="text" id="imageTitle" placeholder="Image title" style="width: 100%; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 5px; color: #fff;">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; color: #888; margin-bottom: 5px;">Description</label>
+          <textarea id="imageDesc" placeholder="Image description" rows="3" style="width: 100%; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 5px; color: #fff;"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" onclick="hideUploadModal()" style="padding: 10px 20px; background: #333; border: none; border-radius: 5px; color: #fff; cursor: pointer;">Cancel</button>
+          <button type="submit" style="padding: 10px 20px; background: #0080ff; border: none; border-radius: 5px; color: #fff; cursor: pointer;">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Image Viewer -->
+  <div id="imageViewer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1001; justify-content: center; align-items: center;" onclick="closeImageViewer()">
+    <div style="max-width: 90%; max-height: 90%; position: relative;">
+      <button onclick="closeImageViewer()" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: #fff; font-size: 30px; cursor: pointer;">×</button>
+      <h3 id="viewerTitle" style="position: absolute; top: -40px; left: 0; color: #fff; margin: 0;"></h3>
+      <img id="viewerImage" src="" alt="Viewer" style="max-width: 100%; max-height: 80vh; border-radius: 10px;">
+    </div>
+  </div>
+
+  <script>
+    // WebSocket connection
+    let ws;
+    const selectedAgents = new Set(['gpt4']);
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        updateStatus(true);
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        updateStatus(false);
+        setTimeout(connectWebSocket, 3000); // Reconnect
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        updateStatus(false);
+      };
+    }
+
+    function updateStatus(connected) {
+      const dot = document.getElementById('wsStatus');
+      const text = document.getElementById('wsStatusText');
+      if (connected) {
+        dot.classList.add('connected');
+        text.textContent = 'Connected';
+      } else {
+        dot.classList.remove('connected');
+        text.textContent = 'Disconnected';
+      }
+    }
+
+    function handleWebSocketMessage(data) {
+      console.log('WS Message:', data);
+
+      if (data.type === 'agent_response') {
+        addMessage('agent', data.result, data.agent, data.timestamp);
+      }
+    }
+
+    // Agent selection
+    document.getElementById('agentSelector').addEventListener('click', (e) => {
+      if (e.target.classList.contains('agent-btn')) {
+        e.target.classList.toggle('selected');
+        const agent = e.target.dataset.agent;
+        if (selectedAgents.has(agent)) {
+          selectedAgents.delete(agent);
+        } else {
+          selectedAgents.add(agent);
+        }
+      }
+    });
+
+    // Send command
+    async function sendCommand() {
+      const input = document.getElementById('userInput').value.trim();
+      if (!input) return;
+
+      const agents = Array.from(selectedAgents);
+      if (agents.length === 0) {
+        alert('Please select at least one agent');
+        return;
+      }
+
+      // Add user message to chat
+      addMessage('user', input, 'You', new Date().toISOString());
+
+      // Clear input
+      document.getElementById('userInput').value = '';
+
+      // Send to server
+      try {
+        const response = await fetch('/agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input,
+            context: {},
+            target_agents: agents
+          })
+        });
+
+        const data = await response.json();
+        console.log('Response:', data);
+
+      } catch (error) {
+        console.error('Error:', error);
+        addMessage('system', `Error: ${error.message}`, 'System', new Date().toISOString());
+      }
+    }
+
+    // Add message to chat
+    function addMessage(type, content, sender, timestamp) {
+      const chatLogs = document.getElementById('chatLogs');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+
+      const time = new Date(timestamp).toLocaleTimeString();
+      messageDiv.innerHTML = `
+        <div class="timestamp">${time}</div>
+        ${type === 'agent' ? `<div class="agent-name">${sender}</div>` : ''}
+        <div class="content">${content}</div>
+      `;
+
+      chatLogs.appendChild(messageDiv);
+      chatLogs.scrollTop = chatLogs.scrollHeight;
+    }
+
+    // Switch view
+    function switchView(viewId, btn) {
+      // Hide all views
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      // Show selected view
+      document.getElementById(viewId).classList.add('active');
+
+      // Update dock buttons
+      document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    // Enter key to send
+    document.getElementById('userInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendCommand();
+    });
+
+    // Update system time
+    setInterval(() => {
+      document.getElementById('systemTime').textContent = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // Gallery functions
+    async function loadGallery() {
+      try {
+        const response = await fetch('http://localhost:5001/api/iiif/images');
+        const data = await response.json();
+        const grid = document.getElementById('galleryGrid');
+
+        if (!data.images || data.images.length === 0) {
+          grid.innerHTML = '<div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; text-align: center; color: #888;"><p>No images yet. Upload your first image!</p></div>';
+          return;
+        }
+
+        grid.innerHTML = data.images.map(img => {
+          const imageId = img.filename.replace(/\.[^.]+$/, '');
+          return `
+            <div class="image-card" onclick="openImageViewer('${img.filename}', '${img.title}')">
+              <img src="http://localhost:5001/iiif/${img.filename}/full/300,/0/default.jpg" alt="${img.title}" />
+              <h3>${img.title}</h3>
+              <p style="color: #888; font-size: 12px;">${img.width} × ${img.height}</p>
+              <p style="color: #666; font-size: 11px;">${new Date(img.created_at).toLocaleDateString()}</p>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error loading gallery:', error);
+        document.getElementById('galleryGrid').innerHTML = '<div style="color: #ff4444; padding: 20px;">Error loading images: ' + error.message + '</div>';
+      }
+    }
+
+    function showUploadModal() {
+      const modal = document.getElementById('uploadModal');
+      modal.style.display = 'flex';
+    }
+
+    function hideUploadModal() {
+      const modal = document.getElementById('uploadModal');
+      modal.style.display = 'none';
+      document.getElementById('uploadForm').reset();
+    }
+
+    async function handleUpload() {
+      const fileInput = document.getElementById('imageFile');
+      const titleInput = document.getElementById('imageTitle');
+      const descInput = document.getElementById('imageDesc');
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please select an image file');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function(e) {
+        try {
+          const base64 = e.target.result.split(',')[1];
+
+          const response = await fetch('http://localhost:5001/api/iiif/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              file: base64,
+              filename: file.name,
+              title: titleInput.value || file.name,
+              description: descInput.value || ''
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.status === 'ok') {
+            alert('Image uploaded successfully!');
+            hideUploadModal();
+            loadGallery(); // Reload gallery
+          } else {
+            alert('Upload failed: ' + data.message);
+          }
+        } catch (error) {
+          console.error('Upload error:', error);
+          alert('Upload error: ' + error.message);
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function openImageViewer(filename, title) {
+      const viewer = document.getElementById('imageViewer');
+      const viewerImg = document.getElementById('viewerImage');
+      const viewerTitle = document.getElementById('viewerTitle');
+
+      viewerImg.src = `http://localhost:5001/iiif/${filename}/full/max/0/default.jpg`;
+      viewerTitle.textContent = title;
+      viewer.style.display = 'flex';
+    }
+
+    function closeImageViewer() {
+      document.getElementById('imageViewer').style.display = 'none';
+    }
+
+    // Swiper functions
+    let currentProfile = null;
+    const sessionId = 'session-' + Date.now();
+
+    async function initSwiper() {
+      try {
+        await loadSwiperStats();
+        await loadMatches();
+        await loadNextProfile();
+      } catch (error) {
+        console.error('Error initializing swiper:', error);
+      }
+    }
+
+    async function loadNextProfile() {
+      try {
+        document.getElementById('swiperLoading').style.display = 'block';
+        document.getElementById('swiperCard').style.display = 'none';
+
+        const response = await fetch(`http://localhost:5001/api/swiper/profile?weighted=true&sessionId=${sessionId}`);
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          currentProfile = data.profile;
+          renderProfileCard(currentProfile);
+          document.getElementById('swiperLoading').style.display = 'none';
+          document.getElementById('swiperCard').style.display = 'block';
+        } else {
+          throw new Error(data.message || 'Failed to load profile');
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        document.getElementById('swiperLoading').innerHTML = `<p style="color: #ff4444;">Error: ${error.message}</p>`;
+      }
+    }
+
+    function renderProfileCard(profile) {
+      const card = document.getElementById('swiperCard');
+      card.className = 'swiper-card';
+
+      const originEmoji = profile.metadata?.first_name_origin === profile.metadata?.last_name_origin ? '🔗' : '🌍';
+
+      card.innerHTML = `
+        <div class="swiper-card-score">${profile.match_score}</div>
+        <div class="swiper-card-name">${profile.full_name}</div>
+        <div class="swiper-card-email">${profile.email}</div>
+        <div class="swiper-card-phone">${profile.phone_formatted}</div>
+
+        <div class="swiper-card-info">
+          <div class="swiper-card-info-item">
+            <div class="swiper-card-info-label">Domain</div>
+            <div class="swiper-card-info-value">${profile.domain}</div>
+          </div>
+          <div class="swiper-card-info-item">
+            <div class="swiper-card-info-label">Type</div>
+            <div class="swiper-card-info-value">${profile.domain_type}</div>
+          </div>
+          <div class="swiper-card-info-item">
+            <div class="swiper-card-info-label">Country</div>
+            <div class="swiper-card-info-value">${profile.country_name}</div>
+          </div>
+          <div class="swiper-card-info-item">
+            <div class="swiper-card-info-label">Origin</div>
+            <div class="swiper-card-info-value">${originEmoji} ${profile.metadata.first_name_origin}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function swipeLeft() {
+      if (!currentProfile) return;
+
+      const card = document.getElementById('swiperCard');
+      card.classList.add('swipe-left');
+
+      await recordSwipe('left');
+
+      setTimeout(() => {
+        loadNextProfile();
+      }, 400);
+    }
+
+    async function swipeRight() {
+      if (!currentProfile) return;
+
+      const card = document.getElementById('swiperCard');
+      card.classList.add('swipe-right');
+
+      await recordSwipe('right');
+
+      setTimeout(async () => {
+        await loadMatches();
+        await loadSwiperStats();
+        loadNextProfile();
+      }, 400);
+    }
+
+    async function recordSwipe(direction) {
+      try {
+        const response = await fetch('http://localhost:5001/api/swiper/swipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profile: currentProfile,
+            direction: direction,
+            sessionId: sessionId
+          })
+        });
+
+        const data = await response.json();
+        console.log(`Swiped ${direction}:`, data);
+      } catch (error) {
+        console.error('Error recording swipe:', error);
+      }
+    }
+
+    async function loadSwiperStats() {
+      try {
+        const response = await fetch(`http://localhost:5001/api/swiper/stats?sessionId=${sessionId}`);
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          const stats = data.stats;
+          document.getElementById('statTotalSwipes').textContent = stats.total_swipes || 0;
+          document.getElementById('statMatches').textContent = stats.accepted || 0;
+          document.getElementById('statRejected').textContent = stats.rejected || 0;
+          document.getElementById('statAcceptRate').textContent = (stats.accept_rate || 0) + '%';
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    async function loadMatches() {
+      try {
+        const response = await fetch(`http://localhost:5001/api/swiper/matches?sessionId=${sessionId}&limit=50`);
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          const matchesList = document.getElementById('matchesList');
+          document.getElementById('matchCount').textContent = data.count;
+
+          if (data.count === 0) {
+            matchesList.innerHTML = '<div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; text-align: center; color: #888;"><p>No matches yet. Start swiping!</p></div>';
+            return;
+          }
+
+          matchesList.innerHTML = data.matches.map(match => `
+            <div class="match-card">
+              <div class="match-card-name">${match.full_name}</div>
+              <div class="match-card-email">${match.email}</div>
+              <div class="match-card-phone">${match.phone}</div>
+              <div class="match-card-domain">Domain: ${match.domain} (${match.domain_type})</div>
+              <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                Score: ${match.match_score} • ${new Date(match.created_at).toLocaleDateString()}
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Error loading matches:', error);
+      }
+    }
+
+    async function showSwiperStats() {
+      try {
+        const response = await fetch(`http://localhost:5001/api/swiper/stats?sessionId=${sessionId}`);
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          const stats = data.stats;
+          const topDomains = data.top_domains.map(d => `${d.domain}: ${d.count}`).join(', ') || 'None';
+          const topNames = data.top_names.map(n => `${n.first_name} ${n.last_name}`).join(', ') || 'None';
+
+          alert(`📊 Swiper Statistics\\n\\n` +
+            `Total Swipes: ${stats.total_swipes}\\n` +
+            `Accepted: ${stats.accepted}\\n` +
+            `Rejected: ${stats.rejected}\\n` +
+            `Accept Rate: ${stats.accept_rate}%\\n\\n` +
+            `Top Domains: ${topDomains}\\n` +
+            `Top Names: ${topNames}`);
+        }
+      } catch (error) {
+        console.error('Error showing stats:', error);
+        alert('Error loading stats: ' + error.message);
+      }
+    }
+
+    async function exportMatches() {
+      try {
+        const format = prompt('Export format? (vcard, csv, json)', 'vcard');
+        if (!format || !['vcard', 'csv', 'json'].includes(format.toLowerCase())) {
+          return;
+        }
+
+        const response = await fetch('http://localhost:5001/api/swiper/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            format: format.toLowerCase(),
+            sessionId: sessionId
+          })
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `matches.${format.toLowerCase()}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        } else {
+          const error = await response.json();
+          alert('Export failed: ' + error.message);
+        }
+      } catch (error) {
+        console.error('Error exporting matches:', error);
+        alert('Export error: ' + error.message);
+      }
+    }
+
+    // Keyboard controls for swiper
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('swiperView').classList.contains('active')) {
+        if (e.key === 'ArrowLeft') {
+          swipeLeft();
+        } else if (e.key === 'ArrowRight') {
+          swipeRight();
+        }
+      }
+    });
+
+    // Initialize
+    connectWebSocket();
+  </script>
+  <script src="widgets/world-clock.js"></script>
+  <script src="widgets/system-status.js"></script>
+  <script src="widgets/crypto-prices.js"></script>
+  <script src="widgets/stock-ticker.js"></script>
+  <script>
+    // Initialize widgets
+    document.addEventListener('DOMContentLoaded', () => {
+      // World Clock Widget
+      const worldClock = new WorldClock('world-clock-widget');
+
+      // System Status Widget
+      const systemStatus = new SystemStatus('system-status-widget');
+
+      // Crypto Prices Widget
+      const cryptoPrices = new CryptoPricesWidget('crypto-prices-widget');
+      cryptoPrices.init();
+
+      // Stock Ticker Widget
+      const stockTicker = new StockTickerWidget('stock-ticker-widget');
+      stockTicker.init();
+
+      // Register service worker for PWA support
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
+          .catch(err => console.error('[PWA] Service worker registration failed:', err));
+      }
+    });
+  </script>
+</body>
+</html>

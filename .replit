@@ -1,0 +1,103 @@
+# Replit configuration for CALOS Agent Router
+#
+# This makes the project instantly runnable on Replit
+# Fork this repo on Replit and click "Run"!
+
+# Main command to run the server
+run = "npm start"
+
+# Entry point file
+entrypoint = "router.js"
+
+# Primary language
+language = "nodejs"
+
+# Hidden files (don't show in file tree)
+hidden = [
+  ".config",
+  "node_modules",
+  ".DS_Store",
+  ".git",
+  ".claude",
+  "logs"
+]
+
+# Environment detection
+[env]
+PORT = "5001"
+NODE_ENV = "development"
+HOST = "0.0.0.0"
+# Replit provides DATABASE_URL automatically if PostgreSQL is enabled
+
+# Nix environment (see replit.nix)
+[nix]
+channel = "stable-23_11"
+
+# Deployment configuration
+[deployment]
+run = ["npm", "start"]
+deploymentTarget = "cloudrun"
+ignorePorts = false
+
+[deployment.environment]
+NODE_ENV = "production"
+
+# Package manager
+[packager]
+language = "nodejs"
+
+[packager.features]
+packageSearch = true
+guessImports = true
+enabledForHosting = false
+
+# Language server (autocomplete, linting)
+[languages.javascript]
+pattern = "**/{*.js,*.jsx,*.ts,*.tsx,*.mjs}"
+
+[languages.javascript.languageServer]
+start = "typescript-language-server --stdio"
+
+# Debugger configuration
+[debugger]
+support = true
+
+[debugger.interactive]
+transport = "localhost:0"
+startCommand = ["dap-node"]
+
+[debugger.interactive.initializeMessage]
+command = "initialize"
+type = "request"
+
+[debugger.interactive.initializeMessage.arguments]
+clientID = "replit"
+clientName = "replit.com"
+columnsStartAt1 = true
+linesStartAt1 = true
+locale = "en-us"
+pathFormat = "path"
+supportsInvalidatedEvent = true
+supportsProgressReporting = true
+supportsRunInTerminalRequest = true
+supportsVariablePaging = true
+supportsVariableType = true
+
+[debugger.interactive.launchMessage]
+command = "launch"
+type = "request"
+
+[debugger.interactive.launchMessage.arguments]
+console = "externalTerminal"
+cwd = "."
+pauseForSourceMap = false
+program = "./router.js"
+request = "launch"
+sourceMaps = true
+stopOnEntry = false
+type = "pwa-node"
+
+# Replit-specific ports
+[[ports]]
+localPort = 5001
+externalPort = 80

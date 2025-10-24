@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+/**
+ * Generate REAL culture packs from agent-router codebase
+ * No more blank emojis - scan YOUR actual code for patterns
+ */
+
+const path = require('path');
+const EngineeringCardGenerator = require('../lib/engineering-card-generator');
+
+async function main() {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  GENERATING REAL CULTURE PACKS');
+  console.log('  From YOUR agent-router codebase');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  const projectPath = path.join(__dirname, '..');
+
+  const generator = new EngineeringCardGenerator({
+    outputDir: path.join(projectPath, 'data/culture-packs')
+  });
+
+  // Generate cards from YOUR codebase
+  console.log(`Scanning: ${projectPath}\n`);
+
+  const cards = await generator.generateFromCodebase(projectPath, {
+    maxFiles: 50,
+    includeTests: false
+  });
+
+  if (cards.length === 0) {
+    console.log('No patterns detected!\n');
+    return;
+  }
+
+  // Display what was found
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  DETECTED PATTERNS');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  const byRarity = cards.reduce((acc, card) => {
+    if (!acc[card.rarity]) acc[card.rarity] = [];
+    acc[card.rarity].push(card);
+    return acc;
+  }, {});
+
+  for (const [rarity, rarityCards] of Object.entries(byRarity)) {
+    console.log(`${rarity.toUpperCase()}: ${rarityCards.length} cards`);
+    rarityCards.slice(0, 3).forEach(card => {
+      console.log(`  - ${card.metadata.pattern} (${card.metadata.instances}x in ${card.metadata.files[0]})`);
+    });
+    console.log('');
+  }
+
+  // Create culture pack
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  CREATING CULTURE PACK');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+  const packId = 'agent-router-real-patterns';
+
+  const pack = await generator.createCulturePack(cards, packId, {
+    name: 'Agent Router - Real Patterns',
+    description: 'REAL patterns from YOUR agent-router codebase (not fake emojis)',
+    emoji: '🤖',
+    controversial: true,
+    teachingTool: true
+  });
+
+  console.log(`✓ Created: ${pack.packId}.json`);
+  console.log(`  Prompts: ${pack.prompts.length}`);
+  console.log(`  Responses: ${pack.responses.length}`);
+  console.log(`  Rarity: ${pack.rarity}`);
+  console.log(`\nNow your card game uses REAL code from YOUR project!\n`);
+}
+
+main().catch(err => {
+  console.error('Error:', err);
+  process.exit(1);
+});

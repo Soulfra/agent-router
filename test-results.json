@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-10-23T00:38:27.457Z",
+  "summary": {
+    "total": 14,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "Scheduler Unit Tests",
+      "tests": [
+        {
+          "name": "should create scheduler instance",
+          "status": "PASS",
+          "duration_ms": 0
+        },
+        {
+          "name": "should schedule a task",
+          "status": "PASS",
+          "duration_ms": 0
+        },
+        {
+          "name": "should start scheduler and execute tasks",
+          "status": "PASS",
+          "duration_ms": 104
+        },
+        {
+          "name": "should run task immediately with runImmediately option",
+          "status": "PASS",
+          "duration_ms": 52
+        },
+        {
+          "name": "should disable and enable tasks",
+          "status": "PASS",
+          "duration_ms": 303
+        },
+        {
+          "name": "should remove task",
+          "status": "PASS",
+          "duration_ms": 0
+        },
+        {
+          "name": "should run task on demand with runNow()",
+          "status": "PASS",
+          "duration_ms": 1
+        },
+        {
+          "name": "should handle task errors gracefully",
+          "status": "PASS",
+          "duration_ms": 103
+        },
+        {
+          "name": "should retry failed tasks",
+          "status": "PASS",
+          "duration_ms": 364
+        },
+        {
+          "name": "should track task statistics",
+          "status": "PASS",
+          "duration_ms": 154
+        },
+        {
+          "name": "should get stats for all tasks",
+          "status": "PASS",
+          "duration_ms": 0
+        },
+        {
+          "name": "should prevent duplicate task names",
+          "status": "PASS",
+          "duration_ms": 0
+        },
+        {
+          "name": "should track task execution history",
+          "status": "PASS",
+          "duration_ms": 153
+        },
+        {
+          "name": "should stop all tasks when scheduler stops",
+          "status": "PASS",
+          "duration_ms": 304
+        }
+      ],
+      "startTime": 1761179907462,
+      "duration": 1541
+    }
+  ]
+}

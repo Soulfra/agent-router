@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise Dashboard | CALOS™</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px 32px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #333;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    .stat-change {
+      font-size: 13px;
+      color: #44cc44;
+    }
+
+    .stat-change.negative {
+      color: #ff4444;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .search-bar {
+      flex: 1;
+      min-width: 300px;
+      max-width: 500px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 12px 20px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+      background: #252525;
+      border-color: #667eea;
+    }
+
+    /* Customers Table */
+    .customers-table {
+      background: #1a1a1a;
+      border-radius: 12px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #252525;
+    }
+
+    th {
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      font-weight: 600;
+    }
+
+    tbody tr {
+      border-top: 1px solid #333;
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #252525;
+    }
+
+    td {
+      padding: 16px 20px;
+      font-size: 14px;
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-active {
+      background: rgba(68, 204, 68, 0.2);
+      color: #44cc44;
+      border: 1px solid #44cc44;
+    }
+
+    .status-trial {
+      background: rgba(255, 191, 0, 0.2);
+      color: #ffbf00;
+      border: 1px solid #ffbf00;
+    }
+
+    .status-past-due {
+      background: rgba(255, 107, 53, 0.2);
+      color: #ff6b35;
+      border: 1px solid #ff6b35;
+    }
+
+    .status-canceled {
+      background: rgba(255, 68, 68, 0.2);
+      color: #ff4444;
+      border: 1px solid #ff4444;
+    }
+
+    /* Tier Badge */
+    .tier-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .tier-community {
+      background: #e0e7ff;
+      color: #4c51bf;
+    }
+
+    .tier-pro {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+    }
+
+    .tier-enterprise {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      margin-right: 8px;
+      transition: transform 0.2s;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .action-view {
+      background: #667eea;
+      color: white;
+    }
+
+    .action-edit {
+      background: #ffbf00;
+      color: #333;
+    }
+
+    .action-revoke {
+      background: #ff4444;
+      color: white;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      border: 1px solid #333;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      color: #e0e0e0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 32px;
+      color: #888;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #e0e0e0;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #888;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(102, 126, 234, 0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Usage Meter */
+    .usage-meter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .usage-bar {
+      flex: 1;
+      height: 6px;
+      background: #333;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .usage-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #44cc44, #66dd66);
+      transition: width 0.3s;
+    }
+
+    .usage-fill.warning {
+      background: linear-gradient(90deg, #ff9f1c, #ffb84d);
+    }
+
+    .usage-fill.danger {
+      background: linear-gradient(90deg, #ff4444, #ff6666);
+    }
+
+    .usage-text {
+      font-size: 12px;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-bar {
+        max-width: none;
+      }
+
+      .customers-table {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 800px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>🏢 Enterprise Dashboard</h1>
+    <p>Manage all licensed customers, analyze usage patterns, and track revenue</p>
+  </div>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-value" id="total-customers">-</div>
+        <div class="stat-change" id="customers-change">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Active Licenses</div>
+        <div class="stat-value" id="active-licenses">-</div>
+        <div class="stat-change" id="licenses-change">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Monthly Revenue</div>
+        <div class="stat-value" id="monthly-revenue">-</div>
+        <div class="stat-change" id="revenue-change">-</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Trial Conversions</div>
+        <div class="stat-value" id="trial-conversion">-</div>
+        <div class="stat-change" id="conversion-change">-</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="🔍 Search customers by domain, email, or install ID...">
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+        <button class="btn btn-primary" onclick="openCreateModal()">➕ Create License</button>
+      </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="customers-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Domain</th>
+            <th>Tier</th>
+            <th>Status</th>
+            <th>Usage</th>
+            <th>MRR</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="customers-tbody">
+          <tr>
+            <td colspan="8">
+              <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 16px;">Loading customers...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create License Modal -->
+  <div class="modal" id="create-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create New License</h2>
+        <button class="modal-close" onclick="closeCreateModal()">×</button>
+      </div>
+
+      <form id="create-form" onsubmit="createLicense(event)">
+        <div class="form-group">
+          <label>User ID</label>
+          <input type="number" name="userId" required>
+        </div>
+
+        <div class="form-group">
+          <label>Tier</label>
+          <select name="tier" required>
+            <option value="community">Community (Free)</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Billing Period</label>
+          <select name="billingPeriod">
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Trial Days (optional)</label>
+          <input type="number" name="trialDays" min="0" max="90" placeholder="14">
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" name="notes" placeholder="Internal notes...">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Create License</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let customers = [];
+
+    /**
+     * Initialize
+     */
+    async function init() {
+      await loadStats();
+      await loadCustomers();
+
+      // Setup search
+      document.getElementById('search-input').addEventListener('input', filterCustomers);
+
+      // Auto-refresh every 30 seconds
+      setInterval(() => {
+        loadStats();
+        loadCustomers();
+      }, 30000);
+    }
+
+    /**
+     * Load stats
+     */
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/enterprise/stats');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        document.getElementById('total-customers').textContent = data.stats.totalCustomers || 0;
+        document.getElementById('active-licenses').textContent = data.stats.activeLicenses || 0;
+        document.getElementById('monthly-revenue').textContent = `$${(data.stats.monthlyRevenue || 0).toLocaleString()}`;
+        document.getElementById('trial-conversion').textContent = `${data.stats.trialConversion || 0}%`;
+
+        // Changes (mock data for now)
+        document.getElementById('customers-change').textContent = '+12 this month';
+        document.getElementById('licenses-change').textContent = '+8 this month';
+        document.getElementById('revenue-change').textContent = '+23% vs last month';
+        document.getElementById('conversion-change').textContent = '+5% vs last month';
+      } catch (error) {
+        console.error('[Enterprise] Failed to load stats:', error);
+      }
+    }
+
+    /**
+     * Load customers
+     */
+    async function loadCustomers() {
+      try {
+        const response = await fetch('/api/enterprise/customers');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        customers = data.customers;
+        renderCustomers(customers);
+      } catch (error) {
+        console.error('[Enterprise] Failed to load customers:', error);
+        document.getElementById('customers-tbody').innerHTML = `
+          <tr><td colspan="8" style="text-align: center; padding: 40px; color: #ff4444;">
+            Failed to load customers: ${error.message}
+          </td></tr>
+        `;
+      }
+    }
+
+    /**
+     * Render customers table
+     */
+    function renderCustomers(customersList) {
+      const tbody = document.getElementById('customers-tbody');
+
+      if (customersList.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="8" style="text-align: center; padding: 40px; color: #888;">
+            No customers found
+          </td></tr>
+        `;
+        return;
+      }
+
+      const rows = customersList.map(customer => {
+        const statusClass = `status-${customer.status}`;
+        const tierClass = `tier-${customer.tier_slug}`;
+
+        // Calculate usage percentage (example: API requests)
+        const usagePct = customer.usage && customer.limits
+          ? Math.min((customer.usage.apiRequests / customer.limits.apiRequests) * 100, 100)
+          : 0;
+
+        const usageClass = usagePct >= 80 ? 'danger' : usagePct >= 50 ? 'warning' : '';
+
+        // Calculate MRR
+        const mrr = calculateMRR(customer);
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 600;">${customer.username || 'Unknown'}</div>
+              <div style="font-size: 12px; color: #888;">${customer.email || ''}</div>
+            </td>
+            <td>
+              <div style="font-weight: 500;">${customer.domain || 'N/A'}</div>
+              <div style="font-size: 11px; color: #666;">${customer.install_id.substring(0, 12)}...</div>
+            </td>
+            <td><span class="tier-badge ${tierClass}">${customer.tier_slug}</span></td>
+            <td><span class="status-badge ${statusClass}">${customer.status}</span></td>
+            <td>
+              <div class="usage-meter">
+                <div class="usage-bar">
+                  <div class="usage-fill ${usageClass}" style="width: ${usagePct}%"></div>
+                </div>
+                <span class="usage-text">${Math.round(usagePct)}%</span>
+              </div>
+            </td>
+            <td style="font-weight: 600; color: #44cc44;">$${mrr}</td>
+            <td style="color: #888; font-size: 13px;">
+              ${new Date(customer.created_at).toLocaleDateString()}
+            </td>
+            <td>
+              <button class="action-btn action-view" onclick="viewCustomer('${customer.install_id}')">View</button>
+              <button class="action-btn action-edit" onclick="editCustomer('${customer.install_id}')">Edit</button>
+              <button class="action-btn action-revoke" onclick="revokeCustomer('${customer.install_id}')">Revoke</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rows;
+    }
+
+    /**
+     * Calculate MRR for customer
+     */
+    function calculateMRR(customer) {
+      const basePrice = customer.tier_slug === 'enterprise' ? 299
+        : customer.tier_slug === 'pro' ? 49
+        : 0;
+
+      // Add usage-based charges (example)
+      const usageCharges = 0; // Calculate from usage data
+
+      return basePrice + usageCharges;
+    }
+
+    /**
+     * Filter customers
+     */
+    function filterCustomers() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+
+      const filtered = customers.filter(customer => {
+        return (customer.username || '').toLowerCase().includes(query)
+          || (customer.email || '').toLowerCase().includes(query)
+          || (customer.domain || '').toLowerCase().includes(query)
+          || customer.install_id.toLowerCase().includes(query);
+      });
+
+      renderCustomers(filtered);
+    }
+
+    /**
+     * View customer
+     */
+    function viewCustomer(installId) {
+      const customer = customers.find(c => c.install_id === installId);
+      if (customer) {
+        window.location.href = `/culture-profile.html?install_id=${installId}`;
+      }
+    }
+
+    /**
+     * Edit customer
+     */
+    function editCustomer(installId) {
+      alert('Edit functionality coming soon!');
+      // TODO: Open edit modal
+    }
+
+    /**
+     * Revoke customer license
+     */
+    async function revokeCustomer(installId) {
+      const customer = customers.find(c => c.install_id === installId);
+
+      if (!confirm(`Revoke license for ${customer.domain || customer.username}?\n\nThis will immediately disable their access.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/enterprise/revoke-license', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ installId })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+
+        alert('License revoked successfully!');
+        await loadCustomers();
+      } catch (error) {
+        alert(`Failed to revoke license: ${error.message}`);
+      }
+    }
+
+    /**
+     * Open create modal
+     */
+    function openCreateModal() {
+      document.getElementById('create-modal').classList.add('active');
+    }
+
+    /**
+     * Close create modal
+     */
+    function closeCreateModal() {
+      document.getElementById('create-modal').classList.remove('active');
+      document.getElementById('create-form').reset();
+    }
+
+    /**
+     * Create license
+     */
+    async function createLicense(event) {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const data = {
+        userId: parseInt(formData.get('userId')),
+        tier: formData.get('tier'),
+        billingPeriod: formData.get('billingPeriod'),
+        trialDays: formData.get('trialDays') ? parseInt(formData.get('trialDays')) : 0,
+        notes: formData.get('notes')
+      };
+
+      try {
+        const response = await fetch('/api/enterprise/create-license', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        alert(`License created successfully!\n\nInstall ID: ${result.installId}\n\nShare this with the customer.`);
+
+        closeCreateModal();
+        await loadCustomers();
+      } catch (error) {
+        alert(`Failed to create license: ${error.message}`);
+      }
+    }
+
+    /**
+     * Refresh data
+     */
+    async function refreshData() {
+      await loadStats();
+      await loadCustomers();
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

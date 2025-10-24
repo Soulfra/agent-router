@@ -15,6 +15,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const jsonPath = require('../lib/json-path');
+const PriceVerifier = require('../lib/price-verifier');
 
 class PricingSource {
   constructor(options = {}) {
@@ -33,6 +34,9 @@ class PricingSource {
     this.requestCounts = {}; // Track requests per minute per source
     this.rateLimitBackoff = {}; // Track backoff state for each source
     this.maxRequestsPerMinute = 10; // Conservative limit for free tier
+
+    // Price verification
+    this.verifier = new PriceVerifier({ db: this.db });
   }
 
   /**
@@ -92,9 +96,29 @@ class PricingSource {
         price: data[currency],
         change24h: data[`${currency}_24h_change`] || null,
         volume24h: data[`${currency}_24h_vol`] || null,
+        // Use API timestamp (source_timestamp) not system time
         lastUpdate: data.last_updated_at ? new Date(data.last_updated_at * 1000) : new Date(),
+        source_timestamp: data.last_updated_at ? new Date(data.last_updated_at * 1000) : new Date(),
+        ingested_at: new Date(), // When WE received it (may have clock skew)
         currency: currency.toUpperCase(),
         source: 'coingecko'
+      };
+
+      // Verify price data quality
+      const verification = await this.verifier.verify(priceData);
+      if (!verification.verified || verification.confidence < 70) {
+        console.warn(`[PricingSource] ${verification.recommendation} for ${symbol}:`, {
+          price: priceData.price,
+          confidence: verification.confidence,
+          issues: verification.issues
+        });
+        await this._logSuspiciousPrice(symbol, priceData, verification);
+      }
+
+      // Add verification metadata to returned data
+      priceData.verification = {
+        verified: verification.verified,
+        confidence: verification.confidence
       };
 
       // Reset backoff on success
@@ -167,9 +191,29 @@ class PricingSource {
         change: quote.regularMarketPrice - quote.previousClose,
         changePercent: ((quote.regularMarketPrice - quote.previousClose) / quote.previousClose) * 100,
         volume: quote.regularMarketVolume,
+        // Use API timestamp (source_timestamp) not system time
         lastUpdate: new Date(quote.regularMarketTime * 1000),
+        source_timestamp: new Date(quote.regularMarketTime * 1000),
+        ingested_at: new Date(), // When WE received it
         currency: quote.currency || 'USD',
         source: 'yahoo_finance'
+      };
+
+      // Verify price data quality
+      const verification = await this.verifier.verify(priceData);
+      if (!verification.verified || verification.confidence < 70) {
+        console.warn(`[PricingSource] ${verification.recommendation} for ${symbol}:`, {
+          price: priceData.price,
+          confidence: verification.confidence,
+          issues: verification.issues
+        });
+        await this._logSuspiciousPrice(symbol, priceData, verification);
+      }
+
+      // Add verification metadata
+      priceData.verification = {
+        verified: verification.verified,
+        confidence: verification.confidence
       };
 
       // Cache the result
@@ -185,6 +229,133 @@ class PricingSource {
 
       console.error(`Failed to fetch ${symbol} stock price:`, error.message);
       throw new Error(`Unable to fetch ${symbol} stock price: ${error.message}`);
+    }
+  }
+
+  /**
+   * Fetch commodity price (Gold, Silver)
+   */
+  async getCommodityPrice(symbol, currency = 'usd') {
+    symbol = symbol.toUpperCase();
+    const cacheKey = `commodity_${symbol}_${currency}`;
+
+    // Check cache first
+    const cached = await this._getFromCache(cacheKey);
+    if (cached) {
+      console.log(`[PricingSource] Cache hit for ${cacheKey} (age: ${Math.round((Date.now() - new Date(cached.lastUpdate)) / 1000)}s)`);
+      return cached;
+    }
+
+    // Check if we're in backoff period
+    if (await this._isInBackoff('coingecko')) {
+      console.warn(`[PricingSource] CoinGecko in backoff, using fallback for ${symbol}`);
+      return await this._getFallbackPrice(symbol, 'commodity');
+    }
+
+    // Check rate limit
+    if (await this._isRateLimited('coingecko')) {
+      console.warn(`[PricingSource] CoinGecko rate limit reached, using fallback for ${symbol}`);
+      return await this._getFallbackPrice(symbol, 'commodity');
+    }
+
+    try {
+      // Track request
+      await this._trackRequest('coingecko');
+
+      // Map symbols to CoinGecko commodity IDs
+      const commodityIdMap = {
+        'AU': 'gold',
+        'GOLD': 'gold',
+        'AG': 'silver',
+        'SILVER': 'silver',
+        'PT': 'platinum',
+        'PLATINUM': 'platinum',
+        'PD': 'palladium',
+        'PALLADIUM': 'palladium'
+      };
+
+      const commodityId = commodityIdMap[symbol];
+      if (!commodityId) {
+        throw new Error(`Unknown commodity symbol: ${symbol}`);
+      }
+
+      // CoinGecko API (commodities priced as crypto-like assets)
+      const response = await axios.get(
+        `${this.apis.coingecko}/simple/price`,
+        {
+          params: {
+            ids: commodityId,
+            vs_currencies: currency,
+            include_24hr_change: true,
+            include_24hr_vol: true,
+            include_last_updated_at: true
+          },
+          timeout: 5000
+        }
+      );
+
+      const data = response.data[commodityId];
+
+      if (!data) {
+        throw new Error(`Price data not available for ${symbol}`);
+      }
+
+      const priceData = {
+        symbol: symbol,
+        price: data[currency],
+        change24h: data[`${currency}_24h_change`] || null,
+        volume24h: data[`${currency}_24h_vol`] || null,
+        // Use API timestamp (source_timestamp) not system time
+        lastUpdate: data.last_updated_at ? new Date(data.last_updated_at * 1000) : new Date(),
+        source_timestamp: data.last_updated_at ? new Date(data.last_updated_at * 1000) : new Date(),
+        ingested_at: new Date(), // When WE received it
+        currency: currency.toUpperCase(),
+        source: 'coingecko',
+        assetType: 'commodity'
+      };
+
+      // Verify price data quality
+      const verification = await this.verifier.verify(priceData);
+      if (!verification.verified || verification.confidence < 70) {
+        console.warn(`[PricingSource] ${verification.recommendation} for ${symbol}:`, {
+          price: priceData.price,
+          confidence: verification.confidence,
+          issues: verification.issues
+        });
+        await this._logSuspiciousPrice(symbol, priceData, verification);
+      }
+
+      // Add verification metadata
+      priceData.verification = {
+        verified: verification.verified,
+        confidence: verification.confidence
+      };
+
+      // Reset backoff on success
+      this.rateLimitBackoff['coingecko'] = null;
+
+      // Cache the result
+      await this._saveToCache(cacheKey, priceData);
+
+      return priceData;
+
+    } catch (error) {
+      // Handle 429 rate limit error
+      if (error.response && error.response.status === 429) {
+        console.error(`[PricingSource] Rate limited by CoinGecko for ${symbol}`);
+        await this._setBackoff('coingecko');
+        return await this._getFallbackPrice(symbol, 'commodity');
+      }
+
+      console.error(`Failed to fetch ${symbol} commodity price:`, error.message);
+
+      // Try fallback before throwing error
+      const fallback = await this._getFallbackPrice(symbol, 'commodity');
+      if (fallback) {
+        return fallback;
+      }
+
+      throw new Error(`Unable to fetch ${symbol} commodity price: ${error.message}`);
     }
   }
 
@@ -472,6 +643,46 @@ class PricingSource {
     } catch (error) {
       console.error(`[PricingSource] Failed to get fallback price for ${symbol}:`, error.message);
       return null;
+    }
+  }
+
+  /**
+   * Log suspicious price data for audit
+   * @private
+   */
+  async _logSuspiciousPrice(symbol, priceData, verification) {
+    if (!this.db) {
+      return;
+    }
+
+    try {
+      await this.db.query(`
+        INSERT INTO price_audit_log (
+          symbol,
+          price,
+          source,
+          confidence_score,
+          verification_status,
+          issues,
+          raw_data,
+          logged_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+      `, [
+        symbol,
+        priceData.price,
+        priceData.source,
+        verification.confidence,
+        verification.verified ? 'verified' : 'rejected',
+        JSON.stringify(verification.issues),
+        JSON.stringify(priceData)
+      ]);
+
+      console.log(`[PricingSource] Logged suspicious price for ${symbol} to audit table`);
+    } catch (error) {
+      // Don't fail if audit logging fails - table might not exist yet
+      if (!error.message.includes('does not exist')) {
+        console.error(`[PricingSource] Failed to log suspicious price:`, error.message);
+      }
     }
   }
 }

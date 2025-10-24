@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Code Search Lab - CalOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f0f23;
+      color: #e0e0e0;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a3e;
+    }
+
+    .section h2 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #0a0a15;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #2a2a3e;
+    }
+
+    .output.error {
+      border-left: 4px solid #e74c3c;
+      background: #1a0a0a;
+    }
+
+    .output.success {
+      border-left: 4px solid #4caf50;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.online {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+    }
+
+    .status.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #aaa;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+
+    .search-result {
+      background: #0a0a15;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      border-left: 3px solid #667eea;
+    }
+
+    .result-file {
+      color: #4caf50;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .result-line {
+      color: #888;
+      font-size: 12px;
+    }
+
+    .result-match {
+      color: #e0e0e0;
+      margin-top: 5px;
+    }
+
+    .highlight {
+      background: #ffd700;
+      color: #0f0f23;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .stats {
+      background: #0a0a15;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+    }
+
+    .stat-item {
+      color: #888;
+    }
+
+    .stat-value {
+      color: #4caf50;
+      font-weight: bold;
+    }
+
+    .preset-searches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .preset-btn {
+      padding: 10px;
+      background: #0a0a15;
+      border: 1px solid #2a2a3e;
+      border-radius: 5px;
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 12px;
+    }
+
+    .preset-btn:hover {
+      border-color: #667eea;
+      background: #1a1a2e;
+    }
+
+    .preset-btn-title {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #667eea;
+    }
+
+    .preset-btn-desc {
+      color: #888;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MCP Code Search Tool</h1>
+  <p class="subtitle">Interactive grep/find interface for code exploration</p>
+
+  <!-- Server Status -->
+  <div class="section">
+    <h2>Server Status</h2>
+    <div id="status-container">
+      <span class="status offline">Offline</span>
+      <span id="status-details" style="margin-left: 10px; color: #888;">Checking...</span>
+    </div>
+    <button onclick="checkServerStatus()" style="margin-top: 10px;">Refresh Status</button>
+  </div>
+
+  <!-- Search Form -->
+  <div class="section">
+    <h2>Search Configuration</h2>
+
+    <div class="input-group">
+      <label>Search Pattern (supports regex):</label>
+      <input type="text" id="pattern" placeholder="e.g., TODO|FIXME|BUG" value="TODO">
+    </div>
+
+    <div class="input-group">
+      <label>Search Path:</label>
+      <input type="text" id="path" placeholder="e.g., ./lib or ./src" value="./lib">
+    </div>
+
+    <div class="input-group">
+      <label>File Extension Filter:</label>
+      <select id="extension">
+        <option value="">All files</option>
+        <option value=".js">.js (JavaScript)</option>
+        <option value=".ts">.ts (TypeScript)</option>
+        <option value=".jsx">.jsx (React)</option>
+        <option value=".tsx">.tsx (React TypeScript)</option>
+        <option value=".py">.py (Python)</option>
+        <option value=".go">.go (Go)</option>
+        <option value=".rs">.rs (Rust)</option>
+        <option value=".java">.java (Java)</option>
+        <option value=".md">.md (Markdown)</option>
+        <option value=".json">.json (JSON)</option>
+      </select>
+    </div>
+
+    <div class="checkbox-group">
+      <label>
+        <input type="checkbox" id="ignore-case" checked>
+        Ignore Case
+      </label>
+      <label>
+        <input type="checkbox" id="whole-word">
+        Whole Word Only
+      </label>
+      <label>
+        <input type="checkbox" id="show-context">
+        Show Context
+      </label>
+    </div>
+
+    <div class="input-group">
+      <label>Max Results:</label>
+      <input type="number" id="max-results" value="50" min="1" max="500">
+    </div>
+
+    <div class="button-grid">
+      <button onclick="searchCode()">Search Code</button>
+      <button onclick="clearResults()">Clear Results</button>
+    </div>
+  </div>
+
+  <!-- Preset Searches -->
+  <div class="section">
+    <h2>Quick Searches</h2>
+    <div class="preset-searches">
+      <div class="preset-btn" onclick="presetSearch('TODO|FIXME|HACK', './lib', true)">
+        <div class="preset-btn-title">Code TODOs</div>
+        <div class="preset-btn-desc">Find all TODO comments</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('console\\.log|debugger', './lib', false, '.js')">
+        <div class="preset-btn-title">Debug Code</div>
+        <div class="preset-btn-desc">Find console.log statements</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('async function|await', './lib', false, '.js')">
+        <div class="preset-btn-title">Async Functions</div>
+        <div class="preset-btn-desc">Find async/await code</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('class \\w+', './lib', false, '.js')">
+        <div class="preset-btn-title">Class Definitions</div>
+        <div class="preset-btn-desc">Find all classes</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('function \\w+', './lib', false, '.js')">
+        <div class="preset-btn-title">Functions</div>
+        <div class="preset-btn-desc">Find function declarations</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('require\\(|import ', './lib', false, '.js')">
+        <div class="preset-btn-title">Dependencies</div>
+        <div class="preset-btn-desc">Find imports/requires</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('module\\.exports|export', './lib', false, '.js')">
+        <div class="preset-btn-title">Exports</div>
+        <div class="preset-btn-desc">Find module exports</div>
+      </div>
+      <div class="preset-btn" onclick="presetSearch('process\\.env', './lib', false)">
+        <div class="preset-btn-title">Environment Vars</div>
+        <div class="preset-btn-desc">Find env variable usage</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Stats -->
+  <div class="section" id="stats-section" style="display: none;">
+    <h2>Search Results</h2>
+    <div class="stats" id="stats">
+      <!-- Stats will be populated here -->
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="section">
+    <h2>Output</h2>
+    <pre class="output" id="output">Configure search and click "Search Code"...</pre>
+  </div>
+
+  <script>
+    const MCP_URL = 'http://localhost:3100';
+    const output = document.getElementById('output');
+    let lastSearchResults = null;
+
+    // Log to output
+    function log(message, type = 'default') {
+      const formatted = typeof message === 'string'
+        ? message
+        : JSON.stringify(message, null, 2);
+
+      output.textContent = formatted;
+      output.className = 'output';
+
+      if (type === 'error') {
+        output.classList.add('error');
+      } else if (type === 'success') {
+        output.classList.add('success');
+      }
+    }
+
+    // Call MCP tool
+    async function callMCP(toolName, input) {
+      const response = await fetch(`${MCP_URL}/mcp/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool: toolName, input })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Tool call failed');
+      return data.result;
+    }
+
+    // Check server status
+    async function checkServerStatus() {
+      const statusContainer = document.getElementById('status-container');
+
+      try {
+        const response = await fetch(`${MCP_URL}/mcp/health`);
+        const data = await response.json();
+
+        statusContainer.innerHTML = `
+          <span class="status online">Online</span>
+          <span id="status-details" style="margin-left: 10px; color: #4caf50;">
+            ${data.tools} tools available | Uptime: ${Math.floor(data.uptime)}s
+          </span>
+        `;
+      } catch (error) {
+        statusContainer.innerHTML = `
+          <span class="status offline">Offline</span>
+          <span id="status-details" style="margin-left: 10px; color: #e74c3c;">
+            Cannot connect. Run: ./bin/mcp-server
+          </span>
+        `;
+      }
+    }
+
+    // Search code
+    async function searchCode() {
+      try {
+        const pattern = document.getElementById('pattern').value;
+        const path = document.getElementById('path').value;
+        const extension = document.getElementById('extension').value;
+        const ignoreCase = document.getElementById('ignore-case').checked;
+        const wholeWord = document.getElementById('whole-word').checked;
+        const maxResults = parseInt(document.getElementById('max-results').value);
+
+        if (!pattern) {
+          log('Please enter a search pattern', 'error');
+          return;
+        }
+
+        // Build search pattern
+        let searchPattern = pattern;
+        if (wholeWord) {
+          searchPattern = `\\b${pattern}\\b`;
+        }
+
+        // Call grep tool
+        const result = await callMCP('code_grep', {
+          pattern: searchPattern,
+          path: path,
+          ignoreCase: ignoreCase,
+          filePattern: extension || undefined
+        });
+
+        lastSearchResults = result;
+
+        // Display stats
+        displayStats(result);
+
+        // Format and display results
+        if (result.matches && result.matches.length > 0) {
+          let output = `Found ${result.count} matches:\n\n`;
+
+          const displayMatches = result.matches.slice(0, maxResults);
+          displayMatches.forEach(match => {
+            // Highlight the pattern in the match
+            const highlighted = match.replace(
+              new RegExp(pattern, ignoreCase ? 'gi' : 'g'),
+              (m) => `[${m}]`
+            );
+            output += `${highlighted}\n`;
+          });
+
+          if (result.count > maxResults) {
+            output += `\n... and ${result.count - maxResults} more matches (increase Max Results to see all)`;
+          }
+
+          log(output, 'success');
+        } else {
+          log(`No matches found for pattern: ${pattern}\n\nTry:\n- Different search path\n- Case-insensitive search\n- Broader pattern`, 'error');
+        }
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Display search stats
+    function displayStats(result) {
+      const statsSection = document.getElementById('stats-section');
+      const statsDiv = document.getElementById('stats');
+
+      statsSection.style.display = 'block';
+
+      // Extract unique files from matches
+      const files = new Set();
+      if (result.matches) {
+        result.matches.forEach(match => {
+          const fileMatch = match.match(/^([^:]+):/);
+          if (fileMatch) {
+            files.add(fileMatch[1]);
+          }
+        });
+      }
+
+      statsDiv.innerHTML = `
+        <div class="stat-item">
+          Total Matches: <span class="stat-value">${result.count || 0}</span>
+        </div>
+        <div class="stat-item">
+          Files: <span class="stat-value">${files.size}</span>
+        </div>
+        <div class="stat-item">
+          Pattern: <span class="stat-value">${document.getElementById('pattern').value}</span>
+        </div>
+      `;
+    }
+
+    // Preset search
+    function presetSearch(pattern, path, ignoreCase, extension = '') {
+      document.getElementById('pattern').value = pattern;
+      document.getElementById('path').value = path;
+      document.getElementById('ignore-case').checked = ignoreCase;
+      document.getElementById('extension').value = extension;
+      searchCode();
+    }
+
+    // Clear results
+    function clearResults() {
+      log('Configure search and click "Search Code"...');
+      document.getElementById('stats-section').style.display = 'none';
+      lastSearchResults = null;
+    }
+
+    // Check status on load
+    window.addEventListener('load', () => {
+      checkServerStatus();
+    });
+  </script>
+</body>
+</html>

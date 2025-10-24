@@ -289,6 +289,138 @@
     }
 
     /* ============================================
+       PAYMENT WALL MODAL
+       ============================================ */
+
+    .payment-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .payment-modal.show {
+      display: flex;
+    }
+
+    .payment-modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .payment-modal h2 {
+      color: #2d3436;
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+
+    .payment-modal p {
+      color: #636e72;
+      font-size: 16px;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .payment-modal .price {
+      font-size: 48px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .payment-modal .price-detail {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .payment-modal .features {
+      text-align: left;
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .payment-modal .feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: #2d3436;
+    }
+
+    .payment-modal .feature:last-child {
+      margin-bottom: 0;
+    }
+
+    .payment-modal .feature-icon {
+      color: #00b894;
+      font-size: 20px;
+    }
+
+    .payment-modal .btn-upgrade {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 18px 40px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+
+    .payment-modal .btn-upgrade:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+    }
+
+    .payment-modal .btn-close {
+      background: #e9ecef;
+      color: #636e72;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 30px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    .payment-modal .btn-close:hover {
+      background: #dee2e6;
+    }
+
+    /* ============================================
        MOBILE RESPONSIVE DESIGN
        ============================================ */
 
@@ -493,6 +625,44 @@
     </div>
   </div>
 
+  <!-- Payment Wall Modal -->
+  <div class="payment-modal" id="paymentModal">
+    <div class="payment-modal-content">
+      <h2>🎉 You've Used Your Free Swipes!</h2>
+      <p>Upgrade to Premium to get unlimited recipe rankings and save your favorites.</p>
+
+      <div class="price">$4.99</div>
+      <div class="price-detail">per month, cancel anytime</div>
+
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Unlimited recipe swipes</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Save your top recipes</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Export your ELO rankings</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Advanced filtering & search</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Priority recipe additions</span>
+        </div>
+      </div>
+
+      <button class="btn-upgrade" onclick="upgradeToPremium()">Upgrade to Premium</button>
+      <button class="btn-close" onclick="closePaymentModal()">Maybe Later</button>
+    </div>
+  </div>
+
+  <script src="../lib/analytics.js"></script>
   <script src="../lib/elo-calculator.js"></script>
   <script>
     const API_URL = 'http://localhost:5001/api/elo';
@@ -500,6 +670,11 @@
     let matchNumber = 0;
     let eloCalc = null;
     let voteStartTime = null;
+
+    // Free tier limits
+    const FREE_SWIPES_PER_DAY = 20;
+    let swipesUsedToday = 0;
+    let isPremium = false;
 
     // Device fingerprinting - unique device identification
     async function generateDeviceFingerprint() {
@@ -826,9 +1001,17 @@
     async function chooseWinner(winnerId) {
       if (!currentMatchup) return;
 
+      // Check if user can swipe (free tier limit)
+      if (!canSwipe()) {
+        return; // Paywall shown, don't proceed
+      }
+
       const [recipeA, recipeB] = currentMatchup.items;
       const winnerCard = document.querySelector(`.recipe-card[data-id="${winnerId}"]`);
       winnerCard.classList.add('winner');
+
+      // Increment swipe count
+      incrementSwipeCount();
 
       // Calculate vote duration
       const voteDuration = voteStartTime ? Date.now() - voteStartTime : null;
@@ -982,8 +1165,109 @@
       `;
     }
 
+    // Check premium status on init
+    function checkPremiumStatus() {
+      // Check localStorage for premium status
+      isPremium = localStorage.getItem('recipePremium') === 'true';
+
+      // Load swipe count for today
+      const today = new Date().toDateString();
+      const lastDate = localStorage.getItem('recipeLastSwipeDate');
+
+      if (lastDate !== today) {
+        // New day - reset count
+        swipesUsedToday = 0;
+        localStorage.setItem('recipeLastSwipeDate', today);
+        localStorage.setItem('recipeSwipeCount', '0');
+      } else {
+        swipesUsedToday = parseInt(localStorage.getItem('recipeSwipeCount') || '0');
+      }
+
+      updateSwipeCounter();
+    }
+
+    // Update swipe counter display
+    function updateSwipeCounter() {
+      const statusEl = document.getElementById('rateLimitStatus');
+
+      if (isPremium) {
+        statusEl.innerHTML = '⭐ Premium - Unlimited swipes';
+      } else {
+        const remaining = Math.max(0, FREE_SWIPES_PER_DAY - swipesUsedToday);
+        statusEl.innerHTML = `${remaining}/${FREE_SWIPES_PER_DAY} free swipes remaining today`;
+
+        if (remaining === 0) {
+          statusEl.innerHTML += ' <span style="color: #ff4444;">- Upgrade for unlimited!</span>';
+        }
+      }
+    }
+
+    // Check if user can swipe
+    function canSwipe() {
+      if (isPremium) return true;
+      if (swipesUsedToday >= FREE_SWIPES_PER_DAY) {
+        showPaymentModal();
+        Analytics.track('paywall_shown', {
+          trigger: 'swipe_limit',
+          swipes_used: swipesUsedToday
+        });
+        return false;
+      }
+      return true;
+    }
+
+    // Increment swipe count
+    function incrementSwipeCount() {
+      if (isPremium) return;
+
+      swipesUsedToday++;
+      localStorage.setItem('recipeSwipeCount', swipesUsedToday.toString());
+      updateSwipeCounter();
+
+      // Track swipe event
+      Analytics.track('recipe_swipe', {
+        swipe_number: swipesUsedToday,
+        is_premium: isPremium,
+        remaining_swipes: Math.max(0, FREE_SWIPES_PER_DAY - swipesUsedToday)
+      });
+    }
+
+    // Show payment modal
+    function showPaymentModal() {
+      document.getElementById('paymentModal').classList.add('show');
+      Analytics.trackFunnelStep('recipe_premium', 1, 'paywall_shown');
+    }
+
+    // Close payment modal
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.remove('show');
+      Analytics.track('paywall_dismissed', {
+        swipes_used: swipesUsedToday
+      });
+    }
+
+    // Upgrade to premium
+    async function upgradeToPremium() {
+      // Track conversion intent
+      Analytics.trackConversion('upgrade', {
+        value: 4.99,
+        currency: 'USD'
+      });
+      Analytics.trackFunnelStep('recipe_premium', 2, 'upgrade_clicked');
+
+      // Redirect to Stripe checkout (we'll implement this next)
+      window.location.href = '/checkout/recipe-premium';
+    }
+
     // Initialize on load
+    checkPremiumStatus();
     init();
+
+    // Track page load
+    Analytics.track('recipe_app_loaded', {
+      is_premium: isPremium,
+      swipes_remaining: Math.max(0, FREE_SWIPES_PER_DAY - swipesUsedToday)
+    });
 
     console.log('🍳 Recipe ELO Ranker loaded!');
   </script>

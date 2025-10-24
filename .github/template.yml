@@ -1,0 +1,47 @@
+name: OAuth Starter
+description: Multi-provider OAuth with auto-subdomain creation (ColdStartKit template)
+
+# Template variables that users can customize when creating from template
+variables:
+  - name: BRAND_NAME
+    description: Your brand/app name
+    default: My App
+
+  - name: PARENT_DOMAIN
+    description: Your domain (subdomains will be @handle.yourdomain.com)
+    default: example.com
+
+  - name: BRAND_COLOR_1
+    description: Primary brand color (hex)
+    default: "#667eea"
+
+  - name: BRAND_COLOR_2
+    description: Secondary brand color (hex)
+    default: "#764ba2"
+
+# Files to customize with template variables
+files:
+  - path: .env.example
+    replacements:
+      - search: "PARENT_DOMAIN=soulfra.com"
+        replace: "PARENT_DOMAIN={{PARENT_DOMAIN}}"
+
+  - path: public/login.html
+    replacements:
+      - search: "Soulfra Network"
+        replace: "{{BRAND_NAME}}"
+      - search: "#667eea"
+        replace: "{{BRAND_COLOR_1}}"
+      - search: "#764ba2"
+        replace: "{{BRAND_COLOR_2}}"
+
+# Post-creation message
+message: |
+  🎉 OAuth Starter created!
+
+  Next steps:
+  1. cp .env.example .env
+  2. Add your OAuth credentials (see docs/SOCIAL-AUTH-SETUP.md)
+  3. Deploy: vercel
+
+  Need help? https://coldstartkit.com/docs/oauth-starter

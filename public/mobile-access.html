@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>CalOS Mobile Access</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            color: #2d3748;
+        }
+
+        .card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #2d3748;
+        }
+
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .qr-code {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            word-break: break-all;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #c6f6d5;
+            color: #22543d;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #38a169;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #38a169;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .error {
+            padding: 12px;
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            color: #c53030;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📱</div>
+            <h1>CalOS Mobile Access</h1>
+            <p class="subtitle">Connect your phone to the CalOS system</p>
+        </div>
+
+        <div class="card">
+            <h2>📡 Connection Status</h2>
+            <div class="status-badge">
+                <div class="status-indicator"></div>
+                <span id="status">Checking...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔗 Quick Access</h2>
+            <a href="/oauth-upload.html" class="btn">📸 OAuth Upload</a>
+            <a href="/health" class="btn btn-secondary">💚 Health Check</a>
+        </div>
+
+        <div class="card">
+            <h2>📱 Share with Another Device</h2>
+            <p style="margin-bottom: 16px; font-size: 14px; color: #718096;">
+                Scan this QR code with another phone or tablet to access CalOS
+            </p>
+            <div class="qr-container">
+                <img src="/api/qr-code?path=/oauth-upload.html" alt="QR Code" class="qr-code" id="qrCode">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🌐 Network Information</h2>
+            <div id="networkInfo" class="loading">
+                Loading network details...
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>✨ Available Features</h2>
+            <ul class="feature-list">
+                <li>Upload OAuth screenshots</li>
+                <li>Auto-extract credentials</li>
+                <li>Generate narrated tutorials</li>
+                <li>Animated cursor tracking</li>
+                <li>Multi-format export (GIF, MP4)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Load network information
+        async function loadNetworkInfo() {
+            try {
+                const response = await fetch('/api/network-info');
+                const data = await response.json();
+
+                const infoHTML = `
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon">🖥️</div>
+                            <div class="info-content">
+                                <div class="info-label">Hostname</div>
+                                <div class="info-value">${data.hostname}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">📍</div>
+                            <div class="info-content">
+                                <div class="info-label">Local IP Address</div>
+                                <div class="info-value">${data.ip}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">🔌</div>
+                            <div class="info-content">
+                                <div class="info-label">Port</div>
+                                <div class="info-value">${data.port}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">🌐</div>
+                            <div class="info-content">
+                                <div class="info-label">Network URL</div>
+                                <div class="info-value">${data.networkURL}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">📶</div>
+                            <div class="info-content">
+                                <div class="info-label">WiFi Status</div>
+                                <div class="info-value">${data.wifi ? 'Connected' : 'Not Connected'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('networkInfo').innerHTML = infoHTML;
+                document.getElementById('status').textContent = 'Connected';
+
+            } catch (error) {
+                console.error('Failed to load network info:', error);
+                document.getElementById('networkInfo').innerHTML = `
+                    <div class="error">
+                        Failed to load network information. Please try refreshing the page.
+                    </div>
+                `;
+                document.getElementById('status').textContent = 'Error';
+            }
+        }
+
+        // Check health status
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    document.getElementById('status').textContent = 'Online';
+                } else {
+                    document.getElementById('status').textContent = 'Degraded';
+                }
+            } catch (error) {
+                document.getElementById('status').textContent = 'Offline';
+            }
+        }
+
+        // Handle QR code error
+        document.getElementById('qrCode').onerror = function() {
+            this.style.display = 'none';
+            this.parentElement.innerHTML = `
+                <div class="error">
+                    Failed to load QR code. Try accessing /api/qr-code directly.
+                </div>
+            `;
+        };
+
+        // Initialize
+        loadNetworkInfo();
+        checkHealth();
+
+        // Refresh status every 10 seconds
+        setInterval(checkHealth, 10000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Workflow - Desktop</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+      color: #111827;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px 32px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-draft {
+      background: #e0e7ff;
+      color: #4c1d95;
+    }
+
+    .status-review {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-signed {
+      background: #dcfce7;
+      color: #14532d;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 32px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -40px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px #e5e7eb;
+    }
+
+    .timeline-dot.active {
+      background: #667eea;
+      box-shadow: 0 0 0 2px #667eea;
+    }
+
+    .timeline-dot.completed {
+      background: #10b981;
+      box-shadow: 0 0 0 2px #10b981;
+    }
+
+    .timeline-line {
+      position: absolute;
+      left: -33px;
+      top: 20px;
+      bottom: 0;
+      width: 2px;
+      background: #e5e7eb;
+    }
+
+    .timeline-content {
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+    }
+
+    .timeline-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .timeline-desc {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .message-list {
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    .message {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #667eea;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .message-content {
+      flex: 1;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .message-role {
+      font-weight: 600;
+      font-size: 14px;
+      color: #111827;
+    }
+
+    .message-time {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .message-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #374151;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 12px;
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .button-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .button-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .button-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .qr-section {
+      text-align: center;
+      padding: 24px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .qr-code {
+      max-width: 200px;
+      margin: 0 auto 16px;
+      padding: 16px;
+      background: white;
+      border-radius: 8px;
+    }
+
+    .qr-label {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .device-list {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .device-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f0fdf4;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #166534;
+    }
+
+    .device-dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .signature-panel {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: white;
+      padding: 32px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .signature-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .signature-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .signature-hash {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: rgba(0,0,0,0.2);
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 16px;
+      word-break: break-all;
+    }
+
+    .alert {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .alert-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>💼 Contract Workflow</h1>
+    <div class="header-subtitle">DocuSign-like multi-device contract signing</div>
+  </div>
+
+  <div class="container">
+    <!-- Loading State -->
+    <div id="loadingSection" class="card loading">
+      <div class="spinner"></div>
+      <p>Loading session...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+      <!-- Alerts -->
+      <div id="alertContainer"></div>
+
+      <div class="grid">
+        <!-- Left Column: Contract Details -->
+        <div>
+          <!-- Session Info -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Session Details</div>
+              <span id="statusBadge" class="status-badge status-draft">Draft</span>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value" id="messageCount">0</div>
+                <div class="stat-label">Messages</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="totalCost">$0.00</div>
+                <div class="stat-label">Total Cost</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <strong>Session Name:</strong> <span id="sessionName">-</span>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <strong>Model:</strong> <span id="primaryModel">-</span>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <strong>Version:</strong> <span id="version">1</span>
+            </div>
+            <div>
+              <strong>Created:</strong> <span id="createdAt">-</span>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div class="card" id="messagesCard">
+            <div class="card-header">
+              <div class="card-title">Conversation</div>
+            </div>
+            <div id="messageList" class="message-list">
+              <p style="text-align: center; color: #9ca3af;">No messages yet</p>
+            </div>
+          </div>
+
+          <!-- Contract Actions -->
+          <div class="card" id="actionsCard">
+            <div class="card-header">
+              <div class="card-title">Actions</div>
+            </div>
+            <div id="actionsButtons">
+              <button class="button button-primary" onclick="enterReview()" id="btnReview">
+                📋 Review Contract
+              </button>
+              <button class="button button-primary" onclick="approveContract()" id="btnApprove" style="display: none;">
+                ✅ Approve Costs
+              </button>
+              <button class="button button-primary" onclick="signContract()" id="btnSign" style="display: none;">
+                🔏 Sign Contract
+              </button>
+              <button class="button button-secondary" onclick="exportPDF()" id="btnExport" style="display: none;">
+                📄 Export PDF
+              </button>
+              <button class="button button-secondary" onclick="shareContract()" id="btnShare" style="display: none;">
+                📤 Share
+              </button>
+            </div>
+          </div>
+
+          <!-- Signature Panel -->
+          <div id="signaturePanel" style="display: none;">
+            <div class="signature-panel">
+              <div class="signature-icon">🔏</div>
+              <div class="signature-title">Contract Signed!</div>
+              <div style="margin-top: 12px;">Signed at: <span id="signedAt">-</span></div>
+              <div class="signature-hash" id="soulfraHash"></div>
+              <div style="margin-top: 16px;">
+                <button class="button button-secondary" onclick="emailReceipt()" style="margin: 0;">
+                  📧 Email Receipt
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Timeline & Devices -->
+        <div>
+          <!-- Timeline -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Workflow</div>
+            </div>
+            <div class="timeline" id="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot" id="dot-draft"></div>
+                <div class="timeline-line"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Draft</div>
+                  <div class="timeline-desc">Session active, chatting with AI</div>
+                  <div class="timeline-time" id="time-draft">-</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot" id="dot-review"></div>
+                <div class="timeline-line"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Review</div>
+                  <div class="timeline-desc">Preview contract before approval</div>
+                  <div class="timeline-time" id="time-review">-</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot" id="dot-approved"></div>
+                <div class="timeline-line"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Approved</div>
+                  <div class="timeline-desc">Costs approved, ready to sign</div>
+                  <div class="timeline-time" id="time-approved">-</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot" id="dot-signed"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Signed</div>
+                  <div class="timeline-desc">Cryptographically signed with Soulfra</div>
+                  <div class="timeline-time" id="time-signed">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- QR Code -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">QR Code</div>
+            </div>
+            <div class="qr-section">
+              <img id="qrCodeImage" class="qr-code" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f3f4f6' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='14'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Session QR Code">
+              <div class="qr-label" id="qrLabel">Scan to pair mobile device</div>
+            </div>
+          </div>
+
+          <!-- Connected Devices -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Connected Devices</div>
+            </div>
+            <div id="deviceList" class="device-list">
+              <div class="device-chip">
+                <div class="device-dot"></div>
+                <span>Desktop</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Session state
+    let sessionId = null;
+    let userId = null;
+    let ws = null;
+    let sessionState = null;
+
+    // Initialize
+    window.addEventListener('load', async () => {
+      const params = new URLSearchParams(window.location.search);
+      sessionId = params.get('sessionId');
+      userId = params.get('userId');
+
+      if (!sessionId || !userId) {
+        showAlert('Missing session or user ID', 'error');
+        return;
+      }
+
+      await connectWebSocket();
+      await loadSession();
+    });
+
+    // WebSocket connection
+    async function connectWebSocket() {
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws/contract-sync`;
+
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        ws.send(JSON.stringify({
+          type: 'register',
+          sessionId,
+          userId,
+          deviceType: 'desktop',
+          deviceId: getDeviceId()
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        handleWebSocketMessage(message);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        showAlert('Connection error', 'error');
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket closed');
+        setTimeout(connectWebSocket, 5000);
+      };
+    }
+
+    // Handle WebSocket messages
+    function handleWebSocketMessage(message) {
+      console.log('WebSocket message:', message);
+
+      switch (message.type) {
+        case 'sync':
+          sessionState = message.state;
+          updateUI();
+          break;
+
+        case 'contract_review':
+        case 'contract_approved':
+        case 'contract_signed':
+          loadSession(); // Reload to get latest state
+          showAlert('Contract updated!', 'success');
+          break;
+
+        case 'device_connected':
+          showAlert(`Device connected: ${message.device}`, 'info');
+          break;
+
+        case 'error':
+          showAlert(message.error, 'error');
+          break;
+      }
+    }
+
+    // Load session
+    async function loadSession() {
+      try {
+        const response = await fetch(`/api/ollama/session/${sessionId}/summary`, {
+          headers: {
+            'Cookie': `session_token=${getCookie('session_token')}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to load session');
+
+        const data = await response.json();
+        sessionState = data.session;
+
+        document.getElementById('loadingSection').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+
+        updateUI();
+
+      } catch (error) {
+        console.error('Load error:', error);
+        showAlert('Failed to load session', 'error');
+      }
+    }
+
+    // Update UI
+    function updateUI() {
+      if (!sessionState) return;
+
+      const status = sessionState.contractStatus || 'draft';
+
+      // Status badge
+      const statusBadge = document.getElementById('statusBadge');
+      statusBadge.textContent = status;
+      statusBadge.className = `status-badge status-${status}`;
+
+      // Session info
+      document.getElementById('sessionName').textContent = sessionState.sessionName || '-';
+      document.getElementById('primaryModel').textContent = sessionState.primaryModel || '-';
+      document.getElementById('version').textContent = sessionState.version || 1;
+      document.getElementById('messageCount').textContent = sessionState.messageCount || 0;
+      document.getElementById('totalCost').textContent = `$${(sessionState.totalCost || 0).toFixed(2)}`;
+      document.getElementById('createdAt').textContent = new Date(sessionState.createdAt).toLocaleString();
+
+      // Timeline
+      updateTimeline(status);
+
+      // Messages
+      updateMessages();
+
+      // Action buttons
+      updateActionButtons(status);
+
+      // Signature panel
+      if (status === 'signed') {
+        document.getElementById('signaturePanel').style.display = 'block';
+        document.getElementById('signedAt').textContent = new Date(sessionState.signedAt).toLocaleString();
+        if (sessionState.soulfraHash) {
+          document.getElementById('soulfraHash').textContent =
+            `SHA-256: ${sessionState.soulfraHash.sha256}\nEd25519: ${sessionState.soulfraHash.ed25519_signature?.substring(0, 64)}...`;
+        }
+        document.getElementById('qrLabel').textContent = 'Scan to verify signature';
+      }
+    }
+
+    // Update timeline
+    function updateTimeline(currentStatus) {
+      const statuses = ['draft', 'review', 'approved', 'signed'];
+      const currentIndex = statuses.indexOf(currentStatus);
+
+      statuses.forEach((status, index) => {
+        const dot = document.getElementById(`dot-${status}`);
+        if (index < currentIndex) {
+          dot.className = 'timeline-dot completed';
+        } else if (index === currentIndex) {
+          dot.className = 'timeline-dot active';
+        } else {
+          dot.className = 'timeline-dot';
+        }
+      });
+    }
+
+    // Update messages
+    function updateMessages() {
+      if (!sessionState.messages || sessionState.messages.length === 0) return;
+
+      const messageList = document.getElementById('messageList');
+      messageList.innerHTML = sessionState.messages.map(m => `
+        <div class="message">
+          <div class="message-avatar">${m.role === 'user' ? 'U' : 'A'}</div>
+          <div class="message-content">
+            <div class="message-header">
+              <div class="message-role">${m.role}</div>
+              <div class="message-time">${new Date(m.timestamp).toLocaleTimeString()}</div>
+            </div>
+            <div class="message-text">${m.content}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Update action buttons
+    function updateActionButtons(status) {
+      document.getElementById('btnReview').style.display = status === 'draft' ? 'inline-block' : 'none';
+      document.getElementById('btnApprove').style.display = status === 'review' ? 'inline-block' : 'none';
+      document.getElementById('btnSign').style.display = status === 'approved' ? 'inline-block' : 'none';
+      document.getElementById('btnExport').style.display = status === 'signed' ? 'inline-block' : 'none';
+      document.getElementById('btnShare').style.display = status === 'signed' ? 'inline-block' : 'none';
+    }
+
+    // Enter review
+    async function enterReview() {
+      try {
+        const response = await fetch(`/api/ollama/session/${sessionId}/review`, {
+          method: 'POST',
+          headers: {
+            'Cookie': `session_token=${getCookie('session_token')}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to enter review');
+        await loadSession();
+        showAlert('Contract review mode entered', 'success');
+
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    // Approve contract
+    async function approveContract() {
+      try {
+        const response = await fetch(`/api/ollama/session/${sessionId}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': `session_token=${getCookie('session_token')}`
+          },
+          body: JSON.stringify({
+            approvedCostCeiling: sessionState.totalCost * 1.5
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to approve');
+        await loadSession();
+        showAlert('Contract approved!', 'success');
+
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    // Sign contract
+    async function signContract() {
+      try {
+        const response = await fetch(`/api/ollama/session/${sessionId}/sign`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': `session_token=${getCookie('session_token')}`
+          },
+          body: JSON.stringify({
+            metadata: {
+              signedOn: 'desktop'
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to sign');
+        await loadSession();
+        showAlert('Contract signed!', 'success');
+
+      } catch (error) {
+        showAlert(error.message, 'error');
+      }
+    }
+
+    // Export PDF
+    async function exportPDF() {
+      showAlert('PDF export coming soon!', 'info');
+    }
+
+    // Share contract
+    async function shareContract() {
+      if (!sessionState.publicShareUrl) {
+        showAlert('No public URL available', 'error');
+        return;
+      }
+
+      const url = `${window.location.origin}${sessionState.publicShareUrl}`;
+      await navigator.clipboard.writeText(url);
+      showAlert('Link copied to clipboard!', 'success');
+    }
+
+    // Email receipt
+    async function emailReceipt() {
+      showAlert('Email feature coming soon!', 'info');
+    }
+
+    // Show alert
+    function showAlert(message, type) {
+      const container = document.getElementById('alertContainer');
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.textContent = message;
+      container.appendChild(alert);
+
+      setTimeout(() => {
+        alert.remove();
+      }, 5000);
+    }
+
+    // Get device ID
+    function getDeviceId() {
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        deviceId = 'desktop_' + Math.random().toString(36).substring(7);
+        localStorage.setItem('deviceId', deviceId);
+      }
+      return deviceId;
+    }
+
+    // Get cookie
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return '';
+    }
+  </script>
+</body>
+</html>

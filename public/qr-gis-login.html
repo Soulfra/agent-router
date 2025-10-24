@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Login with Google - CalOS</title>
+  <meta name="description" content="Scan with your iPhone → Sign in with Google → Done! 100% serverless.">
+
+  <!-- QRCode.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+    }
+
+    .login-card {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 40px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      opacity: 0.9;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    .badge-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge.google {
+      background: rgba(219,68,55,0.3);
+      color: #fff;
+    }
+
+    .badge.serverless {
+      background: rgba(46,204,113,0.3);
+      color: #2ecc71;
+    }
+
+    .badge.sheets {
+      background: rgba(52,152,219,0.3);
+      color: #3498db;
+    }
+
+    .qr-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 30px auto;
+      max-width: 300px;
+    }
+
+    #qrCode {
+      width: 100%;
+      height: auto;
+    }
+
+    .qr-counter {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      opacity: 0.7;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+
+    .status.waiting {
+      background: rgba(241,196,15,0.2);
+      border: 1px solid rgba(241,196,15,0.4);
+      color: #f1c40f;
+    }
+
+    .status.success {
+      background: rgba(46,204,113,0.2);
+      border: 1px solid rgba(46,204,113,0.4);
+      color: #2ecc71;
+    }
+
+    .status.error {
+      background: rgba(231,76,60,0.2);
+      border: 1px solid rgba(231,76,60,0.4);
+      color: #e74c3c;
+    }
+
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .timer {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 10px;
+    }
+
+    .instructions {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .instructions h3 {
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    .instructions ol {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+
+    .instructions li {
+      margin: 8px 0;
+    }
+
+    .feature-list {
+      background: rgba(46,204,113,0.1);
+      border: 1px solid rgba(46,204,113,0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .feature-list strong {
+      color: #2ecc71;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px 20px;
+      background: #fff;
+      color: #667eea;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    a {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .config-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      transition: transform 0.2s;
+    }
+
+    .config-button:hover {
+      transform: rotate(45deg);
+      background: rgba(255,255,255,0.3);
+    }
+
+    .config-panel {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .config-panel h3 {
+      margin-bottom: 15px;
+    }
+
+    .config-panel input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .config-panel input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .config-panel button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="config-button" onclick="toggleConfig()" title="Configure">⚙️</div>
+
+    <div class="login-card">
+      <h1>🔐 QR + Google Login</h1>
+      <p class="subtitle">Scan with iPhone → Sign in with Google → Done!</p>
+
+      <div class="badge-container">
+        <span class="badge google">
+          <svg style="width:16px;height:16px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+          </svg>
+          Google Identity
+        </span>
+        <span class="badge serverless">✨ Serverless</span>
+        <span class="badge sheets">📊 Google Sheets</span>
+      </div>
+
+      <!-- Config Panel -->
+      <div id="configPanel" class="config-panel hidden">
+        <h3>⚙️ Configuration</h3>
+        <p style="font-size:0.9rem;opacity:0.8;margin-bottom:15px">
+          Need help? See <a href="GIS_SETUP.md" target="_blank">setup guide</a>
+        </p>
+        <input
+          type="text"
+          id="clientId"
+          placeholder="Google Client ID (1234567890-abc.apps.googleusercontent.com)"
+          autocomplete="off"
+        />
+        <button onclick="saveConfig()">💾 Save Configuration</button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState">
+        <div class="spinner"></div>
+        <p>Creating QR code...</p>
+      </div>
+
+      <!-- QR Code State -->
+      <div id="qrState" class="hidden">
+        <div class="qr-container">
+          <canvas id="qrCode"></canvas>
+          <div class="qr-counter" id="qrCounter">QR #1</div>
+        </div>
+
+        <div class="status waiting">
+          <div class="spinner"></div>
+          Waiting for Google sign-in...
+          <div class="timer">Auto-refresh in <span id="refreshTimer">60</span>s</div>
+        </div>
+
+        <div class="instructions">
+          <h3>📱 How to login:</h3>
+          <ol>
+            <li>Open camera on your iPhone</li>
+            <li>Point at the QR code above</li>
+            <li>Tap the notification</li>
+            <li>Click "Sign in with Google"</li>
+            <li>You'll be automatically logged in!</li>
+          </ol>
+        </div>
+
+        <div class="feature-list">
+          <strong>✨ Why this is awesome:</strong><br>
+          • 100% serverless (no backend required)<br>
+          • Auto-refreshing QR codes every 60s<br>
+          • Free tier only - zero monthly cost<br>
+          • Secure Google Identity Services<br>
+          • 30-day free trial + referral bonuses
+        </div>
+
+        <button onclick="generateQRCode()">🔄 Generate New Code</button>
+      </div>
+
+      <!-- Success State -->
+      <div id="successState" class="hidden">
+        <div class="status success">
+          ✓ Login Successful!
+        </div>
+        <p>Welcome, <span id="userName"></span>!</p>
+        <p>Redirecting to dashboard...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="hidden">
+        <div class="status error" id="errorMessage"></div>
+        <button onclick="location.reload()">Try Again</button>
+      </div>
+
+      <div style="margin-top: 30px; opacity: 0.8;">
+        <a href="index.html">← Back to Home</a> |
+        <a href="qr-config-wizard.html">Setup Google Sheets</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CalOS Identity Tracker -->
+  <script src="identity-tracker.js"></script>
+
+  <!-- Google Sheets QR Auth -->
+  <script src="sheets-qr-auth.js"></script>
+
+  <!-- Role Manager -->
+  <script src="/lib/role-manager.js"></script>
+
+  <!-- Local Network Detector -->
+  <script src="/lib/local-network-detector.js"></script>
+
+  <script>
+    let sessionId = null;
+    let pollInterval = null;
+    let refreshInterval = null;
+    let refreshCountdown = null;
+    let qrCounter = 1;
+    let sheetsAuth = null;
+    let googleClientId = null;
+    let roleManager = null;
+    let networkDetector = null;
+
+    // Load config
+    function loadConfig() {
+      const saved = localStorage.getItem('calos_gis_config');
+      if (saved) {
+        const config = JSON.parse(saved);
+        googleClientId = config.clientId;
+        if (googleClientId) {
+          document.getElementById('clientId').value = googleClientId;
+        }
+      }
+    }
+
+    // Save config
+    function saveConfig() {
+      const clientId = document.getElementById('clientId').value.trim();
+      if (!clientId) {
+        alert('Please enter your Google Client ID');
+        return;
+      }
+      localStorage.setItem('calos_gis_config', JSON.stringify({ clientId }));
+      googleClientId = clientId;
+      alert('✓ Configuration saved! Click "Try Again" to generate QR code.');
+      toggleConfig();
+      location.reload();
+    }
+
+    // Toggle config panel
+    function toggleConfig() {
+      const panel = document.getElementById('configPanel');
+      panel.classList.toggle('hidden');
+    }
+
+    // Show/hide states
+    function showState(state) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('qrState').classList.add('hidden');
+      document.getElementById('successState').classList.add('hidden');
+      document.getElementById('errorState').classList.add('hidden');
+      document.getElementById(state + 'State').classList.remove('hidden');
+    }
+
+    // Generate QR code with session URL
+    async function generateQRCode() {
+      try {
+        showState('loading');
+
+        // Check if Sheets configured
+        sheetsAuth = new SheetsQRAuth();
+        if (!sheetsAuth.isConfigured()) {
+          showError('⚙️ Google Sheets not configured. Visit qr-config-wizard.html to set up.');
+          return;
+        }
+
+        // Generate unique session ID
+        sessionId = crypto.randomUUID();
+
+        // Create session in Google Sheets
+        await sheetsAuth.createSession(sessionId, {
+          sessionId,
+          status: 'pending',
+          createdAt: Date.now(),
+          expiresAt: Date.now() + (5 * 60 * 1000), // 5 min
+          desktopFingerprint: window.CalOSIdentity?.fingerprint || 'unknown',
+          verified: false,
+          qrCounter
+        });
+
+        // Build session URL (iPhone will open this)
+        const sessionUrl = `${window.location.origin}/qr-scan.html?session=${sessionId}`;
+
+        // Generate QR code with session URL
+        const qrCanvas = document.getElementById('qrCode');
+        await QRCode.toCanvas(qrCanvas, sessionUrl, {
+          width: 260,
+          margin: 2,
+          color: {
+            dark: '#667eea',
+            light: '#ffffff'
+          }
+        });
+
+        // Update counter
+        document.getElementById('qrCounter').textContent = `QR #${qrCounter}`;
+
+        // Show QR state
+        showState('qr');
+
+        // Start polling for verification
+        startPolling();
+
+        // Start auto-refresh timer
+        startAutoRefresh();
+
+        console.log('[QR GIS Login] Session created:', sessionId);
+
+      } catch (error) {
+        console.error('[QR GIS Login] Error:', error);
+        showError(error.message || 'Failed to generate QR code');
+      }
+    }
+
+    // Start polling Google Sheets for verification
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(async () => {
+        try {
+          const status = await sheetsAuth.pollForVerification(sessionId);
+
+          if (status.verified) {
+            clearInterval(pollInterval);
+            clearInterval(refreshInterval);
+            clearInterval(refreshCountdown);
+            handleLoginSuccess(status.session);
+          }
+        } catch (error) {
+          console.error('[QR GIS Login] Poll error:', error);
+        }
+      }, 2000); // Poll every 2 seconds
+    }
+
+    // Start auto-refresh timer (60 seconds)
+    function startAutoRefresh() {
+      let countdown = 60;
+
+      // Update countdown display
+      refreshCountdown = setInterval(() => {
+        countdown--;
+        document.getElementById('refreshTimer').textContent = countdown;
+
+        if (countdown <= 0) {
+          clearInterval(refreshCountdown);
+        }
+      }, 1000);
+
+      // Auto-regenerate QR code after 60 seconds
+      refreshInterval = setTimeout(() => {
+        qrCounter++;
+        generateQRCode();
+      }, 60000);
+    }
+
+    // Handle successful login
+    function handleLoginSuccess(session) {
+      try {
+        showState('success');
+
+        // Display user name
+        document.getElementById('userName').textContent = session.userName || session.userEmail;
+
+        // Store session data
+        localStorage.setItem('calos_session', JSON.stringify({
+          userId: session.userId,
+          email: session.userEmail,
+          name: session.userName,
+          picture: session.userPicture,
+          authMethod: 'qr-gis',
+          loginAt: Date.now()
+        }));
+
+        console.log('[QR GIS Login] Login successful:', session);
+
+        // Redirect to dashboard after 3 seconds
+        setTimeout(() => {
+          window.location.href = 'trial-dashboard.html';
+        }, 3000);
+
+      } catch (error) {
+        console.error('[QR GIS Login] Finalization error:', error);
+        showError('Login succeeded but finalization failed.');
+      }
+    }
+
+    // Show error
+    function showError(message) {
+      document.getElementById('errorMessage').textContent = message;
+      showState('error');
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
+      // Initialize role manager
+      roleManager = new RoleManager();
+
+      // Initialize network detector
+      networkDetector = new LocalNetworkDetector();
+
+      // Load config
+      loadConfig();
+
+      // Check if user has session
+      const session = localStorage.getItem('calos_session');
+      if (session) {
+        const userData = JSON.parse(session);
+
+        // Initialize or check role
+        let role = roleManager.getRole(userData.userId);
+        if (role === 'guest') {
+          // First time login - assign trial role
+          roleManager.setRole(userData.userId, 'trial', {
+            reason: 'first-login',
+            grantedBy: 'system'
+          });
+          console.log('[QR Login] Assigned trial role to new user:', userData.userId);
+        }
+
+        // Get network info
+        const networkInfo = await networkDetector.detect();
+        console.log('[QR Login] Network info:', networkInfo);
+      }
+
+      setTimeout(generateQRCode, 500);
+    });
+  </script>
+</body>
+</html>

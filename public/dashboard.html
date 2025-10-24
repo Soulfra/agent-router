@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CalOS - Dashboard</title>
 
+  <!-- Usage Meter Styles -->
+  <link rel="stylesheet" href="/styles/usage-meter.css">
+
   <style>
     :root {
       --primary: #6c5ce7;
@@ -144,6 +147,23 @@
       margin: 1rem 0;
       font-family: monospace;
     }
+
+    /* Usage meter compact mode in header */
+    .usage-meter-container {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 99;
+    }
+
+    @media (max-width: 768px) {
+      .usage-meter-container {
+        position: relative;
+        top: 0;
+        right: 0;
+        padding: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -170,6 +190,11 @@
     </button>
   </nav>
 
+  <!-- Usage Meter (Compact Mode) -->
+  <div class="usage-meter-container">
+    <div id="usage-meter"></div>
+  </div>
+
   <!-- Content -->
   <div class="content">
     <div id="loading" class="loading">
@@ -184,7 +209,31 @@
     </iframe>
   </div>
 
+  <!-- Usage Meter Script -->
+  <script src="/components/usage-meter.js"></script>
+
   <script>
+    // Initialize Usage Meter
+    let usageMeter;
+    const userId = localStorage.getItem('userId') || 1;
+
+    function initUsageMeter() {
+      usageMeter = new UsageMeter({
+        containerId: 'usage-meter',
+        userId: userId,
+        displayMode: 'compact',
+        refreshInterval: 30000,
+        showUpgradePrompts: true
+      });
+      usageMeter.init();
+
+      // Make globally accessible for compact mode details button
+      window.usageMeter = usageMeter;
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', initUsageMeter);
+
     // Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
