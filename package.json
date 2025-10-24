@@ -156,6 +156,9 @@
     "cal:platform:list": "node bin/cal-domain-platform-cli.js list",
     "cal:platform:sync": "node bin/cal-domain-platform-cli.js sync-brands",
     "cal:platform:chat": "node bin/cal-domain-platform-cli.js chat",
+    "cal:deploy:all": "node bin/cal-deploy-multi-brand --all",
+    "cal:deploy:daemon": "node bin/cal-deploy-multi-brand --daemon",
+    "cal:deploy:dry-run": "node bin/cal-deploy-multi-brand --all --dry-run",
     "postinstall": "node scripts/check-setup.js"
   },
   "packageManager": "npm@10.8.2 || pnpm@9.0.0",

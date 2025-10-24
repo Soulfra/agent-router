@@ -330,7 +330,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 
 ---
 
-## 🛣️ API Endpoints (1455 total)
+## 🛣️ API Endpoints (1459 total)
 
 
 ### `routes/account-warming-routes.js`
@@ -1386,6 +1386,15 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | POST | `/jobs/:id/lesson-plan` |  |
 | POST | `/jobs/:id/pr` |  |
 | POST | `/jobs` |  |
+
+### `routes/job-scraper-routes.js`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/scrape` |  |
+| GET | `/list` |  |
+| POST | `/:id/apply` |  |
+| GET | `/stats` |  |
 
 ### `routes/knowledge-graph-routes.js`
 
@@ -2545,7 +2554,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 
 ---
 
-## 📚 Core Modules (539 total)
+## 📚 Core Modules (541 total)
 
 | File | Module | Purpose |
 |------|--------|----------|
@@ -2969,6 +2978,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/relationship-filter.js` | RelationshipFilter | Relationship Filter - Family & Conflict-of-Interest Exclusion  Prevents matching: - Family members (siblings, parents, cousins) - Household members (s |
 | `lib/relationship-router.js` | RelationshipRouter | Relationship Router - Unified Inclusion & Exclusion System  Extends RelationshipFilter to support BOTH: - Family/friend EXCLUSION (dating app mode - a |
 | `lib/remote-control-manager.js` | RemoteControlManager | Remote Control Manager  Centralized control for all remote systems: - GitHub Gists (create/update/delete) - GitHub Repos (fork/clone/push) - Chat syst |
+| `lib/remote-job-scraper.js` | RemoteJobScraper | Remote Job Scraper & Automation  Scrapes remote job boards, filters by skills from Universal Portfolio, auto-generates applications, and tracks status |
 | `lib/reputation-engine.js` | ReputationEngine | Reputation Engine  Extends Cal tracking with clout/karma/reputation system for talent marketplace. Solves: "gain clout and followers... activity and i |
 | `lib/resource-manager.js` | ResourceManager | Resource Manager  Track asset/inventory state: - What resources exist (manifest) - Load state: empty/loading/loaded/failed - Types: code, sprites, aud |
 | `lib/response-filter.js` | ResponseFilter | Response Filter  Filters agent responses for multiple domains/projects simultaneously Each domain gets only the relevant portions of the response  Exa |
@@ -3041,6 +3051,7 @@ ALTER TABLE ai_ab_test_results ADD CONSTRAINT fk_ab_results_experiment
 | `lib/unified-knowledge-interface.js` | UnifiedKnowledgeInterface | Unified Knowledge Interface  Single API for querying all of Cal's knowledge stores: - PostgreSQL knowledge_patterns (debugging patterns from knowledge |
 | `lib/unified-user-profile.js` | UnifiedUserProfile | Unified User Profile  Brings together ALL user data into a single comprehensive profile: - Identity (from Identity Resolver) - Analytics (from Session |
 | `lib/unit-converter.js` | UnitConverter | Unit Converter  Converts between units: currency, temperature, distance, time, weight, volume, etc. Supports real-time currency exchange rates (with c |
+| `lib/universal-deployment-orchestrator.js` | UniversalDeploymentOrchestrator | Universal Deployment Orchestrator  Single interface to deploy across ALL platforms: - GitHub Pages - Vercel - Railway - Render - Custom servers  Suppo |
 | `lib/universal-portfolio-manager.js` | UniversalPortfolioManager | Universal Portfolio Manager  Maps complete digital infrastructure hierarchy: matthewmauer (system user) → repos → domains → packages → deployments  Hi |
 | `lib/universal-table-scraper.js` | UniversalTableScraper | Universal Table Scraper  Extracts tabular data from any source: - HTML tables (DOM or HTML strings) - JSON arrays of objects - CSV strings - API respo |
 | `lib/url-index.js` | URLIndex | URL Index & Tracker  Tracks every URL the system fetches with metadata and annotations. Provides visibility into what external resources we depend on. |

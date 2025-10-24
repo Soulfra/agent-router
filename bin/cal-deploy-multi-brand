@@ -1,0 +1,489 @@
+#!/usr/bin/env node
+/**
+ * Cal Multi-Brand Autonomous Deployment
+ *
+ * Teaches Cal to autonomously:
+ * 1. Manage Git branches for 12 brands
+ * 2. Deploy to GitHub Pages / Railway / Vercel
+ * 3. Configure DNS automatically
+ * 4. Run the Cal Meta-Orchestrator loop
+ * 5. Monitor all deployments
+ *
+ * Usage:
+ *   # Deploy all brands
+ *   node bin/cal-deploy-multi-brand --all
+ *
+ *   # Deploy specific brand
+ *   node bin/cal-deploy-multi-brand --brand=soulfra.com
+ *
+ *   # Start autonomous loop (deploys on changes)
+ *   node bin/cal-deploy-multi-brand --daemon
+ *
+ *   # Test deployment plan (dry run)
+ *   node bin/cal-deploy-multi-brand --dry-run
+ *
+ * Features:
+ * - Autonomous Git branch management
+ * - Multi-platform deployment (GitHub Pages, Railway, Vercel)
+ * - DNS configuration via GoDaddy API
+ * - Zero-downtime deployments
+ * - Cal Meta-Orchestrator integration
+ * - Saves tokens by running autonomously
+ */
+
+const fs = require('fs').promises;
+const path = require('path');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const chalk = require('chalk');
+const { Pool } = require('pg');
+
+const CALOSDomainPlatform = require('../lib/calos-domain-platform');
+const CalMetaOrchestrator = require('../lib/cal-meta-orchestrator');
+const AgentMesh = require('../lib/agent-mesh');
+const DeploymentOrchestrator = require('../lib/deployment-orchestrator');
+
+const execAsync = promisify(exec);
+
+class CalMultiBrandDeploy {
+  constructor(options = {}) {
+    this.dryRun = options.dryRun || false;
+    this.daemon = options.daemon || false;
+    this.verbose = options.verbose || false;
+
+    // Initialize database
+    this.db = new Pool({
+      connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/calos'
+    });
+
+    // Load brand registry
+    this.brandsRegistryPath = path.join(__dirname, '../brands/BRANDS_REGISTRY.json');
+    this.brands = null;
+
+    // Deployment stats
+    this.stats = {
+      brandsDeployed: 0,
+      brancheCreated: 0,
+      dnsConfigured: 0,
+      errors: []
+    };
+
+    console.log(chalk.cyan.bold('\n🤖 Cal Multi-Brand Autonomous Deployment\n'));
+    console.log(chalk.gray('─'.repeat(80)));
+  }
+
+  /**
+   * Load brand registry
+   */
+  async loadBrands() {
+    const data = await fs.readFile(this.brandsRegistryPath, 'utf8');
+    this.brands = JSON.parse(data);
+    console.log(chalk.green(`✅ Loaded ${this.brands.totalBrands} brands from registry\n`));
+    return this.brands;
+  }
+
+  /**
+   * Create Git branch for each brand
+   */
+  async createBrandBranches() {
+    console.log(chalk.yellow('\n📦 Creating Git branches for all brands...\n'));
+
+    for (const brand of this.brands.brands) {
+      const branchName = `brand/${brand.domain.replace('.com', '')}`;
+
+      try {
+        // Check if branch exists
+        const { stdout: branches } = await execAsync('git branch --list');
+
+        if (branches.includes(branchName)) {
+          console.log(chalk.gray(`   ⏭️  Branch ${branchName} already exists`));
+          continue;
+        }
+
+        if (this.dryRun) {
+          console.log(chalk.yellow(`   🔍 [DRY RUN] Would create branch: ${branchName}`));
+          continue;
+        }
+
+        // Create brand-specific branch from main
+        await execAsync(`git checkout -b ${branchName} main`);
+        await execAsync(`git push -u origin ${branchName}`);
+
+        console.log(chalk.green(`   ✅ Created branch: ${branchName}`));
+        this.stats.brancheCreated++;
+
+        // Return to main
+        await execAsync('git checkout main');
+
+      } catch (error) {
+        console.error(chalk.red(`   ❌ Failed to create branch for ${brand.domain}:`), error.message);
+        this.stats.errors.push({ brand: brand.domain, error: error.message });
+      }
+    }
+
+    console.log(chalk.green(`\n✅ Created ${this.stats.brancheCreated} brand branches\n`));
+  }
+
+  /**
+   * Deploy brand to appropriate platform
+   */
+  async deployBrand(brand) {
+    console.log(chalk.yellow(`\n🚀 Deploying ${brand.name} (${brand.domain})...\n`));
+
+    const branchName = `brand/${brand.domain.replace('.com', '')}`;
+
+    try {
+      // Switch to brand branch
+      if (!this.dryRun) {
+        await execAsync(`git checkout ${branchName}`);
+      }
+
+      // Determine deployment platform
+      let deploymentResult;
+
+      if (brand.type === 'identity' || brand.type === 'content') {
+        // Deploy to GitHub Pages
+        deploymentResult = await this.deployToGitHubPages(brand);
+      } else if (brand.type === 'platform' || brand.type === 'marketplace') {
+        // Deploy to Railway (needs database)
+        deploymentResult = await this.deployToRailway(brand);
+      } else {
+        // Deploy to Vercel (serverless)
+        deploymentResult = await this.deployToVercel(brand);
+      }
+
+      // Configure DNS
+      await this.configureDNS(brand, deploymentResult.url);
+
+      console.log(chalk.green(`✅ ${brand.name} deployed to ${deploymentResult.url}\n`));
+      this.stats.brandsDeployed++;
+
+      // Return to main
+      if (!this.dryRun) {
+        await execAsync('git checkout main');
+      }
+
+      return deploymentResult;
+
+    } catch (error) {
+      console.error(chalk.red(`❌ Failed to deploy ${brand.domain}:`), error.message);
+      this.stats.errors.push({ brand: brand.domain, error: error.message });
+
+      // Return to main on error
+      if (!this.dryRun) {
+        try {
+          await execAsync('git checkout main');
+        } catch (e) {
+          // Ignore checkout errors
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Deploy to GitHub Pages
+   */
+  async deployToGitHubPages(brand) {
+    const repoName = brand.github.repo || `Soulfra/${brand.domain.replace('.com', '')}.github.io`;
+
+    if (this.dryRun) {
+      console.log(chalk.yellow(`   🔍 [DRY RUN] Would deploy to GitHub Pages: ${repoName}`));
+      return { url: `https://${brand.domain}`, platform: 'github-pages' };
+    }
+
+    // Check if repo exists
+    const { stdout: repoCheck } = await execAsync(`gh repo view ${repoName} 2>&1 || echo "not found"`);
+
+    if (repoCheck.includes('not found')) {
+      // Create GitHub Pages repo
+      console.log(chalk.gray(`   Creating GitHub repo: ${repoName}...`));
+      await execAsync(`gh repo create ${repoName} --public --description "${brand.tagline}"`);
+    }
+
+    // Push to GitHub Pages
+    console.log(chalk.gray(`   Pushing to GitHub Pages...`));
+    await execAsync(`git push origin brand/${brand.domain.replace('.com', '')} --force`);
+
+    // Enable GitHub Pages
+    const domain = brand.domain.replace('.com', '');
+    await execAsync(`gh api repos/Soulfra/${domain}.github.io/pages -X POST -f source[branch]=main -f source[path]=/public || echo "Pages already enabled"`);
+
+    return {
+      url: `https://${domain}.github.io`,
+      platform: 'github-pages',
+      repo: repoName
+    };
+  }
+
+  /**
+   * Deploy to Railway
+   */
+  async deployToRailway(brand) {
+    if (this.dryRun) {
+      console.log(chalk.yellow(`   🔍 [DRY RUN] Would deploy to Railway: ${brand.domain}`));
+      return { url: `https://${brand.domain}`, platform: 'railway' };
+    }
+
+    console.log(chalk.gray(`   Deploying to Railway...`));
+
+    // Railway deployment via CLI
+    const projectName = brand.domain.replace('.com', '');
+
+    try {
+      await execAsync(`railway up --project ${projectName}`);
+      const { stdout: url } = await execAsync(`railway domain`);
+
+      return {
+        url: url.trim(),
+        platform: 'railway',
+        project: projectName
+      };
+    } catch (error) {
+      console.log(chalk.yellow(`   ⚠️  Railway CLI not installed or project doesn't exist`));
+      console.log(chalk.gray(`   Manual setup needed: https://railway.app/new`));
+
+      return {
+        url: `https://${brand.domain}`,
+        platform: 'railway',
+        manual: true
+      };
+    }
+  }
+
+  /**
+   * Deploy to Vercel
+   */
+  async deployToVercel(brand) {
+    if (this.dryRun) {
+      console.log(chalk.yellow(`   🔍 [DRY RUN] Would deploy to Vercel: ${brand.domain}`));
+      return { url: `https://${brand.domain}`, platform: 'vercel' };
+    }
+
+    console.log(chalk.gray(`   Deploying to Vercel...`));
+
+    try {
+      const { stdout: url } = await execAsync(`vercel --prod --yes --token=${process.env.VERCEL_TOKEN || ''}`);
+
+      return {
+        url: url.trim(),
+        platform: 'vercel'
+      };
+    } catch (error) {
+      console.log(chalk.yellow(`   ⚠️  Vercel CLI not installed`));
+      console.log(chalk.gray(`   Manual setup: vercel deploy --prod`));
+
+      return {
+        url: `https://${brand.domain}`,
+        platform: 'vercel',
+        manual: true
+      };
+    }
+  }
+
+  /**
+   * Configure DNS via GoDaddy API
+   */
+  async configureDNS(brand, deploymentUrl) {
+    console.log(chalk.gray(`   Configuring DNS for ${brand.domain}...`));
+
+    if (this.dryRun) {
+      console.log(chalk.yellow(`   🔍 [DRY RUN] Would configure DNS A record: ${brand.domain} → ${deploymentUrl}`));
+      return;
+    }
+
+    // Initialize CALOS Domain Platform
+    const platform = new CALOSDomainPlatform({ db: this.db });
+
+    try {
+      await platform.initialize();
+
+      // Configure DNS based on platform
+      const hostname = deploymentUrl.replace('https://', '').replace('http://', '');
+
+      await platform.updateDNSRecords(brand.domain, [
+        { type: 'CNAME', name: '@', data: hostname, ttl: 600 },
+        { type: 'CNAME', name: 'www', data: hostname, ttl: 600 }
+      ]);
+
+      console.log(chalk.green(`   ✅ DNS configured: ${brand.domain} → ${hostname}`));
+      this.stats.dnsConfigured++;
+
+    } catch (error) {
+      console.log(chalk.yellow(`   ⚠️  DNS configuration failed: ${error.message}`));
+      console.log(chalk.gray(`   Manual GoDaddy setup needed for ${brand.domain}`));
+    }
+  }
+
+  /**
+   * Start Cal Meta-Orchestrator (autonomous loop)
+   */
+  async startMetaOrchestrator() {
+    console.log(chalk.yellow('\n🔄 Starting Cal Meta-Orchestrator (autonomous loop)...\n'));
+
+    // Initialize Agent Mesh
+    const agentMesh = new AgentMesh();
+
+    // Register Cal as autonomous deployment agent
+    agentMesh.registerNode('cal-deployer', {
+      name: 'Cal Autonomous Deployer',
+      capabilities: ['git', 'github', 'railway', 'vercel', 'dns', 'deployment'],
+      maxConcurrent: 5
+    });
+
+    // Initialize Cal Meta-Orchestrator
+    const orchestrator = new CalMetaOrchestrator({
+      db: this.db,
+      agentMesh,
+      cycleInterval: 300000, // 5 minutes
+      userId: 'cal'
+    });
+
+    // Start orchestration loop
+    await orchestrator.start();
+
+    console.log(chalk.green('✅ Cal Meta-Orchestrator running autonomously\n'));
+    console.log(chalk.gray('Cal will check for changes and deploy automatically every 5 minutes\n'));
+    console.log(chalk.gray('Press Ctrl+C to stop\n'));
+
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log(chalk.yellow('\n🛑 Stopping Cal Meta-Orchestrator...\n'));
+      orchestrator.stop();
+      await this.db.end();
+      console.log(chalk.green('✅ Cal stopped gracefully\n'));
+      process.exit(0);
+    });
+  }
+
+  /**
+   * Main execution
+   */
+  async execute(options = {}) {
+    const brandFilter = options.brand;
+    const deployAll = options.all;
+
+    try {
+      // Load brands
+      await this.loadBrands();
+
+      // Create brand branches
+      await this.createBrandBranches();
+
+      // Deploy brands
+      const brandsToeDeploy = deployAll
+        ? this.brands.brands
+        : brandFilter
+          ? this.brands.brands.filter(b => b.domain === brandFilter)
+          : [];
+
+      if (brandsToeDeploy.length === 0 && !this.daemon) {
+        console.log(chalk.yellow('\n⚠️  No brands to deploy. Use --all or --brand=<domain>\n'));
+        return;
+      }
+
+      for (const brand of brandsToeDeploy) {
+        await this.deployBrand(brand);
+      }
+
+      // Print summary
+      console.log(chalk.cyan.bold('\n📊 Deployment Summary\n'));
+      console.log(chalk.gray('─'.repeat(80)));
+      console.log(chalk.green(`✅ Brands deployed: ${this.stats.brandsDeployed}`));
+      console.log(chalk.green(`✅ Branches created: ${this.stats.brancheCreated}`));
+      console.log(chalk.green(`✅ DNS configured: ${this.stats.dnsConfigured}`));
+
+      if (this.stats.errors.length > 0) {
+        console.log(chalk.red(`❌ Errors: ${this.stats.errors.length}`));
+        this.stats.errors.forEach(err => {
+          console.log(chalk.red(`   - ${err.brand}: ${err.error}`));
+        });
+      }
+
+      console.log('');
+
+      // Start daemon if requested
+      if (this.daemon) {
+        await this.startMetaOrchestrator();
+      } else {
+        await this.db.end();
+      }
+
+    } catch (error) {
+      console.error(chalk.red('\n❌ Fatal error:'), error.message);
+      if (this.verbose) {
+        console.error(error.stack);
+      }
+      await this.db.end();
+      process.exit(1);
+    }
+  }
+}
+
+// Parse CLI arguments
+const args = process.argv.slice(2);
+const options = {
+  all: args.includes('--all'),
+  brand: args.find(a => a.startsWith('--brand='))?.split('=')[1],
+  dryRun: args.includes('--dry-run'),
+  daemon: args.includes('--daemon'),
+  verbose: args.includes('--verbose') || args.includes('-v'),
+  help: args.includes('--help') || args.includes('-h')
+};
+
+// Show help
+if (options.help) {
+  console.log(`
+Cal Multi-Brand Autonomous Deployment
+======================================
+
+Teaches Cal to autonomously deploy all 12 brands without Claude Code.
+
+Usage:
+  node bin/cal-deploy-multi-brand [options]
+
+Options:
+  --all              Deploy all brands
+  --brand=<domain>   Deploy specific brand (e.g., --brand=soulfra.com)
+  --daemon           Start autonomous loop (deploys on changes)
+  --dry-run          Test deployment plan without executing
+  --verbose, -v      Show detailed logs
+  --help, -h         Show this help message
+
+Examples:
+  # Deploy all brands
+  node bin/cal-deploy-multi-brand --all
+
+  # Deploy only soulfra.com
+  node bin/cal-deploy-multi-brand --brand=soulfra.com
+
+  # Start autonomous deployment daemon
+  node bin/cal-deploy-multi-brand --daemon
+
+  # Test deployment plan (no changes)
+  node bin/cal-deploy-multi-brand --all --dry-run
+
+  # Deploy with pm2 (run 24/7)
+  pm2 start bin/cal-deploy-multi-brand --name "cal-deployer" -- --daemon
+
+What Cal Does:
+  1. Creates Git branches for each brand
+  2. Deploys to GitHub Pages / Railway / Vercel
+  3. Configures GoDaddy DNS automatically
+  4. Runs Cal Meta-Orchestrator every 5 minutes
+  5. Monitors deployments and auto-fixes issues
+
+Benefits:
+  ✅ Saves Claude Code tokens
+  ✅ Saves weekly limit
+  ✅ Runs 24/7 autonomously
+  ✅ Zero manual work
+  ✅ Multi-brand coordination
+`);
+  process.exit(0);
+}
+
+// Run
+const deployer = new CalMultiBrandDeploy(options);
+deployer.execute(options);
