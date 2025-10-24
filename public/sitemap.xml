@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lessons.calriven.com/lessons/</loc>
+    <loc>https://lessons.soulfra.com/lessons/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://lessons.calriven.com/lessons/#/mcp-development</loc>
+    <loc>https://lessons.soulfra.com/lessons/#/mcp-development</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://lessons.calriven.com/lessons/#/rpg-card-game</loc>
+    <loc>https://lessons.soulfra.com/lessons/#/rpg-card-game</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://lessons.calriven.com/lessons/#/zero-dependency</loc>
+    <loc>https://lessons.soulfra.com/lessons/#/zero-dependency</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://lessons.calriven.com/lessons/#/multi-tier</loc>
+    <loc>https://lessons.soulfra.com/lessons/#/multi-tier</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
